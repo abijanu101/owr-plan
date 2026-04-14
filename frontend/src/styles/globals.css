@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* Color Palette */
+
+:root {
+  --color-primary: #f97766;
+
+  --bg-accent: #4c0e36;
+  --bg-primary: #200412;
+  --bg-raised: #290917;
+
+  --text-neutral: #dc8379;
+  --text-muted: #743c40;
+
+  --border-subtle: var(--text-muted);
+
+  --color-success: #488845;
+  --color-error: #990101;
+}
+
+
+/* Config */
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  background-color: var(--bg-primary);
+  width: 100%;
+  height: 100vh;
+  overflow:hidden;
+
+  color: var(--text-neutral);
+  font-family: cursive;
+}
+
+
+/* Utility Classes for Inline CSS */
+
+.text-neutral {
+  color: var(--text-neutral);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-accent {
+  background-color: var(--bg-accent);
+}
+
+.bg-default {
+  background-color: var(--bg-primary);
+}
+
+.bg-raised {
+  background-color: var(--bg-raised);
+}
+
