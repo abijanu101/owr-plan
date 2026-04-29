@@ -9,7 +9,7 @@ export default function EntitiesPg() {
     const [selectedEntity, setSelectedEntity] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showActivityModal, setShowActivityModal] = useState(false);
-    const [newEntity, setNewEntity] = useState({ name: '', type: 'person' });
+    const [newEntity, setNewEntity] = useState({ name: '', type: 'person', faceIcon: '', accessories: [] });
     const [newActivity, setNewActivity] = useState({ title: '', description: '', date: '', entityId: '' });
 
     useEffect(() => {
@@ -52,9 +52,15 @@ export default function EntitiesPg() {
 
     const handleCreateEntity = async () => {
         try {
-            await createEntity(newEntity);
+            const entityData = {
+                ...newEntity,
+                type: selectedTab,
+                faceIcon: newEntity.faceIcon || null,
+                accessories: newEntity.accessories
+            };
+            await createEntity(entityData);
             setShowCreateModal(false);
-            setNewEntity({ name: '', type: 'person' });
+            setNewEntity({ name: '', type: 'person', faceIcon: '', accessories: [] });
             fetchEntities();
         } catch (error) {
             console.error(error);
@@ -72,7 +78,24 @@ export default function EntitiesPg() {
         }
     };
 
+    const faceIcons = icons.filter(icon => icon.type === 'face');
+    const accessoryIcons = icons.filter(icon => icon.type === 'accessory');
+
     const filteredEntities = entities.filter(e => e.type === selectedTab);
+
+    const renderIcon = (entity) => {
+        if (!entity.faceIcon && (!entity.accessories || entity.accessories.length === 0)) {
+            return <div className="w-16 h-16 bg-gray-200 flex items-center justify-center">No Icon</div>;
+        }
+        return (
+            <div className="w-16 h-16 relative">
+                {entity.faceIcon && <div dangerouslySetInnerHTML={{ __html: entity.faceIcon.filename }} className="absolute inset-0" />}
+                {entity.accessories?.map((acc, idx) => (
+                    <div key={idx} dangerouslySetInnerHTML={{ __html: acc.filename }} className="absolute inset-0" />
+                ))}
+            </div>
+        );
+    };
 
     return (
         <div className="p-4">
@@ -110,22 +133,29 @@ export default function EntitiesPg() {
                         className={`p-4 border rounded cursor-pointer ${selectedEntity?._id === entity._id ? 'border-blue-500' : ''}`}
                         onClick={() => setSelectedEntity(entity)}
                     >
-                        {/* Icon Placeholder */}
-                        <div className="w-16 h-16 bg-gray-200 mb-2 flex items-center justify-center">
-                            {entity.faceIcon ? 'SVG Icon' : 'No Icon'}
-                        </div>
+                        {/* Icon */}
+                        {renderIcon(entity)}
                         <h3 className="text-lg font-bold">{entity.name}</h3>
-                        {/* For person: show groups, for group: show members */}
+                        {/* For person: show groups */}
                         {selectedTab === 'person' && (
                             <div>
-                                <p>Groups: {entity.members?.length || 0}</p>
-                                {/* Add/Remove group buttons */}
+                                <p>Groups:</p>
+                                <ul>
+                                    {entity.members?.map(member => (
+                                        <li key={member._id}>{member.name}</li>
+                                    ))}
+                                </ul>
                             </div>
                         )}
+                        {/* For group: show members */}
                         {selectedTab === 'group' && (
                             <div>
-                                <p>Members: {entity.members?.length || 0}</p>
-                                {/* Add/Remove member buttons */}
+                                <p>Members:</p>
+                                <ul>
+                                    {entity.members?.map(member => (
+                                        <li key={member._id}>{member.name}</li>
+                                    ))}
+                                </ul>
                             </div>
                         )}
                     </div>
@@ -157,15 +187,38 @@ export default function EntitiesPg() {
             {/* Create Entity Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-4 rounded">
+                    <div className="bg-white p-4 rounded max-w-md w-full">
                         <h3>Create {selectedTab}</h3>
                         <input
                             type="text"
                             placeholder="Name"
                             value={newEntity.name}
-                            onChange={(e) => setNewEntity({ ...newEntity, name: e.target.value, type: selectedTab })}
+                            onChange={(e) => setNewEntity({ ...newEntity, name: e.target.value })}
                             className="border p-2 w-full mb-2"
                         />
+                        <select
+                            value={newEntity.faceIcon}
+                            onChange={(e) => setNewEntity({ ...newEntity, faceIcon: e.target.value })}
+                            className="border p-2 w-full mb-2"
+                        >
+                            <option value="">Select Face Icon</option>
+                            {faceIcons.map(icon => (
+                                <option key={icon._id} value={icon._id}>{icon.filename}</option>
+                            ))}
+                        </select>
+                        <select
+                            multiple
+                            value={newEntity.accessories}
+                            onChange={(e) => {
+                                const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                setNewEntity({ ...newEntity, accessories: selected });
+                            }}
+                            className="border p-2 w-full mb-2"
+                        >
+                            {accessoryIcons.map(icon => (
+                                <option key={icon._id} value={icon._id}>{icon.filename}</option>
+                            ))}
+                        </select>
                         <button onClick={handleCreateEntity} className="bg-green-500 text-white px-4 py-2">Create</button>
                         <button onClick={() => setShowCreateModal(false)} className="ml-2">Cancel</button>
                     </div>
