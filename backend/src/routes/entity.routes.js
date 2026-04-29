@@ -8,11 +8,14 @@ const {
   deleteEntity,
   addMemberToGroup,
   removeMemberFromGroup,
-  getGroupMembers, 
-  editProfile, 
-  viewSchedule, 
+  getGroupMembers,
+  editProfile,
+  viewSchedule,
   getActivitiesForEntity
 } = require('../controllers/entityController');
+const { protect } = require('../middlewares/auth.middleware');
+
+router.use(protect);
 
 // Routes for entity operations
 router.post('/', createEntity);

@@ -12,4 +12,4 @@ const iconSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-  export default mongoose.model("Icon", iconSchema);
+module.exports = mongoose.model('Icon', iconSchema);
