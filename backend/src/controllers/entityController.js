@@ -47,11 +47,7 @@ const getEntitiesByUser = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
 
-    const entities = await Entity.find({ userId })
-      .populate('faceIcon')
-      .populate('accessory')
-      .populate('addons')
-      .populate('members');
+    const entities = await Entity.find({ userId }).populate('members');
 
     res.status(200).json({ success: true, count: entities.length, data: entities });
   } catch (error) {
@@ -68,11 +64,7 @@ const getEntityById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid entity ID' });
     }
 
-    const entity = await Entity.findById(id)
-      .populate('faceIcon')
-      .populate('accessory')
-      .populate('addons')
-      .populate('members');
+    const entity = await Entity.findById(id).populate('members');
 
     if (!entity) {
       return res.status(404).json({ success: false, message: 'Entity not found' });
@@ -221,10 +213,7 @@ const getGroupMembers = async (req, res) => {
     }
 
     const group = await Entity.findById(id)
-      .populate('members')
-      .populate('faceIcon')
-      .populate('accessory')
-      .populate('addons');
+      .populate('members');
 
     if (!group) {
       return res.status(404).json({ success: false, message: 'Group not found' });

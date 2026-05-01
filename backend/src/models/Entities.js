@@ -26,20 +26,17 @@ const entitySchema = new mongoose.Schema({
   },
 
   faceIcon: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon",
+    type: String,
     default: null
   },
 
   accessory: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon",
+    type: String,
     default: null
   },
 
   addons: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon"
+    type: String
   }],
 
   // enforce that group cant reference groups inside in backend logic 

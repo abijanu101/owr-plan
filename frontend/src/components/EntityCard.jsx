@@ -1,10 +1,11 @@
 import EntityIcon from './EntityIcon';
 
 export default function EntityCard({ entity, onClick, selected = false }) {
-    const faceSvg = entity.faceIcon?.filename || '';
-    const accessory = entity.accessory?.filename || entity.accessory || '';
+    const getIconName = (icon) => icon?.filename || icon || '';
+    const faceSvg = getIconName(entity.faceIcon);
+    const accessory = getIconName(entity.accessory);
     const addonSvgs = Array.isArray(entity.addons)
-        ? entity.addons.map((addon) => addon.filename || addon)
+        ? entity.addons.map((addon) => getIconName(addon)).filter(Boolean)
         : [];
 
     const metaLabel = entity.type === 'group' ? 'Group' : 'Person';

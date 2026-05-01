@@ -121,9 +121,9 @@ export default function EntityDetailPg() {
             <div className="grid gap-6 lg:grid-cols-[1.35fr_0.9fr]">
                 <section className="rounded-[32px] border border-white/10 bg-white/5 p-6 shadow-xl shadow-black/10">
                     <div className="flex flex-wrap items-center gap-6">
-                        <EntityIcon
-                            faceSvg={entity.faceIcon?.filename || ''}
-                            accessory={entity.accessory?.filename || ''}
+                            <EntityIcon
+                            faceSvg={entity.faceIcon?.filename || entity.faceIcon || ''}
+                            accessory={entity.accessory?.filename || entity.accessory || ''}
                             addons={(entity.addons || []).map((addon) => addon.filename || addon)}
                             size={112}
                         />
