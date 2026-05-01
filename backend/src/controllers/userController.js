@@ -195,3 +195,42 @@ const logoutUser = async (req, res) => {
     });
   }
 };
+
+const getUserById = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: { user: { id: req.params.id, name: 'Dummy User' } }
+  });
+};
+
+const getAllUsers = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: { users: [] }
+  });
+};
+
+const updateUser = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    data: { user: { id: req.params.id, ...req.body } }
+  });
+};
+
+const deleteUser = async (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: `User ${req.params.id} deleted successfully`
+  });
+};
+
+module.exports = {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  logoutUser,
+  getUserById,
+  getAllUsers,
+  updateUser,
+  deleteUser
+}
