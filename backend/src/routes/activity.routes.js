@@ -8,19 +8,21 @@ const {
   deleteActivity,
   getAvailabilityVisualization,
   getBestTimeSlots,
-  bulkCreateActivities
+  bulkCreateActivities,
+  parseSchedule,
 } = require('../controllers/activityController');
 
-// Routes for activity operations
-router.post('/', createActivity);
-router.post('/bulk', bulkCreateActivities);
-router.get('/user/:userId', getUserActivities);
-router.get('/:id', getActivityById);
-router.put('/:id', updateActivity);
-router.delete('/:id', deleteActivity);
+// Core CRUD
+router.post('/',       createActivity);
+router.post('/bulk',   bulkCreateActivities);
+router.post('/parse',  parseSchedule);          // LLM schedule parsing
 
-// Routes for activity analytics
+router.get('/user/:userId',        getUserActivities);
 router.get('/visualization/:userId', getAvailabilityVisualization);
-router.get('/plan', getBestTimeSlots);
+router.get('/plan',                getBestTimeSlots);
+router.get('/:id',                 getActivityById);
+
+router.put('/:id',    updateActivity);
+router.delete('/:id', deleteActivity);
 
 module.exports = router;
