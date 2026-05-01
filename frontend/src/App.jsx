@@ -8,6 +8,7 @@ import DateTimePicker from './components/DateTimePicker'
 import DateTimeRangePicker from './components/DateTimeRangePicker'
 import { EntityProvider } from './context/EntityContext'
 import CreateActivity from './pages/CreateActivity'
+import EditActivity from './pages/EditActivity'
 
 export default function App() {
     return <>
