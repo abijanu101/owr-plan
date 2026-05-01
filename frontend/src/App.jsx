@@ -4,11 +4,13 @@ import Playground from './pages/playground'
 import TimePicker from './components/TimePicker'
 import DateTimePicker from './components/DateTimePicker'
 import DateTimeRangePicker from './components/DateTimeRangePicker'
+import { EntityProvider } from './context/EntityContext'
 
 export default function App() {
     return <>
-        <BrowserRouter>
-            <div className="flex flex-col h-full">
+        <EntityProvider>
+            <BrowserRouter>
+                <div className="flex flex-col h-full">
                 <Navbar />
                 <div className="flex-1 overflow-y-auto">
                     <Routes>
@@ -35,6 +37,7 @@ export default function App() {
                     </Routes>
                 </div>
             </div>
-        </BrowserRouter>
+            </BrowserRouter>
+        </EntityProvider>
     </>
 }
