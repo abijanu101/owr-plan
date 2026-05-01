@@ -5,7 +5,6 @@ import DateTimePicker from '../components/DateTimePicker';
 
 import EntityChip from '../components/EntitySelector/EntityChip';
 import EntitySelector from '../components/EntitySelector';
-import SimplifiedConstraintPicker from '../components/SimplifiedConstraintPicker';
 
 export default function Playground() {
     const [selectedTime, setSelectedTime] = useState("08:59 AM");
@@ -140,13 +139,6 @@ export default function Playground() {
                     </div>
                 </div>
             </div>
-
-            <section className="mb-20">
-                <h2 className="text-xl font-bold mb-8 uppercase tracking-widest text-[#DC8379]/40">Simplified Constraint Picker</h2>
-                <div className="flex justify-center">
-                    <SimplifiedConstraintPicker />
-                </div>
-            </section>
 
             <div className="opacity-40 text-muted space-y-2 text-sm font-medium pt-12">
                 <div>- Date Input (TODO)</div>
