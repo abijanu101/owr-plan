@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/navbar'
 import Playground from './pages/playground'
+import CreateActivity from './pages/CreateActivity'
 import TimePicker from './components/TimePicker'
 import DateTimePicker from './components/DateTimePicker'
 import DateTimeRangePicker from './components/DateTimeRangePicker'
@@ -21,6 +22,7 @@ export default function App() {
                         <Route path='/entities' element={<>entities</>} />
                         <Route path='/entities/:id' element={<>entity typeshi</>} />
                         <Route path='/activities' element={<>activities</>} />
+                        <Route path='/activities/create' element={<CreateActivity />} />
                         <Route path='/activities/:id' element={<>activity typeshi</>} />
 
                         <Route path='/visualize' element={<>schedule visualization here</>} />
