@@ -42,11 +42,10 @@ export default function EntitySelector({
             <div
                 onClick={() => setIsOverlayOpen(true)}
                 className={`
-                    cursor-pointer transition-all duration-300
+                    cursor-pointer transition-all duration-300 flex items-center
                     ${variant === 'table'
-                        ? 'p-2 border border-transparent hover:bg-white/5 rounded-2xl'
-                        : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30'}
-                    min-h-[80px] flex items-center 
+                        ? 'p-1 py-1.5 border border-transparent hover:bg-white/5 rounded-xl min-h-[40px]'
+                        : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
                 `}
             >
                 {selectedEntities.length === 0 ? (

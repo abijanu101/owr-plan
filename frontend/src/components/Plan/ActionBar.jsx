@@ -20,19 +20,31 @@ const ChevronDownIcon = ({ className }) => (
     </svg>
 );
 
-export default function ActionBar({ onReset, onGenerate }) {
+const ChevronUpIcon = ({ className }) => (
+    <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    </svg>
+);
+
+export default function ActionBar({ onReset, onGenerate, currentView = 'simplified' }) {
+    const isStructured = currentView === 'structured';
+    const linkTo = isStructured ? "/plan" : "/plan/structured";
+    const linkTextDesktop = isStructured ? "Simplified Options" : "Advanced Options";
+    const linkTextMobile = isStructured ? "Simplified" : "Advanced";
+    const Icon = isStructured ? ChevronUpIcon : ChevronDownIcon;
+
     return (
         <div className="fixed bottom-0 left-0 w-full bg-[#1A0B16]/80 backdrop-blur-xl border-t border-[#DC8379]/10 p-4 z-50">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 sm:gap-6">
-                    {/* View Advanced Options */}
+                    {/* View Toggle */}
                     <Link
-                        to="/plan/structured"
+                        to={linkTo}
                         className="flex items-center gap-2 text-[#DC8379]/60 hover:text-[#f97766] transition-all text-sm font-bold group px-4 py-2 rounded-lg hover:bg-white/5 cursor-pointer select-none"
                     >
-                        <ChevronDownIcon className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
-                        <span style={{ fontFamily: 'cursive' }} className="hidden sm:inline">Advanced Options</span>
-                        <span style={{ fontFamily: 'cursive' }} className="sm:hidden">Advanced</span>
+                        <Icon className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+                        <span style={{ fontFamily: 'cursive' }} className="hidden sm:inline">{linkTextDesktop}</span>
+                        <span style={{ fontFamily: 'cursive' }} className="sm:hidden">{linkTextMobile}</span>
                     </Link>
                 </div>
 
