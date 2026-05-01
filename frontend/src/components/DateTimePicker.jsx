@@ -61,7 +61,7 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
             <div className="relative inline-block" ref={containerRef}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="text-[#DC8379] hover:text-[#f97766] transition-colors border-b-2 border-dotted border-[#DC8379]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
+                    className="text-[#f97766] hover:brightness-110 transition-all border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
                     style={{ fontFamily: 'cursive' }}
                 >
                     {dateTimeState.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {dateTimeState.time}

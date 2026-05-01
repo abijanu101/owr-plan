@@ -7,6 +7,7 @@ import TimePicker from './components/TimePicker'
 import DateTimePicker from './components/DateTimePicker'
 import DateTimeRangePicker from './components/DateTimeRangePicker'
 import { EntityProvider } from './context/EntityContext'
+import CreateActivity from './pages/CreateActivity'
 
 export default function App() {
     return <>
@@ -22,12 +23,12 @@ export default function App() {
                             <Route path='/login' element={<>bye</>} />
                             <Route path='/signup' element={<>bye</>} />
 
-                        <Route path='/' element={<>home</>} />
-                        <Route path='/entities' element={<>entities</>} />
-                        <Route path='/entities/:id' element={<>entity typeshi</>} />
-                        <Route path='/activities' element={<>activities</>} />
-                        <Route path='/activities/create' element={<CreateActivity />} />
-                        <Route path='/activities/:id' element={<>activity typeshi</>} />
+                            <Route path='/' element={<>home</>} />
+                            <Route path='/entities' element={<>entities</>} />
+                            <Route path='/entities/:id' element={<>entity typeshi</>} />
+                            <Route path='/activities' element={<>activities</>} />
+                            <Route path='/activities/create' element={<CreateActivity />} />
+                            <Route path='/activities/:id' element={<>activity typeshi</>} />
 
                             <Route path='/visualize' element={<>schedule visualization here</>} />
                             <Route path='/plan' element={<Plan />} />
