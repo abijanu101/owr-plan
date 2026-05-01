@@ -22,11 +22,12 @@ export default function App() {
                             <Route path='/login' element={<>bye</>} />
                             <Route path='/signup' element={<>bye</>} />
 
-                            <Route path='/' element={<>home</>} />
-                            <Route path='/entities' element={<>entities</>} />
-                            <Route path='/entities/:id' element={<>entity typeshi</>} />
-                            <Route path='/activities' element={<>activities</>} />
-                            <Route path='/activities/:id' element={<>activity typeshi</>} />
+                        <Route path='/' element={<>home</>} />
+                        <Route path='/entities' element={<>entities</>} />
+                        <Route path='/entities/:id' element={<>entity typeshi</>} />
+                        <Route path='/activities' element={<>activities</>} />
+                        <Route path='/activities/create' element={<CreateActivity />} />
+                        <Route path='/activities/:id' element={<>activity typeshi</>} />
 
                             <Route path='/visualize' element={<>schedule visualization here</>} />
                             <Route path='/plan' element={<Plan />} />
