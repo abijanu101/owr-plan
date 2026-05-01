@@ -154,8 +154,11 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
             )}
             
             {!inline && (
-                 <div className="mt-2 flex items-start w-full">
-                     <button onClick={() => setIsOpen(false)} className="w-full px-6 py-3.5 rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer">Done</button>
+                 <div className="mt-2 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 w-full">
+                     <button onClick={() => setIsOpen(false)} className="w-full sm:w-auto px-6 py-3.5 rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer">Done</button>
+                     <div className="bg-[var(--color-primary)] text-[var(--bg-primary)] px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-[0_4px_15px_rgba(249,119,102,0.4)] border-2 border-[var(--bg-raised)] w-full sm:w-auto text-center">
+                         {time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')} {time.period}
+                     </div>
                  </div>
             )}
         </div>

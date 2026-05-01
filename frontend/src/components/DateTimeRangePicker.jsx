@@ -226,7 +226,7 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
     };
 
     return (
-        <div className="flex flex-col sm:flex-row gap-8 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row gap-8 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md relative">
             
             {/* Calendar Side */}
             <div className="flex flex-col gap-6 w-[17rem] pt-2">
@@ -276,17 +276,19 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
                     />
                 </div>
                 
-                {/* Done Button */}
-                <div className="mt-6 flex items-start pl-2">
+                {/* Bottom Bar: Done Button & Date Pill */}
+                <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 w-full pl-2">
                     <button 
                         onClick={onClose}
                         className="px-6 py-3.5 w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                         Done
                     </button>
+                    <div className="bg-[var(--color-primary)] text-[var(--bg-primary)] px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-[0_4px_15px_rgba(249,119,102,0.4)] border-2 border-[var(--bg-raised)] w-full sm:w-auto text-center">
+                        {dateTimeState.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {dateTimeState.time}
+                    </div>
                 </div>
             </div>
-
         </div>
     );
 }
