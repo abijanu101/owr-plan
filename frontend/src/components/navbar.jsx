@@ -48,7 +48,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden md:flex absolute top-[100%] left-0 w-full bg-accent border-b-2 border-[var(--border-subtle)] flex-row justify-center items-end gap-24 pt-8 pb-8 shadow-xl transition-all duration-300 ease-out origin-top -translate-y-4 opacity-0 invisible group-hover:translate-y-0 group-hover:opacity-100 group-hover:visible z-[60]">
+            <div className="hidden md:flex absolute top-[100%] left-0 w-full bg-accent border-b-2 border-[var(--border-subtle)] flex-row justify-center items-end gap-24 pt-8 pb-12 shadow-xl transition-all duration-300 ease-out origin-top -translate-y-4 opacity-0 invisible group-hover:translate-y-0 group-hover:opacity-100 group-hover:visible z-[60] rounded-b-[50%]">
                 {NAV_ITEMS.map((item) => {
                     const isActive = location.pathname.startsWith(item.path);
                     const isScaledUp = ['shared expenses', 'activities', 'entities'].includes(item.name);
@@ -78,9 +78,8 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Navigation Dropdown */}
-            {isMobileOpen && (
-                <div className="md:hidden absolute top-[100%] left-0 w-full h-[calc(100vh-56px)] z-40 bg-accent px-4 pt-8 flex flex-col gap-8 overflow-y-auto">
-                    {/* Mobile Grid Layout for Links */}
+            <div className={`md:hidden absolute top-[100%] left-0 w-full h-[calc(100vh-56px)] z-40 bg-accent px-4 pt-8 flex flex-col gap-8 overflow-y-auto transition-all duration-300 ease-in-out ${isMobileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-8 pointer-events-none'}`}>
+                {/* Mobile Grid Layout for Links */}
                     <div className="grid grid-cols-2 gap-y-5 gap-x-4">
                         {NAV_ITEMS.map((item) => {
                             const isActive = location.pathname.startsWith(item.path);
@@ -107,11 +106,10 @@ export default function Navbar() {
                     </div>
                     {/* Mobile Auth Buttons */}
                     <div className="flex flex-row items-center justify-center gap-6 mt-auto border-t border-[var(--border-subtle)] pt-6 pb-6 sticky bottom-0 bg-accent z-10 w-full shadow-[0_-10px_20px_var(--bg-accent)]">
-                        <Link to="/login" onClick={() => setIsMobileOpen(false)} className="inline-block text-xl px-8 py-3 whitespace-nowrap border border-[var(--color-primary)] rounded-full hover:bg-[var(--bg-accent)] transition-all">login</Link>
-                        <Link to="/signup" onClick={() => setIsMobileOpen(false)} className="inline-block bg-[var(--color-primary)] text-[var(--bg-primary)] px-8 py-4 whitespace-nowrap leading-none rounded-full text-xl font-bold hover:brightness-110 transition-all">signup</Link>
+                        <Link to="/login" onClick={() => setIsMobileOpen(false)} className="inline-block text-lg px-8 py-3 whitespace-nowrap border border-[var(--color-primary)] rounded-full hover:bg-[var(--bg-accent)] transition-all">login</Link>
+                        <Link to="/signup" onClick={() => setIsMobileOpen(false)} className="inline-block bg-[var(--color-primary)] text-[var(--bg-primary)] px-8 py-4 whitespace-nowrap leading-none rounded-full text-lg font-bold hover:brightness-110 transition-all">signup</Link>
                     </div>
                 </div>
-            )}
         </nav>
     );
 }
