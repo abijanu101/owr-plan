@@ -28,6 +28,7 @@ export default function App() {
                             <Route path='/entities/:id' element={<>entity typeshi</>} />
                             <Route path='/activities' element={<>activities</>} />
                             <Route path='/activities/create' element={<CreateActivity />} />
+                            <Route path='/activities/:id/edit' element={<EditActivity />} />
                             <Route path='/activities/:id' element={<>activity typeshi</>} />
 
                             <Route path='/visualize' element={<>schedule visualization here</>} />
