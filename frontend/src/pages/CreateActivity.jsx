@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import TimePicker from '../components/TimePicker';
-import DateTimePicker from '../components/DateTimePicker';
+import TimePicker from '../components/Pickers/TimePicker';
+import DateTimePicker from '../components/Pickers/DateTimePicker';
 import EntitySelector from '../components/EntitySelector';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];

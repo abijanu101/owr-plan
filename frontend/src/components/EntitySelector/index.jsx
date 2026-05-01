@@ -50,7 +50,7 @@ export default function EntitySelector({
                 `}
             >
                 {selectedEntities.length === 0 ? (
-                    <div className="w-full text-center text-[#DC8379]/40 italic font-normal tracking-wide py-2 text-[20px]" style={{ fontFamily: 'cursive' }}>
+                    <div className="w-full text-center text-[#DC8379]/40 italic font-normal tracking-wide py-2 text-[16px] sm:text-[18px]" style={{ fontFamily: 'cursive' }}>
                         Click to choose entities
                     </div>
                 ) : (

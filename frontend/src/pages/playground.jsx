@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import TimePicker from '../components/TimePicker';
-import DateTimeRangePicker from '../components/DateTimeRangePicker';
-import DateTimePicker from '../components/DateTimePicker';
+import TimePicker from '../components/Pickers/TimePicker';
+import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
+import DateTimePicker from '../components/Pickers/DateTimePicker';
 
 import EntityChip from '../components/EntitySelector/EntityChip';
 import EntitySelector from '../components/EntitySelector';
