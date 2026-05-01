@@ -169,8 +169,8 @@ export default function EntityDetails() {
 
   if (loading) {
     return (
-      <div className="w-full h-full flex items-center justify-center p-8 text-[var(--text-neutral)]">
-        <div className="text-2xl animate-pulse">Loading...</div>
+      <div className="w-full h-full flex items-center justify-center p-8">
+        <div className="text-2xl animate-pulse text-muted">Loading...</div>
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function EntityDetails() {
   if (error || !entity) {
     return (
       <div className="w-full h-full flex items-center justify-center p-8">
-        <div className="text-xl text-[var(--color-error)]">
+        <div className="text-xl" style={{ color: 'var(--color-error)' }}>
           {error || 'Entity not found'}
         </div>
       </div>
@@ -209,14 +209,14 @@ export default function EntityDetails() {
 
           <div className="flex items-center justify-center space-x-3 mt-2">
             <h1 
-              className="text-3xl sm:text-4xl text-white px-6 py-2 rounded-full shadow-md drop-shadow text-center"
+              className="text-3xl sm:text-4xl text-white px-6 py-2 rounded-full shadow-md drop-shadow text-center font-bold tracking-widest uppercase"
               style={{ backgroundColor: entity.color || 'var(--bg-accent)' }}
             >
               {entity.name}
             </h1>
             {/* Edit icon pill */}
             <button 
-              className="w-10 h-10 rounded-full bg-[var(--bg-accent)] flex items-center justify-center text-[var(--text-neutral)] hover:brightness-125 transition-all shadow-md shrink-0 cursor-pointer"
+              className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-neutral hover:brightness-125 transition-all shadow-md shrink-0 cursor-pointer"
               onClick={() => setIsEditOpen(true)}
               title="Edit Profile"
             >
@@ -248,32 +248,32 @@ export default function EntityDetails() {
 
           {/* Activities Placeholder (as seen in image) */}
           <div className="w-full mt-10">
-            <div className="w-full h-[2px] bg-[var(--text-neutral)] mb-4 opacity-50 rounded-full" />
-            <h2 className="text-2xl mb-4 text-[var(--text-neutral)] capitalize">Activities</h2>
+            <div className="w-full h-[2px] mb-4 opacity-50 rounded-full bg-neutral" />
+            <h2 className="text-muted font-bold text-xs uppercase tracking-widest mb-4">Activities</h2>
             
             <div className="space-y-4">
-              <div className="w-full rounded-xl border border-[var(--text-neutral)] bg-transparent px-4 py-3 flex justify-between items-center text-[var(--text-neutral)]">
+              <div className="w-full rounded-xl border border-[var(--border-subtle)] bg-transparent px-4 py-3 flex justify-between items-center text-neutral">
                 <span>Activity 11</span>
-                <div className="text-right text-sm leading-tight mr-4">
+                <div className="text-right text-sm leading-tight mr-4 text-muted">
                   <div>2 - 4 pm</div>
                   <div>monday</div>
                   <div>23 feb</div>
                 </div>
-                <div className="text-2xl opacity-80">&#9660;</div>
+                <div className="text-2xl opacity-80 text-muted">&#9660;</div>
               </div>
               
-              <div className="w-full rounded-xl border border-[var(--text-neutral)] bg-transparent px-4 py-3 flex justify-between items-center text-[var(--text-neutral)]">
+              <div className="w-full rounded-xl border border-[var(--border-subtle)] bg-transparent px-4 py-3 flex justify-between items-center text-neutral">
                 <span>Activity 11</span>
-                <div className="text-right text-sm leading-tight mr-4">
+                <div className="text-right text-sm leading-tight mr-4 text-muted">
                   <div>2 - 4 pm</div>
                   <div>monday</div>
                   <div>23 feb</div>
                 </div>
-                <div className="text-2xl opacity-80">&#9660;</div>
+                <div className="text-2xl opacity-80 text-muted">&#9660;</div>
               </div>
             </div>
 
-            <button className="mt-6 rounded-full border border-[var(--text-neutral)] px-6 py-2 flex items-center text-[var(--text-neutral)] hover:bg-[var(--text-neutral)] hover:text-[var(--bg-primary)] transition-colors">
+            <button className="mt-6 rounded-full border border-[var(--border-subtle)] px-6 py-2 flex items-center text-neutral hover:bg-neutral hover:text-primary transition-colors font-bold tracking-wider">
               <span className="text-2xl mr-3 leading-none font-bold">+</span> SCHEDULE NEW ACTIVITY
             </button>
           </div>

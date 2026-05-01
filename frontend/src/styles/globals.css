@@ -18,6 +18,27 @@
   --color-error: #990101;
 }
 
+/* Entity modal responsive layout (portrait: stacked, landscape: side-by-side) */
+.entity-modal-shell {
+  max-width: 22rem;
+  max-height: 86vh;
+}
+
+@media (orientation: landscape) and (min-width: 640px) {
+  .entity-modal-shell {
+    max-width: 44rem;
+  }
+
+  .entity-modal-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+    column-gap: 0.75rem;
+    min-height: 0;
+  }
+}
+
 
 /* Config */
 

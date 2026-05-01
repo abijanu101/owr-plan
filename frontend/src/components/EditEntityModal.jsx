@@ -34,7 +34,7 @@ function hsvToRgb(h, s, v) {
   else if (hh >= 2 && hh < 3) [r1, g1, b1] = [0, c, x];
   else if (hh >= 3 && hh < 4) [r1, g1, b1] = [0, x, c];
   else if (hh >= 4 && hh < 5) [r1, g1, b1] = [x, 0, c];
-  else [r1, g1, b1] = [c, 0, x];
+  else[r1, g1, b1] = [c, 0, x];
 
   const m = v - c;
   return {
@@ -202,7 +202,7 @@ export default function EditEntityModal({ isOpen, onClose, editingEntity, onSucc
     if (isOpen) {
       if (editingEntity) {
         setForm(editingEntity);
-        
+
         // Find indexes if they exist
         const fIdx = FACES.indexOf(editingEntity.faceIcon);
         if (fIdx !== -1) setFaceIndex(fIdx);
@@ -259,7 +259,7 @@ export default function EditEntityModal({ isOpen, onClose, editingEntity, onSucc
     try {
       const url = editingEntity ? `/api/entities/${editingEntity._id}` : "/api/entities";
       const method = editingEntity ? "PUT" : "POST";
-      
+
       const token = localStorage.getItem('token');
       let res;
       try {
@@ -299,131 +299,153 @@ export default function EditEntityModal({ isOpen, onClose, editingEntity, onSucc
   const tintFilter = cssFilterForColor(form.color);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-      <div className="w-full max-w-sm rounded-[2rem] bg-[var(--bg-primary)] overflow-hidden shadow-2xl relative border-4" style={{ borderColor: form.color || 'var(--bg-accent)'}}>
-        
-        {/* Close Button */}
-        <button 
-          onClick={onClose} 
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center font-bold z-10 shadow-lg hover:brightness-110"
+    <div className="fixed inset-0 z-50">
+      {/* Backdrop (blur only the page behind) */}
+      <button
+        type="button"
+        aria-label="Close modal"
+        onClick={onClose}
+        className="absolute inset-0 w-full h-full bg-black/60 backdrop-blur-md"
+      />
+
+      {/* Modal shell */}
+      <div className="absolute inset-0 flex items-center justify-center px-4 py-6">
+        <div
+          className="entity-modal-shell w-full rounded-[2rem] bg-default overflow-hidden shadow-2xl relative border-4 flex flex-col"
+          style={{ borderColor: form.color || 'var(--bg-accent)' }}
         >
-          X
-        </button>
 
-        {/* Header */}
-        <div className="text-center pt-6 pb-2 text-[var(--color-primary)] font-bold text-xl uppercase tracking-wider">
-          {editingEntity ? "Edit Profile" : `Create ${form.type}`}
-        </div>
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-accent text-neutral flex items-center justify-center font-bold z-10 shadow-lg hover:brightness-125 transition-all"
+          >
+            ✕
+          </button>
 
-        {/* Name Input */}
-        <div className="px-8 pb-4">
-          <input 
-            type="text" 
-            value={form.name} 
-            onChange={(e) => setForm({...form, name: e.target.value})}
-            placeholder="Name" 
-            className="w-full text-center bg-transparent border-b-2 text-white border-[var(--text-muted)] focus:outline-none focus:border-[var(--color-primary)] text-2xl py-2 font-cursive"
-          />
-        </div>
+          {/* Header */}
+          <div className="shrink-0 text-center pt-6 pb-2 text-primary font-bold text-xl uppercase tracking-widest">
+            {editingEntity ? "Edit Profile" : `Create ${form.type}`}
+          </div>
 
-        {/* Tabs Header */}
-        <div className="flex w-full mt-2">
-          {[
-            { key: 'face', label: 'Face' },
-            { key: 'addons', label: 'Add-ons' },
-            { key: 'color', label: 'Color' }
-          ].map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`flex-1 py-3 font-bold text-sm tracking-wider uppercase transition-colors
-                ${activeTab === tab.key 
-                  ? 'bg-[var(--text-neutral)] text-[var(--bg-primary)] rounded-t-lg shadow-[0_-4px_10px_rgba(0,0,0,0.2)] z-10' 
-                  : 'bg-[var(--text-muted)] text-[var(--text-neutral)]'
-                }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content Area */}
-        <div className="bg-[var(--text-neutral)] p-6 relative min-h-[350px] flex flex-col items-center">
-          
-          {/* Main Avatar Preview */}
-          <div className="w-48 h-48 mb-6 relative">
-            <AvatarStack
-              type={form.type}
-              color={form.color}
-              faceIcon={form.faceIcon}
-              accessories={form.accessories}
+          {/* Name Input */}
+          <div className="shrink-0 px-8 pb-4">
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Name"
+              className="w-full text-center bg-transparent border-b-2 text-neutral border-[var(--border-subtle)] focus:outline-none focus:border-[var(--color-primary)] text-2xl py-2 font-cursive placeholder:text-muted"
             />
           </div>
 
-          {/* Carousel Area based on Active Tab */}
-          {activeTab === 'face' && (
-            <div className="w-full max-w-[200px] h-32 bg-[rgba(255,255,255,0.3)] rounded-xl relative flex items-center justify-center shadow-inner">
-              <button onClick={handlePrevFace} className="absolute left-2 text-4xl text-[var(--bg-primary)] hover:scale-110 font-bold opacity-70 hover:opacity-100">&lt;</button>
-              <img
-                src={`/avatar/${form.type === 'group' ? FACES[faceIndex].replace('.svg', '-g.svg') : FACES[faceIndex]}`}
-                className="w-24 h-24 object-contain"
-                alt="face selection"
-                style={tintFilter ? { filter: tintFilter } : undefined}
-              />
-              <button onClick={handleNextFace} className="absolute right-2 text-4xl text-[var(--bg-primary)] hover:scale-110 font-bold opacity-70 hover:opacity-100">&gt;</button>
-            </div>
-          )}
-
-          {activeTab === 'addons' && (
-            <div className="w-full max-w-[200px] h-32 bg-[rgba(255,255,255,0.3)] rounded-xl relative flex items-center justify-center shadow-inner">
-              <button onClick={handlePrevAddon} className="absolute left-2 text-4xl text-[var(--bg-primary)] hover:scale-110 font-bold opacity-70 hover:opacity-100">&lt;</button>
-              <img
-                src={`/avatar/${form.type === 'group' ? ACCESSORIES[addonIndex].replace('.svg', '-g.svg') : ACCESSORIES[addonIndex]}`}
-                className="w-24 h-24 object-contain"
-                alt="addon selection"
-                style={tintFilter ? { filter: tintFilter } : undefined}
-              />
-              <button onClick={handleNextAddon} className="absolute right-2 text-4xl text-[var(--bg-primary)] hover:scale-110 font-bold opacity-70 hover:opacity-100">&gt;</button>
-              
-              {/* +/- Toggle Button */}
-              <button 
-                onClick={toggleAddon}
-                className="absolute -bottom-4 -right-4 w-10 h-10 rounded-full bg-[var(--bg-primary)] text-[var(--text-neutral)] flex items-center justify-center text-2xl font-bold shadow-lg hover:brightness-125"
+          {/* Tabs Header */}
+          <div className="shrink-0 flex w-full mt-2">
+            {[
+              { key: 'face', label: 'Face' },
+              { key: 'addons', label: 'Add-ons' },
+              { key: 'color', label: 'Color' }
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={`flex-1 py-3 font-bold text-sm tracking-widest uppercase transition-all
+                ${activeTab === tab.key
+                    ? 'bg-raised text-primary border-b-2 border-[var(--color-primary)]'
+                    : 'bg-default text-muted hover:text-neutral'
+                  }`}
               >
-                {isCurrentAddonSelected ? '-' : '+'}
+                {tab.label}
               </button>
-            </div>
-          )}
+            ))}
+          </div>
 
-          {activeTab === 'color' && (
-            <div className="w-full max-w-[260px] bg-[rgba(255,255,255,0.3)] rounded-xl p-4 shadow-inner flex flex-col items-center gap-3">
-              <div className="text-sm text-[var(--bg-primary)] font-bold tracking-wide uppercase opacity-80">
-                Color
-              </div>
+          {/* Tab Content Area */}
+          <div className="entity-modal-body bg-raised p-5 relative flex flex-col items-center flex-1 min-h-0 overflow-y-auto">
 
-              <ColorWheel
-                value={colorHex}
-                onChange={(next) => {
-                  setColorHex(next);
-                  setForm(prev => ({ ...prev, color: next }));
-                }}
-                size={160}
+            {/* Main Avatar Preview */}
+            <div className="w-56 h-56 mb-3 relative justify-self-end">
+              <AvatarStack
+                type={form.type}
+                color={form.color}
+                faceIcon={form.faceIcon}
+                accessories={form.accessories}
               />
             </div>
-          )}
-          
-        </div>
 
-        {/* Submit Button */}
-        <div className="bg-[var(--bg-primary)] p-4 flex justify-center">
-           <button 
-             onClick={handleSubmit}
-             className="px-8 py-2 rounded-full border-2 border-[var(--text-neutral)] text-[var(--text-neutral)] hover:bg-[var(--text-neutral)] hover:text-[var(--bg-primary)] transition-all font-bold tracking-wider"
-           >
-             SAVE
-           </button>
-        </div>
+            {/* Carousel Area based on Active Tab */}
+            {activeTab === 'face' && (
+              <div className="w-full max-w-[200px] h-32 bg-accent/40 rounded-xl relative flex items-center justify-center shadow-inner border border-[var(--border-subtle)]">
+                <button onClick={handlePrevFace} className="absolute left-2 text-4xl text-neutral hover:text-primary hover:scale-110 font-bold opacity-70 hover:opacity-100 transition-all">&lt;</button>
+                <img
+                  src={`/avatar/${form.type === 'group' ? FACES[faceIndex].replace('.svg', '-g.svg') : FACES[faceIndex]}`}
+                  className="w-24 h-24 object-contain"
+                  alt="face selection"
+                />
+                <button onClick={handleNextFace} className="absolute right-2 text-4xl text-neutral hover:text-primary hover:scale-110 font-bold opacity-70 hover:opacity-100 transition-all">&gt;</button>
+              </div>
+            )}
 
+            {activeTab === 'addons' && (
+              <div className="w-full max-w-[200px] h-32 bg-accent/40 rounded-xl relative flex items-center justify-center shadow-inner border border-[var(--border-subtle)]">
+                <button onClick={handlePrevAddon} className="absolute left-2 text-4xl text-neutral hover:text-primary hover:scale-110 font-bold opacity-70 hover:opacity-100 transition-all">&lt;</button>
+                <img
+                  src={`/avatar/${form.type === 'group' ? ACCESSORIES[addonIndex].replace('.svg', '-g.svg') : ACCESSORIES[addonIndex]}`}
+                  className="w-24 h-24 object-contain"
+                  alt="addon selection"
+                />
+                <button onClick={handleNextAddon} className="absolute right-2 text-4xl text-neutral hover:text-primary hover:scale-110 font-bold opacity-70 hover:opacity-100 transition-all">&gt;</button>
+
+                {/* +/- Toggle Button */}
+                <button
+                  onClick={toggleAddon}
+                  className={`absolute -bottom-4 -right-4 w-10 h-10 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg transition-all
+                  ${isCurrentAddonSelected
+                      ? 'bg-primary text-[var(--bg-primary)]'
+                      : 'bg-accent text-neutral hover:brightness-125'
+                    }`}
+                >
+                  {isCurrentAddonSelected ? '−' : '+'}
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'color' && (
+              <div className="w-full max-w-[260px] bg-accent/40 rounded-xl p-4 shadow-inner border border-[var(--border-subtle)] flex flex-col items-center gap-3">
+                <div className="text-muted font-bold text-xs tracking-widest uppercase">
+                  Pick a Color
+                </div>
+
+                <ColorWheel
+                  value={colorHex}
+                  onChange={(next) => {
+                    setColorHex(next);
+                    setForm(prev => ({ ...prev, color: next }));
+                  }}
+                  size={160}
+                />
+              </div>
+            )}
+
+          </div>
+
+          {/* Footer: Cancel + Save/Create */}
+          <div className="shrink-0 bg-default px-6 py-4 flex flex-row flex-nowrap justify-center gap-4 border-t border-[var(--border-subtle)]">
+            <button
+              onClick={handleSubmit}
+              className="px-6 py-2 rounded-full border border-[var(--border-subtle)] text-muted hover:text-neutral hover:border-[var(--text-neutral)] transition-all font-bold tracking-widest uppercase text-sm"
+            >
+              {editingEntity ? 'Save' : 'Create'}
+            </button>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 rounded-full border border-[var(--border-subtle)] text-muted hover:text-neutral hover:border-[var(--text-neutral)] transition-all font-bold tracking-widest uppercase text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+
+        </div>
       </div>
     </div>
   );

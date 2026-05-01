@@ -10,6 +10,7 @@ import { EntityProvider } from './context/EntityContext'
 import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
 import StructuredPlan from './pages/StructuredPlan'
+import EntityDetails from './pages/EntityDetails'
 
 export default function App() {
     return <>
@@ -27,7 +28,7 @@ export default function App() {
 
                             <Route path='/' element={<>home</>} />
                             <Route path='/entities' element={<>entities</>} />
-                            <Route path='/entities/:id' element={<>entity typeshi</>} />
+                            <Route path='/entities/:id' element={<EntityDetails />} />
                             <Route path='/activities' element={<>activities</>} />
                             <Route path='/activities/create' element={<CreateActivity />} />
                             <Route path='/activities/:id/edit' element={<EditActivity />} />
