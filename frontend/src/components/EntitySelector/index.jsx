@@ -14,11 +14,11 @@ const MOCK_ENTITIES = [
     { id: 'g3', name: 'owrplan gng', type: 'group', color: '#5E5AB2' },
 ];
 
-export default function EntitySelector({ 
-    selectedIds = [], 
-    onChange, 
+export default function EntitySelector({
+    selectedIds = [],
+    onChange,
     variant = 'standalone',
-    maxVisible = 4 
+    maxVisible = 4
 }) {
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
@@ -39,14 +39,14 @@ export default function EntitySelector({
 
     return (
         <>
-            <div 
+            <div
                 onClick={() => setIsOverlayOpen(true)}
                 className={`
                     cursor-pointer transition-all duration-300
-                    ${variant === 'table' 
-                        ? 'p-2 border border-transparent hover:bg-white/5 rounded-2xl' 
-                        : 'w-full bg-[var(--bg-raised)] rounded-[2.5rem] p-10 pt-14 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30'}
-                    min-h-[120px] flex items-center justify-center
+                    ${variant === 'table'
+                        ? 'p-2 border border-transparent hover:bg-white/5 rounded-2xl'
+                        : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30'}
+                    min-h-[80px] flex items-center 
                 `}
             >
                 {selectedEntities.length === 0 ? (
@@ -54,9 +54,9 @@ export default function EntitySelector({
                         Click to choose entities
                     </div>
                 ) : (
-                    <div className="flex flex-wrap gap-4 items-center justify-center w-full">
+                    <div className="flex flex-wrap gap-2 w-full">
                         {visibleEntities.map(entity => (
-                            <EntityChip 
+                            <EntityChip
                                 key={entity.id}
                                 name={entity.name}
                                 color={entity.color}
@@ -65,7 +65,7 @@ export default function EntitySelector({
                             />
                         ))}
                         {remainingCount > 0 && (
-                            <span className="text-muted font-bold text-sm pl-2">
+                            <span className="text-muted font-bold text-xs pl-1 self-center">
                                 +{remainingCount} others
                             </span>
                         )}
@@ -73,7 +73,7 @@ export default function EntitySelector({
                 )}
             </div>
 
-            <SelectionOverlay 
+            <SelectionOverlay
                 isOpen={isOverlayOpen}
                 onClose={() => setIsOverlayOpen(false)}
                 selectedIds={selectedIds}

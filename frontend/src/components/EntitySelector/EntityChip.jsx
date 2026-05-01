@@ -24,7 +24,7 @@ export default function EntityChip({
 }) {
     // Inner chip styles
     // Removed hover:scale-105 from here to handle it at the top level
-    const chipBaseClasses = `relative flex items-center gap-2 px-4 py-1.5 rounded-full transition-all duration-300 whitespace-nowrap text-sm font-bold shadow-sm select-none overflow-hidden`;
+    const chipBaseClasses = `relative flex items-center gap-1.5 px-3 py-1 rounded-full transition-all duration-300 whitespace-nowrap text-xs font-bold shadow-sm select-none overflow-hidden`;
     
     const chipStyles = isSelected 
         ? { backgroundColor: color, color: '#fff', border: `2px solid ${color}` }
@@ -57,7 +57,7 @@ export default function EntityChip({
     // Ensure both types have the same footprint
     return (
         <div 
-            className={`${wrapperClasses} p-[3px] border-2 ${isGroup ? '' : 'border-transparent'}`}
+            className={`${wrapperClasses} p-[2px] border-2 ${isGroup ? '' : 'border-transparent'}`}
             style={isGroup ? { borderColor: color } : {}}
             onClick={onClick}
         >

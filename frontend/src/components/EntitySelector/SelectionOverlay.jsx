@@ -42,7 +42,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
     const handleDragStart = (e, index) => {
         setDraggedItem(index);
         e.dataTransfer.effectAllowed = 'move';
-        
+
         // Hide the default browser "ghost" image
         const img = new Image();
         img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
@@ -52,12 +52,12 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
     const handleDragOver = (e, index) => {
         e.preventDefault();
         if (draggedItem === null || draggedItem === index) return;
-        
+
         // Reorder immediately
         const newSections = [...sections];
         const [movedItem] = newSections.splice(draggedItem, 1);
         newSections.splice(index, 0, movedItem);
-        
+
         setDraggedItem(index);
         setSections(newSections);
     };
@@ -92,7 +92,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
 
                 {/* Header Area */}
                 <div className="pt-6 pb-2 flex flex-col items-center">
-                    <h2 className="text-[42px] font-normal text-[#DC8379] tracking-normal text-center mb-2" style={{ fontFamily: 'cursive' }}>
+                    <h2 className="text-[28px] sm:text-[42px] font-normal text-[#DC8379] tracking-normal text-center mb-2" style={{ fontFamily: 'cursive' }}>
                         Select Entities
                     </h2>
 
@@ -167,7 +167,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                                             </svg>
                                         </div>
 
-                                        <h3 className="text-[24px] font-normal text-[#DC8379] tracking-wide flex-1" style={{ fontFamily: 'cursive' }}>
+                                        <h3 className="text-[18px] sm:text-[24px] font-normal text-[#DC8379] tracking-wide flex-1" style={{ fontFamily: 'cursive' }}>
                                             {section.title}
                                         </h3>
 
@@ -188,7 +188,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                                     </div>
 
                                     {/* Chips Area */}
-                                    <div className={`flex items-start gap-4 px-8 overflow-hidden transition-all duration-500 rounded-b-[20px] ${isExpanded ? 'opacity-100 bg-black/20 pt-4 pb-8 max-h-[1000px]' : 'max-h-0 opacity-0 pt-0 pb-0'}`}>
+                                    <div className={`flex items-start gap-2 md:gap-4 px-3 md:px-8 overflow-hidden transition-all duration-500 rounded-b-[20px] ${isExpanded ? 'opacity-100 bg-black/20 pt-4 pb-8 max-h-[1000px]' : 'max-h-0 opacity-0 pt-0 pb-0'}`}>
                                         {/* ∀ (Select All) Button */}
                                         <button
                                             onClick={(e) => {
@@ -201,7 +201,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                                             <span className="text-lg font-bold leading-none">∀</span>
                                         </button>
 
-                                        <div className="flex flex-wrap gap-x-3 gap-y-4 flex-1">
+                                        <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
                                             {sectionEntities.map(entity => (
                                                 <EntityChip
                                                     key={entity.id}

@@ -2,12 +2,15 @@ import { useState, useEffect, useRef } from 'react';
 
 const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" }) => {
     const scrollRef = useRef(null);
-    const itemHeight = 56; // 3.5rem (56px) for larger touch targets
+    const itemHeight = 56;
     const isScrolling = useRef(false);
     const scrollTimeout = useRef(null);
+    const isDragging = useRef(false);
+    const startY = useRef(0);
+    const startScrollTop = useRef(0);
 
     useEffect(() => {
-        if (scrollRef.current && !isScrolling.current) {
+        if (scrollRef.current && !isScrolling.current && !isDragging.current) {
             const index = items.indexOf(value);
             if (index !== -1) {
                 scrollRef.current.scrollTop = index * itemHeight;
@@ -16,6 +19,7 @@ const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" 
     }, [value, items]);
 
     const handleScroll = (e) => {
+        if (isDragging.current) return;
         isScrolling.current = true;
         clearTimeout(scrollTimeout.current);
         
@@ -31,11 +35,42 @@ const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" 
         }, 150);
     };
 
+    const handleMouseDown = (e) => {
+        isDragging.current = true;
+        startY.current = e.pageY;
+        startScrollTop.current = scrollRef.current.scrollTop;
+        scrollRef.current.style.scrollSnapType = 'none';
+        scrollRef.current.style.cursor = 'grabbing';
+    };
+
+    const handleMouseMove = (e) => {
+        if (!isDragging.current) return;
+        const delta = startY.current - e.pageY;
+        scrollRef.current.scrollTop = startScrollTop.current + delta;
+    };
+
+    const handleMouseUp = () => {
+        if (!isDragging.current) return;
+        isDragging.current = false;
+        scrollRef.current.style.scrollSnapType = 'y mandatory';
+        scrollRef.current.style.cursor = 'grab';
+        
+        const index = Math.round(scrollRef.current.scrollTop / itemHeight);
+        if (index >= 0 && index < items.length) {
+            onChange(items[index]);
+            scrollRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+        }
+    };
+
     return (
         <div 
             ref={scrollRef}
             onScroll={handleScroll}
-            className={`h-[168px] ${width} overflow-y-scroll snap-y snap-mandatory relative text-[2.5rem] font-bold [&::-webkit-scrollbar]:hidden`}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            className={`h-[168px] ${width} overflow-y-scroll snap-y snap-mandatory relative text-[2.5rem] font-bold [&::-webkit-scrollbar]:hidden select-none cursor-grab active:cursor-grabbing`}
             style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
         >
             <div style={{ height: itemHeight }} className="w-full shrink-0" />
@@ -48,10 +83,6 @@ const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" 
                             ? 'text-primary scale-110 opacity-100' 
                             : 'text-muted opacity-40 hover:opacity-70 scale-90'
                     }`}
-                    onClick={() => {
-                        const index = items.indexOf(item);
-                        scrollRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
-                    }}
                 >
                     {item}
                 </div>
@@ -101,7 +132,7 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     };
 
     const pickerContent = (
-        <div className="flex flex-col items-center gap-4 w-full sm:w-auto">
+        <div className="flex flex-col items-center gap-4 w-full sm:w-auto select-none">
             {/* The Main Pill Container */}
             <div className="relative flex items-center justify-center gap-2 sm:gap-4 bg-[var(--bg-accent)]/20 px-6 py-4 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-[var(--border-subtle)]/40 shadow-xl shadow-[var(--bg-primary)] backdrop-blur-sm overflow-hidden w-full sm:w-auto">
                 
@@ -149,7 +180,7 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
             {/* Helper Text */}
             {!hideHelperText && (
                 <div className="text-muted text-sm font-medium flex items-center gap-2 opacity-80">
-                    Scroll or click to select time
+                    Scroll or drag to select time
                 </div>
             )}
             
@@ -167,7 +198,7 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     if (inline) return pickerContent;
 
     return (
-        <div className="relative inline-block w-full sm:w-auto">
+        <div className="relative inline-block w-full sm:w-auto select-none">
             <button
                 onClick={() => setIsOpen(true)}
                 className={`flex items-center gap-4 px-6 py-4 w-full sm:w-[16rem] rounded-[1.5rem] sm:rounded-full border transition-all cursor-pointer ${isOpen
@@ -200,4 +231,3 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
         </div>
     );
 }
-

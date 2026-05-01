@@ -22,13 +22,13 @@ export default function Breadcrumbs() {
     if (location.pathname === '/') return null;
 
     return (
-        <nav className="flex items-center gap-3 py-4 px-6 animate-in fade-in duration-500 overflow-x-auto no-scrollbar" aria-label="Breadcrumb">
-            <Link 
-                to="/" 
+        <nav className="flex items-center gap-3 pt-4 px-6 animate-in fade-in duration-500 overflow-x-auto no-scrollbar" aria-label="Breadcrumb">
+            <Link
+                to="/"
                 className="flex items-center gap-2 text-[#DC8379]/60 hover:text-[#f97766] transition-colors"
             >
                 <HomeIcon />
-                <span className="text-sm font-bold uppercase tracking-widest pt-0.5">OwrPlan</span>
+                <span className="text-sm font-bold tracking-widest pt-0.5">OwrPlan</span>
             </Link>
 
             {pathnames.map((value, index) => {
@@ -40,16 +40,16 @@ export default function Breadcrumbs() {
                     <React.Fragment key={to}>
                         <ChevronRight />
                         {last ? (
-                            <span 
+                            <span
                                 className="text-[#f97766] font-bold text-lg"
                                 style={{ fontFamily: 'cursive' }}
                             >
-                                {displayName}
+                                {displayName.toLowerCase()}
                             </span>
                         ) : (
-                            <Link 
-                                to={to} 
-                                className="text-[#DC8379]/60 hover:text-[#f97766] transition-colors font-medium text-lg capitalize"
+                            <Link
+                                to={to}
+                                className="text-[#DC8379]/60 hover:text-[#f97766] transition-colors font-medium text-lg"
                                 style={{ fontFamily: 'cursive' }}
                             >
                                 {displayName}

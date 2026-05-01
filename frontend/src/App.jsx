@@ -9,6 +9,7 @@ import DateTimeRangePicker from './components/DateTimeRangePicker'
 import { EntityProvider } from './context/EntityContext'
 import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
+import StructuredPlan from './pages/StructuredPlan'
 
 export default function App() {
     return <>
@@ -34,6 +35,7 @@ export default function App() {
 
                             <Route path='/visualize' element={<>schedule visualization here</>} />
                             <Route path='/plan' element={<Plan />} />
+                            <Route path='/plan/structured' element={<StructuredPlan />} />
                             <Route path='/ledgers' element={<>list of expense ledgers page</>} />
                             <Route path='/ledgers/:id' element={<>ledger typeshi</>} />
 
