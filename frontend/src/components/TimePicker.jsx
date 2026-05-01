@@ -1,18 +1,74 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-const UpArrow = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m18 15-6-6-6 6" />
+const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" }) => {
+    const scrollRef = useRef(null);
+    const itemHeight = 56; // 3.5rem (56px) for larger touch targets
+    const isScrolling = useRef(false);
+    const scrollTimeout = useRef(null);
+
+    useEffect(() => {
+        if (scrollRef.current && !isScrolling.current) {
+            const index = items.indexOf(value);
+            if (index !== -1) {
+                scrollRef.current.scrollTop = index * itemHeight;
+            }
+        }
+    }, [value, items]);
+
+    const handleScroll = (e) => {
+        isScrolling.current = true;
+        clearTimeout(scrollTimeout.current);
+        
+        const index = Math.round(e.target.scrollTop / itemHeight);
+        if (index >= 0 && index < items.length) {
+            if (items[index] !== value) {
+                onChange(items[index]);
+            }
+        }
+
+        scrollTimeout.current = setTimeout(() => {
+            isScrolling.current = false;
+        }, 150);
+    };
+
+    return (
+        <div 
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className={`h-[168px] ${width} overflow-y-scroll snap-y snap-mandatory relative text-[2.5rem] font-bold [&::-webkit-scrollbar]:hidden`}
+            style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+        >
+            <div style={{ height: itemHeight }} className="w-full shrink-0" />
+            {items.map((item) => (
+                <div 
+                    key={item} 
+                    style={{ height: itemHeight }}
+                    className={`w-full flex items-center justify-${align === 'center' ? 'center' : align === 'left' ? 'start' : 'end'} shrink-0 snap-center transition-all duration-200 cursor-pointer tabular-nums ${
+                        value === item 
+                            ? 'text-primary scale-110 opacity-100' 
+                            : 'text-muted opacity-40 hover:opacity-70 scale-90'
+                    }`}
+                    onClick={() => {
+                        const index = items.indexOf(item);
+                        scrollRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
+                    }}
+                >
+                    {item}
+                </div>
+            ))}
+            <div style={{ height: itemHeight }} className="w-full shrink-0" />
+        </div>
+    );
+};
+
+const ClockIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
     </svg>
 );
 
-const DownArrow = () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m6 9 6 6 6-6" />
-    </svg>
-);
-
-export default function TimePicker({ initialTime = "08:59 AM", onChange }) {
+export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHelperText = false, inline = false }) {
     const parseTime = (timeStr) => {
         try {
             const [time, p] = timeStr.split(' ');
@@ -27,15 +83,14 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange }) {
         }
     };
 
-    const [time, setTime] = useState(() => parseTime(initialTime));
+    const hours = Array.from({ length: 12 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+    const minutes = Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0'));
+    const periods = ['AM', 'PM'];
 
-    // Controlled inputs for text editing
-    const [hourInput, setHourInput] = useState(time.hour.toString().padStart(2, '0'));
-    const [minuteInput, setMinuteInput] = useState(time.minute.toString().padStart(2, '0'));
+    const [time, setTime] = useState(() => parseTime(initialTime));
+    const [isOpen, setIsOpen] = useState(false);
 
     useEffect(() => {
-        setHourInput(time.hour.toString().padStart(2, '0'));
-        setMinuteInput(time.minute.toString().padStart(2, '0'));
         if (onChange) {
             onChange(`${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')} ${time.period}`);
         }
@@ -45,144 +100,101 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange }) {
         setTime(prev => ({ ...prev, ...updates }));
     };
 
-    const incHour = () => updateTime({ hour: time.hour === 12 ? 1 : time.hour + 1 });
-    const decHour = () => updateTime({ hour: time.hour === 1 ? 12 : time.hour - 1 });
-    const incMinute = () => updateTime({ minute: time.minute === 59 ? 0 : time.minute + 1 });
-    const decMinute = () => updateTime({ minute: time.minute === 0 ? 59 : time.minute - 1 });
-
-    const handleHourBlur = () => {
-        let h = parseInt(hourInput, 10);
-        if (isNaN(h) || h < 1) h = 12;
-        if (h > 12) h = 12;
-        updateTime({ hour: h });
-    };
-
-    const handleMinuteBlur = () => {
-        let m = parseInt(minuteInput, 10);
-        if (isNaN(m) || m < 0) m = 0;
-        if (m > 59) m = 59;
-        updateTime({ minute: m });
-    };
-
-    const handleHourKeyDown = (e) => {
-        if (e.key === 'ArrowUp') { e.preventDefault(); incHour(); }
-        if (e.key === 'ArrowDown') { e.preventDefault(); decHour(); }
-    };
-
-    const handleMinuteKeyDown = (e) => {
-        if (e.key === 'ArrowUp') { e.preventDefault(); incMinute(); }
-        if (e.key === 'ArrowDown') { e.preventDefault(); decMinute(); }
-    };
-
-    const handleHourWheel = (e) => {
-        // Prevent page scroll when hovering over inputs
-        e.preventDefault();
-        if (e.deltaY < 0) incHour();
-        else decHour();
-    };
-
-    const handleMinuteWheel = (e) => {
-        e.preventDefault();
-        if (e.deltaY < 0) incMinute();
-        else decMinute();
-    };
-
-    return (
-        <div className="flex items-center gap-6">
+    const pickerContent = (
+        <div className="flex flex-col items-center gap-4 w-full sm:w-auto">
             {/* The Main Pill Container */}
-            <div className="flex items-center gap-4 bg-[var(--bg-accent)]/20 p-8 rounded-[2.5rem] border border-[var(--border-subtle)]/40 shadow-xl shadow-[var(--bg-primary)] backdrop-blur-sm">
+            <div className="relative flex items-center justify-center gap-2 sm:gap-4 bg-[var(--bg-accent)]/20 px-6 py-4 sm:p-8 rounded-[2rem] sm:rounded-[2.5rem] border border-[var(--border-subtle)]/40 shadow-xl shadow-[var(--bg-primary)] backdrop-blur-sm overflow-hidden w-full sm:w-auto">
+                
+                {/* Selection Highlight Background (Center row) */}
+                <div className="absolute top-1/2 left-0 w-full h-[56px] -translate-y-1/2 bg-[var(--bg-raised)] border-y border-primary/20 pointer-events-none z-0"></div>
 
-                {/* Hours Section */}
-                <div className="flex flex-col items-center gap-4">
-                    <button
-                        onClick={incHour}
-                        className="w-14 h-8 flex items-center justify-center rounded-xl border border-[var(--border-subtle)] text-muted hover:text-neutral hover:bg-[var(--bg-raised)] transition-all cursor-pointer active:scale-95"
-                        aria-label="Increment hour"
-                    >
-                        <UpArrow />
-                    </button>
-
-                    <input
-                        type="text"
-                        value={hourInput}
-                        onChange={(e) => setHourInput(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                        onBlur={handleHourBlur}
-                        onKeyDown={handleHourKeyDown}
-                        onWheel={handleHourWheel}
-                        className="w-16 text-center text-[3.25rem] font-bold text-primary bg-transparent outline-none tabular-nums tracking-tighter"
+                <div className="z-10 flex items-center gap-2 sm:gap-4">
+                    {/* Hours */}
+                    <WheelColumn 
+                        items={hours} 
+                        value={time.hour.toString().padStart(2, '0')} 
+                        onChange={(val) => updateTime({ hour: parseInt(val, 10) })}
+                        width="w-16 sm:w-20"
+                        align="center"
                     />
 
-                    <button
-                        onClick={decHour}
-                        className="w-14 h-8 flex items-center justify-center rounded-xl border border-[var(--border-subtle)] text-muted hover:text-neutral hover:bg-[var(--bg-raised)] transition-all cursor-pointer active:scale-95"
-                        aria-label="Decrement hour"
-                    >
-                        <DownArrow />
-                    </button>
-                </div>
+                    {/* Separator Colon */}
+                    <div className="text-primary text-[2.5rem] font-bold opacity-80 pb-2">:</div>
 
-                {/* Separator Colon */}
-                <div className="text-primary text-[3.25rem] font-bold pb-2 opacity-80 animate-pulse">:</div>
-
-                {/* Minutes Section */}
-                <div className="flex flex-col items-center gap-4">
-                    <button
-                        onClick={incMinute}
-                        className="w-14 h-8 flex items-center justify-center rounded-xl border border-[var(--border-subtle)] text-muted hover:text-neutral hover:bg-[var(--bg-raised)] transition-all cursor-pointer active:scale-95"
-                        aria-label="Increment minute"
-                    >
-                        <UpArrow />
-                    </button>
-
-                    <input
-                        type="text"
-                        value={minuteInput}
-                        onChange={(e) => setMinuteInput(e.target.value.replace(/\D/g, '').slice(0, 2))}
-                        onBlur={handleMinuteBlur}
-                        onKeyDown={handleMinuteKeyDown}
-                        onWheel={handleMinuteWheel}
-                        className="w-16 text-center text-[3.25rem] font-bold text-primary bg-transparent outline-none tabular-nums tracking-tighter"
+                    {/* Minutes */}
+                    <WheelColumn 
+                        items={minutes} 
+                        value={time.minute.toString().padStart(2, '0')} 
+                        onChange={(val) => updateTime({ minute: parseInt(val, 10) })}
+                        width="w-16 sm:w-20"
+                        align="center"
                     />
 
-                    <button
-                        onClick={decMinute}
-                        className="w-14 h-8 flex items-center justify-center rounded-xl border border-[var(--border-subtle)] text-muted hover:text-neutral hover:bg-[var(--bg-raised)] transition-all cursor-pointer active:scale-95"
-                        aria-label="Decrement minute"
-                    >
-                        <DownArrow />
-                    </button>
-                </div>
+                    {/* Divider Line */}
+                    <div className="h-16 w-px bg-[var(--border-subtle)] opacity-40 mx-2 rounded-full hidden sm:block"></div>
 
-                {/* Divider Line */}
-                <div className="h-20 w-px bg-[var(--border-subtle)] opacity-40 mx-2 rounded-full"></div>
-
-                {/* AM/PM Toggles */}
-                <div className="flex flex-col gap-3">
-                    <button
-                        onClick={() => updateTime({ period: 'AM' })}
-                        className={`w-16 py-2.5 rounded-xl font-bold text-sm tracking-wider transition-all border cursor-pointer active:scale-95 ${time.period === 'AM'
-                                ? 'bg-white text-[var(--bg-primary)] border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'text-white border-[var(--border-subtle)] hover:border-white/50 hover:bg-white/5'
-                            }`}
-                    >
-                        AM
-                    </button>
-                    <button
-                        onClick={() => updateTime({ period: 'PM' })}
-                        className={`w-16 py-2.5 rounded-xl font-bold text-sm tracking-wider transition-all border cursor-pointer active:scale-95 ${time.period === 'PM'
-                                ? 'bg-white text-[var(--bg-primary)] border-white shadow-[0_0_15px_rgba(255,255,255,0.2)]'
-                                : 'text-white border-[var(--border-subtle)] hover:border-white/50 hover:bg-white/5'
-                            }`}
-                    >
-                        PM
-                    </button>
+                    {/* AM/PM */}
+                    <div className="flex flex-col gap-2 ml-2 sm:ml-0">
+                        <WheelColumn 
+                            items={periods} 
+                            value={time.period} 
+                            onChange={(val) => updateTime({ period: val })}
+                            width="w-14 sm:w-16"
+                            align="center"
+                        />
+                    </div>
                 </div>
             </div>
 
             {/* Helper Text */}
-            <div className="text-muted text-sm font-medium flex items-center gap-2 opacity-80 pl-2">
-                <span>&larr;</span> Scroll, click arrows, or type
-            </div>
+            {!hideHelperText && (
+                <div className="text-muted text-sm font-medium flex items-center gap-2 opacity-80">
+                    Scroll or click to select time
+                </div>
+            )}
+            
+            {!inline && (
+                 <div className="mt-2 flex items-start w-full">
+                     <button onClick={() => setIsOpen(false)} className="w-full px-6 py-3.5 rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer">Done</button>
+                 </div>
+            )}
+        </div>
+    );
+
+    if (inline) return pickerContent;
+
+    return (
+        <div className="relative inline-block w-full sm:w-auto">
+            <button
+                onClick={() => setIsOpen(true)}
+                className={`flex items-center gap-4 px-6 py-4 w-full sm:w-[16rem] rounded-[1.5rem] sm:rounded-full border transition-all cursor-pointer ${isOpen
+                        ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]'
+                        : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
+                    }`}
+            >
+                <ClockIcon />
+                <div className="text-left flex flex-col">
+                    <span className="font-bold text-[15px] leading-tight tracking-wide">{time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')}</span>
+                    <span className="text-muted text-xs font-semibold">{time.period}</span>
+                </div>
+            </button>
+
+            {isOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md" ref={(el) => {
+                        if (el) {
+                            const handler = (e) => {
+                                if (e.target === el.parentElement) setIsOpen(false);
+                            };
+                            el.parentElement.addEventListener('mousedown', handler);
+                            return () => el.parentElement.removeEventListener('mousedown', handler);
+                        }
+                    }}>
+                        {pickerContent}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
+

@@ -57,11 +57,11 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
     };
 
     return (
-        <div className="relative inline-block" ref={containerRef}>
-            <div className="flex items-center gap-3">
+        <div className="relative inline-block w-full sm:w-auto" ref={containerRef}>
+            <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className={`flex items-center gap-4 px-5 py-3 w-[26rem] rounded-full border transition-all cursor-pointer ${isOpen
+                    className={`flex items-center gap-4 px-6 py-4 w-full sm:w-[26rem] rounded-[1.5rem] sm:rounded-full border transition-all cursor-pointer ${isOpen
                             ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]'
                             : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
                         }`}
@@ -72,32 +72,43 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
                         <span className="text-muted text-xs font-semibold">{dateTimeState.time}</span>
                     </div>
                 </button>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <button
+                        onClick={() => {
+                            const today = new Date();
+                            setDateTimeState({ date: today, time: "12:00 PM" });
+                            if (onChange) onChange({ date: today, time: "12:00 PM" });
+                        }}
+                        className="w-12 h-12 flex shrink-0 items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white hover:border-white/40 transition-all cursor-pointer"
+                        aria-label="Clear"
+                    >
+                        <XIcon />
+                    </button>
 
-                <button
-                    onClick={() => {
-                        const today = new Date();
-                        setDateTimeState({ date: today, time: "12:00 PM" });
-                        if (onChange) onChange({ date: today, time: "12:00 PM" });
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white hover:border-white/40 transition-all cursor-pointer"
-                    aria-label="Clear"
-                >
-                    <XIcon />
-                </button>
-
-                <button
-                    onClick={() => {
-                        setIsOpen(false);
-                        if (onChange) onChange(dateTimeState);
-                    }}
-                    className="px-6 h-10 flex items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white font-bold hover:border-white/40 transition-all cursor-pointer"
-                >
-                    Set
-                </button>
+                    <button
+                        onClick={() => {
+                            setIsOpen(false);
+                            if (onChange) onChange(dateTimeState);
+                        }}
+                        className="px-6 py-3 w-full sm:w-auto flex items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white font-bold hover:border-white/40 transition-all cursor-pointer"
+                    >
+                        Set
+                    </button>
+                </div>
             </div>
 
             {isOpen && (
-                <div className="absolute top-[calc(100%+1rem)] left-0 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
+                        // Handle click outside on the modal wrapper
+                        if (el) {
+                            const handler = (e) => {
+                                if (e.target === el.parentElement) setIsOpen(false);
+                            };
+                            el.parentElement.addEventListener('mousedown', handler);
+                            return () => el.parentElement.removeEventListener('mousedown', handler);
+                        }
+                    }}>
                     <DateTimePickerSinglePanel
                         dateTimeState={dateTimeState}
                         setDateTimeState={setDateTimeState}
@@ -106,6 +117,7 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
                             if (onChange) onChange(dateTimeState);
                         }}
                     />
+                    </div>
                 </div>
             )}
         </div>
@@ -172,7 +184,7 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
     };
 
     return (
-        <div className="flex flex-row gap-8 bg-[var(--bg-raised)]/90 p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row gap-8 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
 
             {/* Calendar Side */}
             <div className="flex flex-col gap-6 w-[17rem] pt-2">
@@ -206,7 +218,7 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
             </div>
 
             {/* Divider */}
-            <div className="w-px bg-[var(--border-subtle)] opacity-40 my-2 rounded-full"></div>
+            <div className="w-full h-px sm:w-px sm:h-auto bg-[var(--border-subtle)] opacity-40 my-4 sm:my-2 rounded-full"></div>
 
             {/* TimePicker Side */}
             <div className="flex flex-col justify-between">
@@ -218,6 +230,7 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
                         initialTime={dateTimeState.time}
                         onChange={handleTimeChange}
                         hideHelperText={true}
+                        inline={true}
                     />
                 </div>
 
@@ -225,7 +238,7 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
                 <div className="mt-6 flex items-start pl-2">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
+                        className="px-6 py-3.5 w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                         Done
                     </button>

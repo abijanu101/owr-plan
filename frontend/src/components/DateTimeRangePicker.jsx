@@ -85,16 +85,16 @@ export default function DateTimeRangePicker() {
     };
 
     return (
-        <div className="relative inline-block" ref={containerRef}>
+        <div className="relative inline-block w-full sm:w-auto" ref={containerRef}>
             {/* Top Bar */}
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
                 
                 {/* FROM */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
                     <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">From</span>
                     <button 
                         onClick={() => setActiveTab(activeTab === 'start' ? null : 'start')}
-                        className={`flex items-center gap-4 px-6 py-3 rounded-full border transition-all cursor-pointer ${
+                        className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
                             activeTab === 'start' 
                                 ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
                                 : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
@@ -109,16 +109,16 @@ export default function DateTimeRangePicker() {
                 </div>
 
                 {/* Arrow */}
-                <div className="text-muted mt-6 opacity-60">
+                <div className="text-muted sm:mt-6 opacity-60 rotate-90 sm:rotate-0">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
                 </div>
 
                 {/* TO */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 w-full sm:w-auto">
                     <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">To</span>
                     <button 
                         onClick={() => setActiveTab(activeTab === 'end' ? null : 'end')}
-                        className={`flex items-center gap-4 px-6 py-3 rounded-full border transition-all cursor-pointer ${
+                        className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
                             activeTab === 'end' 
                                 ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
                                 : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
@@ -133,14 +133,24 @@ export default function DateTimeRangePicker() {
                 </div>
 
                 {/* Duration Badge */}
-                <div className="mt-6 flex items-center justify-center px-5 py-2 rounded-full border border-[var(--border-subtle)] bg-[var(--bg-raised)] text-primary text-sm font-bold shadow-sm">
+                <div className="sm:mt-6 flex items-center justify-center px-6 py-3 w-full sm:w-auto rounded-full border border-[var(--border-subtle)] bg-[var(--bg-raised)] text-primary text-sm font-bold shadow-sm">
                     {calculateDuration()}
                 </div>
             </div>
 
             {/* Popover */}
             {activeTab && (
-                <div className="absolute top-[calc(100%+1.5rem)] left-0 z-50 animate-in fade-in slide-in-from-top-4 duration-200">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
+                        // Handle click outside on the modal wrapper
+                        if (el) {
+                            const handler = (e) => {
+                                if (e.target === el.parentElement) setActiveTab(null);
+                            };
+                            el.parentElement.addEventListener('mousedown', handler);
+                            return () => el.parentElement.removeEventListener('mousedown', handler);
+                        }
+                    }}>
                     <DateTimePickerPanel 
                         key={activeTab}
                         type={activeTab} 
@@ -148,6 +158,7 @@ export default function DateTimeRangePicker() {
                         setDateTimeState={activeTab === 'start' ? setStartDateTime : setEndDateTime}
                         onClose={() => setActiveTab(null)}
                     />
+                    </div>
                 </div>
             )}
         </div>
@@ -215,7 +226,7 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
     };
 
     return (
-        <div className="flex flex-row gap-8 bg-[var(--bg-raised)]/90 p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
+        <div className="flex flex-col sm:flex-row gap-8 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
             
             {/* Calendar Side */}
             <div className="flex flex-col gap-6 w-[17rem] pt-2">
@@ -249,7 +260,7 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
             </div>
 
             {/* Divider */}
-            <div className="w-px bg-[var(--border-subtle)] opacity-40 my-2 rounded-full"></div>
+            <div className="w-full h-px sm:w-px sm:h-auto bg-[var(--border-subtle)] opacity-40 my-4 sm:my-2 rounded-full"></div>
 
             {/* TimePicker Side */}
             <div className="flex flex-col justify-between">
@@ -261,6 +272,7 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
                         initialTime={dateTimeState.time} 
                         onChange={handleTimeChange} 
                         hideHelperText={true} 
+                        inline={true}
                     />
                 </div>
                 
@@ -268,7 +280,7 @@ function DateTimePickerPanel({ type, dateTimeState, setDateTimeState, onClose })
                 <div className="mt-6 flex items-start pl-2">
                     <button 
                         onClick={onClose}
-                        className="px-6 py-2.5 rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
+                        className="px-6 py-3.5 w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                         Done
                     </button>
