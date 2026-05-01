@@ -22,26 +22,35 @@ const entitySchema = new mongoose.Schema({
 
   color: {
     type: String,
-    default: "#000000"
+    default: "var(--color-primary)"
   },
 
   faceIcon: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon",
-    default: null
+    type: String,
+    default: "face/happy.svg"
   },
 
-  accessories: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon"
-  }],
-//enforcethat group cant reference groups inside in backend logic 
+  accessories: {
+    type: [String],
+    default: []
+  },
+
   members: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Entity"
+    ref: "Entity",
+    default: []
+  }],
+
+  groups: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Entity",
+    default: []
   }]
 
 }, { timestamps: true });
+
+// UNIQUE (userId + name)
+entitySchema.index({ userId: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Entity", entitySchema);
 
