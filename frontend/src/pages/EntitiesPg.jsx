@@ -1,50 +1,43 @@
 import { useState, useEffect } from 'react';
-import { getEntities, createEntity, updateEntity, deleteEntity, addMemberToGroup, removeMemberFromGroup, getGroupMembers, getActivitiesForEntity, createActivity, getIcons } from '../services/api';
-
+import { useNavigate } from 'react-router-dom';
+import { getEntities, createEntity, getIcons } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import EntityCard from '../components/EntityCard';
+import AddEntityModal from '../components/AddEntityModal';
 export default function EntitiesPg() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
     const [entities, setEntities] = useState([]);
     const [icons, setIcons] = useState([]);
-    const [activities, setActivities] = useState([]);
     const [selectedTab, setSelectedTab] = useState('person');
-    const [selectedEntity, setSelectedEntity] = useState(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showActivityModal, setShowActivityModal] = useState(false);
-    const [newEntity, setNewEntity] = useState({ name: '', type: 'person', faceIcon: '', accessories: [] });
-    const [newActivity, setNewActivity] = useState({ title: '', description: '', date: '', entityId: '' });
+    const [newEntity, setNewEntity] = useState({ name: '', type: 'person', faceIcon: '', accessory: '', addons: [] });
+    const [error, setError] = useState('');
 
     useEffect(() => {
+        if (!user) {
+            navigate('/login');
+            return;
+        }
         fetchEntities();
         fetchIcons();
-    }, []);
-
-    useEffect(() => {
-        if (selectedEntity) {
-            fetchActivities(selectedEntity._id);
-        }
-    }, [selectedEntity]);
+    }, [user, navigate]);
 
     const fetchEntities = async () => {
         try {
-            const data = await getEntities();
-            setEntities(data);
+            const response = await getEntities();
+            setEntities(response.data || []);
+            setError('');
         } catch (error) {
             console.error(error);
+            setError('Failed to load entities. Please try again.');
         }
     };
 
     const fetchIcons = async () => {
         try {
-            const data = await getIcons();
-            setIcons(data);
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
-    const fetchActivities = async (entityId) => {
-        try {
-            const data = await getActivitiesForEntity(entityId);
-            setActivities(data);
+            const response = await getIcons();
+            setIcons(response.data || []);
         } catch (error) {
             console.error(error);
         }
@@ -56,204 +49,101 @@ export default function EntitiesPg() {
                 ...newEntity,
                 type: selectedTab,
                 faceIcon: newEntity.faceIcon || null,
-                accessories: newEntity.accessories
+                accessory: newEntity.accessory || null,
+                addons: Array.isArray(newEntity.addons) ? newEntity.addons : []
             };
             await createEntity(entityData);
             setShowCreateModal(false);
-            setNewEntity({ name: '', type: 'person', faceIcon: '', accessories: [] });
+            setNewEntity({ name: '', type: 'person', faceIcon: '', accessory: '', addons: [] });
             fetchEntities();
         } catch (error) {
             console.error(error);
+            setError('Failed to create entity.');
         }
     };
 
-    const handleCreateActivity = async () => {
-        try {
-            await createActivity({ ...newActivity, entityId: selectedEntity._id });
-            setShowActivityModal(false);
-            setNewActivity({ title: '', description: '', date: '', entityId: '' });
-            fetchActivities(selectedEntity._id);
-        } catch (error) {
-            console.error(error);
-        }
-    };
+    if (!user) {
+        return <div>Please log in to access this page.</div>;
+    }
 
     const faceIcons = icons.filter(icon => icon.type === 'face');
     const accessoryIcons = icons.filter(icon => icon.type === 'accessory');
+    const addonIcons = icons.filter(icon => icon.type === 'addon');
 
-    const filteredEntities = entities.filter(e => e.type === selectedTab);
-
-    const renderIcon = (entity) => {
-        if (!entity.faceIcon && (!entity.accessories || entity.accessories.length === 0)) {
-            return <div className="w-16 h-16 bg-gray-200 flex items-center justify-center">No Icon</div>;
-        }
-        return (
-            <div className="w-16 h-16 relative">
-                {entity.faceIcon && <div dangerouslySetInnerHTML={{ __html: entity.faceIcon.filename }} className="absolute inset-0" />}
-                {entity.accessories?.map((acc, idx) => (
-                    <div key={idx} dangerouslySetInnerHTML={{ __html: acc.filename }} className="absolute inset-0" />
-                ))}
-            </div>
-        );
-    };
+    const filteredEntities = entities.filter((entity) => entity.type === selectedTab);
 
     return (
         <div className="p-4">
-            <h1 className="text-2xl mb-4">Entities</h1>
-
-            {/* Tabs */}
-            <div className="flex mb-4">
+            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <p className="text-sm text-muted">Entities</p>
+                    <h1 className="text-3xl font-semibold">People and Groups</h1>
+                </div>
                 <button
-                    className={`px-4 py-2 ${selectedTab === 'person' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                    onClick={() => setSelectedTab('person')}
+                    type="button"
+                    onClick={() => setShowCreateModal(true)}
+                    className="inline-flex items-center justify-center rounded-full bg-blue-500 px-5 py-3 text-white shadow-lg shadow-blue-500/20 hover:bg-blue-600"
                 >
-                    Person
-                </button>
-                <button
-                    className={`px-4 py-2 ${selectedTab === 'group' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-                    onClick={() => setSelectedTab('group')}
-                >
-                    Group
+                    + New {selectedTab === 'person' ? 'Person' : 'Group'}
                 </button>
             </div>
 
-            {/* Create Entity Button */}
+            <div className="mb-6 flex flex-wrap gap-3">
+                <button
+                    type="button"
+                    onClick={() => setSelectedTab('person')}
+                    className={`rounded-full px-4 py-2 transition ${selectedTab === 'person' ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
+                >
+                    People
+                </button>
+                <button
+                    type="button"
+                    onClick={() => setSelectedTab('group')}
+                    className={`rounded-full px-4 py-2 transition ${selectedTab === 'group' ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/80 hover:bg-white/20'}`}
+                >
+                    Groups
+                </button>
+            </div>
+
+            {error && <div className="mb-4 rounded-3xl border border-red-200 bg-red-100/70 p-4 text-red-700">{error}</div>}
+
+            {filteredEntities.length === 0 ? (
+                <div className="rounded-[32px] border border-white/10 bg-white/5 p-10 text-center text-muted">
+                    No {selectedTab === 'person' ? 'people' : 'groups'} added yet. Click + to add one.
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {filteredEntities.map((entity) => (
+                        <EntityCard
+                            key={entity._id}
+                            entity={entity}
+                            onClick={() => navigate(`/entities/${entity._id}`)}
+                        />
+                    ))}
+                </div>
+            )}
+
             <button
-                className="mb-4 bg-green-500 text-white px-4 py-2 rounded"
+                type="button"
                 onClick={() => setShowCreateModal(true)}
+                className="fixed bottom-6 right-6 z-10 inline-flex h-16 w-16 items-center justify-center rounded-full bg-blue-500 text-3xl text-white shadow-2xl shadow-blue-500/20"
             >
-                Create {selectedTab === 'person' ? 'Person' : 'Group'}
+                +
             </button>
 
-            {/* Entity List */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {filteredEntities.map(entity => (
-                    <div
-                        key={entity._id}
-                        className={`p-4 border rounded cursor-pointer ${selectedEntity?._id === entity._id ? 'border-blue-500' : ''}`}
-                        onClick={() => setSelectedEntity(entity)}
-                    >
-                        {/* Icon */}
-                        {renderIcon(entity)}
-                        <h3 className="text-lg font-bold">{entity.name}</h3>
-                        {/* For person: show groups */}
-                        {selectedTab === 'person' && (
-                            <div>
-                                <p>Groups:</p>
-                                <ul>
-                                    {entity.members?.map(member => (
-                                        <li key={member._id}>{member.name}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                        {/* For group: show members */}
-                        {selectedTab === 'group' && (
-                            <div>
-                                <p>Members:</p>
-                                <ul>
-                                    {entity.members?.map(member => (
-                                        <li key={member._id}>{member.name}</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-
-            {/* Activities Section */}
-            {selectedEntity && (
-                <div className="mt-8">
-                    <h2 className="text-xl mb-4">Activities for {selectedEntity.name}</h2>
-                    <div className="space-y-2">
-                        {activities.map(activity => (
-                            <div key={activity._id} className="p-2 border rounded">
-                                <h4>{activity.title}</h4>
-                                <p>{activity.description}</p>
-                            </div>
-                        ))}
-                    </div>
-                    {/* Floating + Button */}
-                    <button
-                        className="fixed bottom-4 right-4 bg-blue-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-                        onClick={() => setShowActivityModal(true)}
-                    >
-                        +
-                    </button>
-                </div>
-            )}
-
-            {/* Create Entity Modal */}
-            {showCreateModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-4 rounded max-w-md w-full">
-                        <h3>Create {selectedTab}</h3>
-                        <input
-                            type="text"
-                            placeholder="Name"
-                            value={newEntity.name}
-                            onChange={(e) => setNewEntity({ ...newEntity, name: e.target.value })}
-                            className="border p-2 w-full mb-2"
-                        />
-                        <select
-                            value={newEntity.faceIcon}
-                            onChange={(e) => setNewEntity({ ...newEntity, faceIcon: e.target.value })}
-                            className="border p-2 w-full mb-2"
-                        >
-                            <option value="">Select Face Icon</option>
-                            {faceIcons.map(icon => (
-                                <option key={icon._id} value={icon._id}>{icon.filename}</option>
-                            ))}
-                        </select>
-                        <select
-                            multiple
-                            value={newEntity.accessories}
-                            onChange={(e) => {
-                                const selected = Array.from(e.target.selectedOptions, option => option.value);
-                                setNewEntity({ ...newEntity, accessories: selected });
-                            }}
-                            className="border p-2 w-full mb-2"
-                        >
-                            {accessoryIcons.map(icon => (
-                                <option key={icon._id} value={icon._id}>{icon.filename}</option>
-                            ))}
-                        </select>
-                        <button onClick={handleCreateEntity} className="bg-green-500 text-white px-4 py-2">Create</button>
-                        <button onClick={() => setShowCreateModal(false)} className="ml-2">Cancel</button>
-                    </div>
-                </div>
-            )}
-
-            {/* Create Activity Modal */}
-            {showActivityModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-4 rounded">
-                        <h3>Add Activity</h3>
-                        <input
-                            type="text"
-                            placeholder="Title"
-                            value={newActivity.title}
-                            onChange={(e) => setNewActivity({ ...newActivity, title: e.target.value })}
-                            className="border p-2 w-full mb-2"
-                        />
-                        <textarea
-                            placeholder="Description"
-                            value={newActivity.description}
-                            onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
-                            className="border p-2 w-full mb-2"
-                        />
-                        <input
-                            type="datetime-local"
-                            value={newActivity.date}
-                            onChange={(e) => setNewActivity({ ...newActivity, date: e.target.value })}
-                            className="border p-2 w-full mb-2"
-                        />
-                        <button onClick={handleCreateActivity} className="bg-blue-500 text-white px-4 py-2">Add</button>
-                        <button onClick={() => setShowActivityModal(false)} className="ml-2">Cancel</button>
-                    </div>
-                </div>
-            )}
+            <AddEntityModal
+                open={showCreateModal}
+                type={selectedTab}
+                faceIcons={faceIcons}
+                accessoryIcons={accessoryIcons}
+                addonIcons={addonIcons}
+                entityData={newEntity}
+                setEntityData={setNewEntity}
+                onCreate={handleCreateEntity}
+                onClose={() => setShowCreateModal(false)}
+                error={error}
+                existingEntities={entities}
+            />
         </div>
     );
 }

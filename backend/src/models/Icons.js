@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const iconSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ["accessory", "face", "expense"],
+    enum: ["accessory", "face", "addon", "expense"],
     required: true
   },
   filename: {

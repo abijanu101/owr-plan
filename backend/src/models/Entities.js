@@ -31,11 +31,18 @@ const entitySchema = new mongoose.Schema({
     default: null
   },
 
-  accessories: [{
+  accessory: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Icon",
+    default: null
+  },
+
+  addons: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Icon"
   }],
-//enforcethat group cant reference groups inside in backend logic 
+
+  // enforce that group cant reference groups inside in backend logic 
   members: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Entity"

@@ -6,7 +6,7 @@ const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const createEntity = async (req, res) => {
   try {
-    const { type, name, color, faceIcon, accessories, members } = req.body;
+    const { type, name, color, faceIcon, accessory, addons, members } = req.body;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -27,7 +27,8 @@ const createEntity = async (req, res) => {
       name,
       color: color || '#000000',
       faceIcon: faceIcon || null,
-      accessories: Array.isArray(accessories) ? accessories : [],
+      accessory: accessory || null,
+      addons: Array.isArray(addons) ? addons : [],
       members: type === 'group' && Array.isArray(members) ? members : []
     });
 
@@ -48,7 +49,8 @@ const getEntitiesByUser = async (req, res) => {
 
     const entities = await Entity.find({ userId })
       .populate('faceIcon')
-      .populate('accessories')
+      .populate('accessory')
+      .populate('addons')
       .populate('members');
 
     res.status(200).json({ success: true, count: entities.length, data: entities });
@@ -68,7 +70,8 @@ const getEntityById = async (req, res) => {
 
     const entity = await Entity.findById(id)
       .populate('faceIcon')
-      .populate('accessories')
+      .populate('accessory')
+      .populate('addons')
       .populate('members');
 
     if (!entity) {
@@ -100,7 +103,7 @@ const updateEntity = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to update this entity' });
     }
 
-    const allowedUpdates = ['name', 'color', 'faceIcon', 'accessories'];
+    const allowedUpdates = ['name', 'color', 'faceIcon', 'accessory', 'addons'];
     allowedUpdates.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(updates, field)) {
         entity[field] = updates[field];
@@ -220,7 +223,8 @@ const getGroupMembers = async (req, res) => {
     const group = await Entity.findById(id)
       .populate('members')
       .populate('faceIcon')
-      .populate('accessories');
+      .populate('accessory')
+      .populate('addons');
 
     if (!group) {
       return res.status(404).json({ success: false, message: 'Group not found' });
@@ -255,7 +259,7 @@ const editProfile = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized to edit this profile' });
     }
 
-    const allowedUpdates = ['name', 'color', 'faceIcon', 'accessories'];
+    const allowedUpdates = ['name', 'color', 'faceIcon', 'accessory', 'addons'];
     allowedUpdates.forEach((field) => {
       if (Object.prototype.hasOwnProperty.call(updates, field)) {
         entity[field] = updates[field];

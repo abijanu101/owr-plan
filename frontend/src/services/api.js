@@ -100,6 +100,10 @@ export const getActivitiesForEntity = async (entityId) => {
     return request(`/entities/${entityId}/activities`);
 };
 
+export const getEntityById = async (entityId) => {
+    return request(`/entities/${entityId}`);
+};
+
 export const createActivity = async (data) => {
     const userId = getUserId();
     return request('/activities', {
