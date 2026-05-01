@@ -30,7 +30,7 @@ const ChevronRight = () => (
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", onChange }) {
+export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", onChange, variant = 'full' }) {
     const [dateTimeState, setDateTimeState] = useState({
         date: initialDate || new Date(2026, 3, 29), // Apr 29, 2026
         time: initialTime
@@ -55,6 +55,43 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
         const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dateObj.getMonth()];
         return `${dayName}, ${monthName} ${dateObj.getDate()}`;
     };
+
+    if (variant === 'inline-text') {
+        return (
+            <div className="relative inline-block" ref={containerRef}>
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="text-[#DC8379] hover:text-[#f97766] transition-colors border-b-2 border-dotted border-[#DC8379]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
+                    style={{ fontFamily: 'cursive' }}
+                >
+                    {dateTimeState.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {dateTimeState.time}
+                </button>
+
+                {isOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
+                            if (el) {
+                                const handler = (e) => {
+                                    if (e.target === el.parentElement) setIsOpen(false);
+                                };
+                                el.parentElement.addEventListener('mousedown', handler);
+                                return () => el.parentElement.removeEventListener('mousedown', handler);
+                            }
+                        }}>
+                        <DateTimePickerSinglePanel
+                            dateTimeState={dateTimeState}
+                            setDateTimeState={setDateTimeState}
+                            onClose={() => {
+                                setIsOpen(false);
+                                if (onChange) onChange(dateTimeState);
+                            }}
+                        />
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="relative inline-block w-full sm:w-auto" ref={containerRef}>
