@@ -99,7 +99,7 @@ const ClockIcon = () => (
     </svg>
 );
 
-export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHelperText = false, inline = false }) {
+export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHelperText = false, inline = false, variant = 'default' }) {
     const parseTime = (timeStr) => {
         try {
             const [time, p] = timeStr.split(' ');
@@ -196,6 +196,37 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     );
 
     if (inline) return pickerContent;
+
+    if (variant === 'inline-text') {
+        return (
+            <div className="relative inline-block select-none">
+                <button
+                    onClick={() => setIsOpen(true)}
+                    className="text-[#f97766] border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic transition-all focus:outline-none"
+                    style={{ fontFamily: 'cursive' }}
+                >
+                    {time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')} {time.period}
+                </button>
+
+                {isOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                        <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md" ref={(el) => {
+                            if (el) {
+                                const handler = (e) => {
+                                    if (e.target === el.parentElement) setIsOpen(false);
+                                };
+                                el.parentElement.addEventListener('mousedown', handler);
+                                return () => el.parentElement.removeEventListener('mousedown', handler);
+                            }
+                        }}>
+                            {pickerContent}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
 
     return (
         <div className="relative inline-block w-full sm:w-auto select-none">

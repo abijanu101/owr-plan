@@ -37,19 +37,26 @@ const parseTimeStr = (timeStr) => {
     }
 };
 
-export default function DateTimeRangePicker() {
-    const [startDateTime, setStartDateTime] = useState({
+export default function DateTimeRangePicker({ variant = 'default', initialStart, initialEnd, onChange }) {
+    const [startDateTime, setStartDateTime] = useState(initialStart || {
         date: new Date(2026, 3, 28), // Apr 28, 2026
         time: "08:30 AM"
     });
     
-    const [endDateTime, setEndDateTime] = useState({
+    const [endDateTime, setEndDateTime] = useState(initialEnd || {
         date: new Date(2026, 3, 28),
         time: "11:30 AM"
     });
 
     const [activeTab, setActiveTab] = useState(null);
     const containerRef = useRef(null);
+
+    // Call onChange whenever start or end changes
+    useEffect(() => {
+        if (onChange) {
+            onChange({ start: startDateTime, end: endDateTime });
+        }
+    }, [startDateTime, endDateTime]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -62,12 +69,14 @@ export default function DateTimeRangePicker() {
     }, []);
 
     const formatDateObj = (dateObj) => {
+        if (!dateObj) return "";
         const dayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][dateObj.getDay()];
         const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][dateObj.getMonth()];
         return `${dayName}, ${monthName} ${dateObj.getDate()}`;
     };
 
     const calculateDuration = () => {
+        if (!startDateTime.date || !endDateTime.date) return "Invalid";
         const start = new Date(startDateTime.date);
         const { hours: sH, minutes: sM } = parseTimeStr(startDateTime.time);
         start.setHours(sH, sM, 0, 0);
@@ -85,58 +94,78 @@ export default function DateTimeRangePicker() {
     };
 
     return (
-        <div className="relative inline-block w-full sm:w-auto" ref={containerRef}>
-            {/* Top Bar */}
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
-                
-                {/* FROM */}
-                <div className="flex flex-col gap-2 w-full sm:w-auto">
-                    <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">From</span>
+        <div className={`relative ${variant === 'inline-text' ? 'inline-block' : 'w-full sm:w-auto'}`} ref={containerRef}>
+            {variant === 'inline-text' ? (
+                <div className="flex items-center gap-1">
                     <button 
                         onClick={() => setActiveTab(activeTab === 'start' ? null : 'start')}
-                        className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
-                            activeTab === 'start' 
-                                ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
-                                : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
-                        }`}
+                        className={`text-[#f97766] border-b-2 border-dotted px-1 font-bold italic transition-all focus:outline-none ${activeTab === 'start' ? 'border-[#f97766] brightness-110' : 'border-[#f97766]/40 hover:border-[#f97766]'}`}
+                        style={{ fontFamily: 'cursive' }}
                     >
-                        <CalendarIcon />
-                        <div className="text-left flex flex-col">
-                            <span className="font-bold text-[15px] leading-tight tracking-wide">{formatDateObj(startDateTime.date)}</span>
-                            <span className="text-muted text-xs font-semibold">{startDateTime.time}</span>
-                        </div>
+                        {startDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {startDateTime.time}
                     </button>
-                </div>
-
-                {/* Arrow */}
-                <div className="text-muted sm:mt-6 opacity-60 rotate-90 sm:rotate-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-                </div>
-
-                {/* TO */}
-                <div className="flex flex-col gap-2 w-full sm:w-auto">
-                    <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">To</span>
+                    <span className="text-[#f97766]/50 font-bold italic" style={{ fontFamily: 'cursive' }}>-</span>
                     <button 
                         onClick={() => setActiveTab(activeTab === 'end' ? null : 'end')}
-                        className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
-                            activeTab === 'end' 
-                                ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
-                                : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
-                        }`}
+                        className={`text-[#f97766] border-b-2 border-dotted px-1 font-bold italic transition-all focus:outline-none ${activeTab === 'end' ? 'border-[#f97766] brightness-110' : 'border-[#f97766]/40 hover:border-[#f97766]'}`}
+                        style={{ fontFamily: 'cursive' }}
                     >
-                        <CalendarIcon />
-                        <div className="text-left flex flex-col">
-                            <span className="font-bold text-[15px] leading-tight tracking-wide">{formatDateObj(endDateTime.date)}</span>
-                            <span className="text-muted text-xs font-semibold">{endDateTime.time}</span>
-                        </div>
+                        {endDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {endDateTime.time}
                     </button>
                 </div>
+            ) : (
+                /* Top Bar */
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full">
+                    
+                    {/* FROM */}
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">From</span>
+                        <button 
+                            onClick={() => setActiveTab(activeTab === 'start' ? null : 'start')}
+                            className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
+                                activeTab === 'start' 
+                                    ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
+                                    : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
+                            }`}
+                        >
+                            <CalendarIcon />
+                            <div className="text-left flex flex-col">
+                                <span className="font-bold text-[15px] leading-tight tracking-wide">{formatDateObj(startDateTime.date)}</span>
+                                <span className="text-muted text-xs font-semibold">{startDateTime.time}</span>
+                            </div>
+                        </button>
+                    </div>
 
-                {/* Duration Badge */}
-                <div className="sm:mt-6 flex items-center justify-center px-6 py-3 w-full sm:w-auto rounded-full border border-[var(--border-subtle)] bg-[var(--bg-raised)] text-primary text-sm font-bold shadow-sm">
-                    {calculateDuration()}
+                    {/* Arrow */}
+                    <div className="text-muted sm:mt-6 opacity-60 rotate-90 sm:rotate-0">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                    </div>
+
+                    {/* TO */}
+                    <div className="flex flex-col gap-2 w-full sm:w-auto">
+                        <span className="text-muted font-bold text-xs tracking-widest uppercase pl-1">To</span>
+                        <button 
+                            onClick={() => setActiveTab(activeTab === 'end' ? null : 'end')}
+                            className={`flex items-center gap-4 px-6 py-4 rounded-[1.5rem] sm:rounded-full w-full sm:w-auto border transition-all cursor-pointer ${
+                                activeTab === 'end' 
+                                    ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]' 
+                                    : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
+                            }`}
+                        >
+                            <CalendarIcon />
+                            <div className="text-left flex flex-col">
+                                <span className="font-bold text-[15px] leading-tight tracking-wide">{formatDateObj(endDateTime.date)}</span>
+                                <span className="text-muted text-xs font-semibold">{endDateTime.time}</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    {/* Duration Badge */}
+                    <div className="sm:mt-6 flex items-center justify-center px-6 py-3 w-full sm:w-auto rounded-full border border-[var(--border-subtle)] bg-[var(--bg-raised)] text-primary text-sm font-bold shadow-sm">
+                        {calculateDuration()}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Popover */}
             {activeTab && (
