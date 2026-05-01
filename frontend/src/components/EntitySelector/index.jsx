@@ -42,17 +42,19 @@ export default function EntitySelector({
             <div 
                 onClick={() => setIsOverlayOpen(true)}
                 className={`
-                    cursor-pointer transition-all duration-300 rounded-2xl
-                    ${variant === 'table' ? 'p-2 border border-transparent hover:bg-white/5' : 'p-4 bg-black/20 border-2 border-dashed border-[var(--border-subtle)] hover:border-primary hover:bg-black/30'}
-                    min-h-[60px] flex items-center
+                    cursor-pointer transition-all duration-300
+                    ${variant === 'table' 
+                        ? 'p-2 border border-transparent hover:bg-white/5 rounded-2xl' 
+                        : 'w-full bg-[var(--bg-raised)] rounded-[2.5rem] p-10 pt-14 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30'}
+                    min-h-[120px] flex items-center justify-center
                 `}
             >
                 {selectedEntities.length === 0 ? (
-                    <div className="w-full text-center text-muted italic font-medium tracking-wide py-2">
+                    <div className="w-full text-center text-[#DC8379]/40 italic font-normal tracking-wide py-2 text-[20px]" style={{ fontFamily: 'cursive' }}>
                         Click to choose entities
                     </div>
                 ) : (
-                    <div className="flex flex-wrap gap-3 items-center">
+                    <div className="flex flex-wrap gap-4 items-center justify-center w-full">
                         {visibleEntities.map(entity => (
                             <EntityChip 
                                 key={entity.id}
