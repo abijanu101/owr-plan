@@ -3,10 +3,10 @@ import Navbar from './components/navbar'
 
 export default function App() {
     return <>
-        <div className="h-full">
-            <Navbar />
-            <div className="overflow-y-scroll h-full ">
-                <BrowserRouter>
+        <BrowserRouter>
+            <div className="flex flex-col h-full">
+                <Navbar />
+                <div className="flex-1 overflow-y-auto">
                     <Routes>
                         <Route path='/login' element={<>bye</>} />
                         <Route path='/signup' element={<>bye</>} />
@@ -22,8 +22,8 @@ export default function App() {
                         <Route path='/ledgers' element={<>list of expense ledgers page</>} />
                         <Route path='/ledgers/:id' element={<>ledger typeshi</>} />
                     </Routes>
-                </BrowserRouter>
+                </div>
             </div>
-        </div>
+        </BrowserRouter>
     </>
 }
