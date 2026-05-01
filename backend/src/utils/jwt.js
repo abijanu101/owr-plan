@@ -30,11 +30,8 @@ const verifyToken = (token) => {
  * @param {string} authHeader - Authorization header value
  * @returns {string|null} Token or null if not found
  */
-const extractToken = (authHeader) => {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
-  }
-  return authHeader.split(' ')[1];
+const extractToken = (req) => {
+  return req.cookies.token;
 };
 
 module.exports = {

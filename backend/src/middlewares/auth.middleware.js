@@ -1,11 +1,11 @@
 const { verifyToken, extractToken } = require('../utils/jwt');
-const User = require('../models/User');
+const User = require('../models/Users');
 
 
 const protect = async (req, res, next) => {
   try {
     // Extract token from Authorization header
-    const token = extractToken(req.headers.authorization);
+    const token = extractToken(req);
 
     if (!token) {
       return res.status(401).json({

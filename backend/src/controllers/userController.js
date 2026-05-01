@@ -51,13 +51,16 @@ const registerUser = async (req, res) => {
       createdAt: user.createdAt
     };
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
-      data: {
-        user: userResponse,
-        token
-      }
+      data: { user }
     });
 
   } catch (error) {
@@ -116,13 +119,16 @@ const loginUser = async (req, res) => {
       createdAt: user.createdAt
     };
 
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
     res.status(200).json({
       success: true,
-      message: 'Login successful',
-      data: {
-        user: userResponse,
-        token
-      }
+      data: { user }
     });
 
   } catch (error) {
@@ -173,25 +179,19 @@ const getCurrentUser = async (req, res) => {
  */
 const logoutUser = async (req, res) => {
   try {
-    // In a stateless JWT system, logout is handled on the client side
-    // by removing the token from storage
-    res.status(200).json({
-      success: true,
-      message: 'Logout successful'
+    res.cookie('token', '', {
+      httpOnly: true,
+      expires: new Date(0)
     });
 
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully'
+    });
   } catch (error) {
-    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during logout'
     });
   }
-};
-
-module.exports = {
-  registerUser,
-  loginUser,
-  getCurrentUser,
-  logoutUser,
 };

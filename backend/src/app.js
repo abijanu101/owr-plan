@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const routes = require('./routes');
 
 const app = express();
@@ -7,7 +8,11 @@ const app = express();
 // Middleware
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
-app.use(cors()); // Enable CORS for cross-origin requests
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:3000', // your frontend
+  credentials: true
+}));
 
 // Request logging middleware (optional but useful for debugging)
 app.use((req, res, next) => {
