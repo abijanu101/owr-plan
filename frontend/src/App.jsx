@@ -11,6 +11,8 @@ import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
 import StructuredPlan from './pages/StructuredPlan'
 import EntityDetails from './pages/EntityDetails'
+import Ledger from './pages/Ledger'
+import BlockVisualization from './pages/BlockVisualization'
 
 export default function App() {
     return <>
@@ -34,10 +36,10 @@ export default function App() {
                             <Route path='/activities/:id/edit' element={<EditActivity />} />
                             <Route path='/activities/:id' element={<>activity typeshi</>} />
 
-                            <Route path='/visualize' element={<>schedule visualization here</>} />
+                            <Route path='/visualize' element={<BlockVisualization />} />
                             <Route path='/plan' element={<Plan />} />
                             <Route path='/plan/structured' element={<StructuredPlan />} />
-                            <Route path='/ledgers' element={<>list of expense ledgers page</>} />
+                            <Route path='/ledgers' element={<Ledger />} />
                             <Route path='/ledgers/:id' element={<>ledger typeshi</>} />
 
                             <Route path='/playground' element={<Playground />} />
