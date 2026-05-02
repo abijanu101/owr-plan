@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/navbar'
 import Playground from './pages/playground'
@@ -11,6 +12,9 @@ import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
 import StructuredPlan from './pages/StructuredPlan'
 import EntityDetails from './pages/EntityDetails'
+import ActivitiesPage from './pages/ActivitiesPage';
+import EntitiesPage from './pages/EntitiesPage';
+
 
 export default function App() {
     return <>
@@ -27,9 +31,9 @@ export default function App() {
                             <Route path='/signup' element={<>bye</>} />
 
                             <Route path='/' element={<>home</>} />
-                            <Route path='/entities' element={<>entities</>} />
+                            <Route path="/entities" element={<EntitiesPage />} />
                             <Route path='/entities/:id' element={<EntityDetails />} />
-                            <Route path='/activities' element={<>activities</>} />
+                            <Route path="/activities" element={<ActivitiesPage />} />
                             <Route path='/activities/create' element={<CreateActivity />} />
                             <Route path='/activities/:id/edit' element={<EditActivity />} />
                             <Route path='/activities/:id' element={<>activity typeshi</>} />
