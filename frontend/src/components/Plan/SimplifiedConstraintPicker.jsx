@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
+import React from 'react';
 import DateTimePicker from '../Pickers/DateTimePicker';
 import DurationPicker from '../Pickers/DurationPicker';
+import { usePlan } from '../../context/PlanContext';
 
-export default function SimplifiedConstraintPicker({ duration, setDuration, range, setRange }) {
+export default function SimplifiedConstraintPicker() {
+    const { getSimplifiedConstraintParameter, updateSimplifiedConstraint } = usePlan();
+    
+    const duration = getSimplifiedConstraintParameter('last for') || { hours: 1, minutes: 30 };
+    const range = getSimplifiedConstraintParameter('be between') || {
+        start: { date: new Date(2026, 3, 29), time: "08:00 AM" },
+        end: { date: new Date(2026, 3, 30), time: "11:59 PM" }
+    };
+
+    const setDuration = (val) => updateSimplifiedConstraint('last for', val);
+    const setRange = (val) => updateSimplifiedConstraint('be between', val);
 
     return (
         <div className="flex flex-col items-center w-full max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -34,14 +45,14 @@ export default function SimplifiedConstraintPicker({ duration, setDuration, rang
                             variant="inline-text"
                             initialDate={range.start.date}
                             initialTime={range.start.time}
-                            onChange={(val) => setRange(prev => ({ ...prev, start: val }))}
+                            onChange={(val) => setRange({ ...range, start: val })}
                         />
                         <span>and</span>
                         <DateTimePicker
                             variant="inline-text"
                             initialDate={range.end.date}
                             initialTime={range.end.time}
-                            onChange={(val) => setRange(prev => ({ ...prev, end: val }))}
+                            onChange={(val) => setRange({ ...range, end: val })}
                         />
                     </div>
                 </div>

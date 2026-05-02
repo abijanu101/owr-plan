@@ -24,7 +24,7 @@ export const CONSTRAINT_SCHEMA = {
     },
     'include': {
         category: 'Inclusion',
-        allowedModifiers: MODIFIERS.STANDARD,
+        allowedModifiers: [...MODIFIERS.STANDARD, 'can'],
         parameterType: 'EntitySelector',
         label: 'Entities'
     },
@@ -54,7 +54,7 @@ export const CONSTRAINT_SCHEMA = {
     },
     'pad': {
         category: 'EntitySpecific',
-        allowedModifiers: [''], // Pad does not have a modifier in the local child row, or rather it inherits
+        allowedModifiers: MODIFIERS.STANDARD,
         parameterType: 'DurationPicker',
         label: 'Duration',
         localOnly: true

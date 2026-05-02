@@ -44,7 +44,7 @@ export default function EntitySelector({
                 className={`
                     cursor-pointer transition-all duration-300 flex items-center
                     ${variant === 'table'
-                        ? 'p-1 py-1.5 border border-transparent hover:bg-white/5 rounded-xl min-h-[40px]'
+                        ? 'p-0 py-0 border border-transparent hover:bg-white/5 rounded-xl'
                         : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
                 `}
             >

@@ -1,118 +1,130 @@
 import React from 'react';
 import GlobalConstraintRow from './GlobalConstraintRow';
-import LocalConstraintBlock from './LocalConstraintBlock';
+import ConstraintBlockRow from './ConstraintBlockRow';
 import { getDefaultParameter } from './ConstraintSchema';
 
-export default function ConstraintTable({ mode, globalConstraints, localBlocks, onChangeGlobal, onChangeLocal, isMobile }) {
+const TableHeader = () => (
+    <div className="flex items-center border-b border-[#DC8379]/20 bg-[var(--bg-purple)] text-center">
+        <div className="w-12 shrink-0"></div>
+        <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/20 py-2 px-3 text-center">
+            <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Modifiers</span>
+        </div>
+        <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 text-center">
+            <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Constraints</span>
+        </div>
+        <div className="flex-1 py-2 px-3">
+            <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Parameters</span>
+        </div>
+    </div>
+);
 
-    const addGlobal = () => {
-        const newConstraint = { id: Date.now(), modifier: 'must', type: 'be between', parameter: getDefaultParameter('be between') };
-        onChangeGlobal([...globalConstraints, newConstraint]);
+const SectionLabel = ({ children }) => (
+    <div className="flex items-center gap-4 py-4 px-2">
+        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-[#DC8379]/20" />
+        <span className="text-[#DC8379] text-sm font-bold tracking-widest uppercase opacity-60" style={{ fontFamily: 'cursive' }}>{children}</span>
+        <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-[#DC8379]/20" />
+    </div>
+);
+
+export default function ConstraintTable({ constraints = [], onChange, isMobile }) {
+
+    const systemConstraints = constraints.filter(c => c.isSystem);
+    const customConstraints = constraints.filter(c => !c.isSystem);
+
+    const addConstraint = () => {
+        const newConstraint = { id: Date.now(), isBlock: false, modifier: 'must', type: 'be between', parameter: getDefaultParameter('be between') };
+        onChange([...constraints, newConstraint]);
     };
 
-    const addLocalBlock = () => {
-        const newBlock = { id: Date.now(), modifier: 'must', entity: [], children: [] };
-        onChangeLocal([...localBlocks, newBlock]);
+    const addBlock = () => {
+        const newBlock = { id: Date.now(), isBlock: true, modifier: 'must', entity: [], isExpanded: true, children: [] };
+        onChange([...constraints, newBlock]);
     };
 
-    const updateGlobal = (id, updated) => {
-        onChangeGlobal(globalConstraints.map(c => c.id === id ? updated : c));
+    const updateConstraint = (id, updated) => {
+        onChange(constraints.map(c => c.id === id ? updated : c));
     };
 
-    const removeGlobal = (id) => {
-        onChangeGlobal(globalConstraints.filter(c => c.id !== id));
+    const removeConstraint = (id) => {
+        onChange(constraints.filter(c => c.id !== id));
     };
 
-    const updateLocal = (id, updated) => {
-        onChangeLocal(localBlocks.map(b => b.id === id ? updated : b));
-    };
-
-    const removeLocal = (id) => {
-        onChangeLocal(localBlocks.filter(b => b.id !== id));
-    };
+    const renderRow = (c) => (
+        c.isBlock ? (
+            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+        ) : (
+            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+        )
+    );
 
     if (isMobile) {
         return (
             <div className="flex flex-col gap-4 w-full">
-                {mode === 'global' ? (
+                {systemConstraints.length > 0 && (
                     <>
-                        {globalConstraints.map(c => (
-                            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateGlobal(c.id, u)} onRemove={() => removeGlobal(c.id)} isMobile={true} />
-                        ))}
-                        <button onClick={addGlobal} className="w-full py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
-                            + Add Constraint
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        {localBlocks.map(b => (
-                            <LocalConstraintBlock key={b.id} block={b} onChange={(u) => updateLocal(b.id, u)} onRemove={() => removeLocal(b.id)} isMobile={true} />
-                        ))}
-                        <button onClick={addLocalBlock} className="w-full py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
-                            + Add New Block
-                        </button>
+                        <SectionLabel>System Constraints</SectionLabel>
+                        {systemConstraints.map(renderRow)}
                     </>
                 )}
+
+                <SectionLabel>Custom Constraints</SectionLabel>
+                {customConstraints.map(renderRow)}
+                
+                {customConstraints.length === 0 && (
+                    <div className="py-8 text-center text-[#DC8379]/40 italic" style={{ fontFamily: 'cursive' }}>
+                        No custom constraints added yet
+                    </div>
+                )}
+
+                <div className="flex flex-col gap-2 pt-4">
+                    <button onClick={addConstraint} className="w-full py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
+                        + Add Constraint
+                    </button>
+                    <button onClick={addBlock} className="w-full py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
+                        + Add Block
+                    </button>
+                </div>
             </div>
         );
     }
 
     // Desktop
     return (
-        <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl overflow-hidden w-full flex flex-col">
-            {/* Headers */}
-            <div className="flex items-center border-b border-[var(--border-subtle)] bg-[var(--bg-purple)] text-center">
-                <div className="w-12 shrink-0"></div>
-                <div className="w-32 sm:w-40 shrink-0 border-r border-[var(--border-subtle)]/40 py-2 px-3">
-                    <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Modifiers</span>
-                </div>
-                <div className="w-40 sm:w-48 shrink-0 border-r border-[var(--border-subtle)]/40 py-2 px-3">
-                    <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Constraints</span>
-                </div>
-                <div className="flex-1 py-2 px-3">
-                    <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Parameters</span>
+        <div className="flex flex-col gap-8 w-full">
+            {/* System Table */}
+            <div className="flex flex-col gap-3">
+                <SectionLabel>System Constraints</SectionLabel>
+                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl overflow-hidden w-full flex flex-col">
+                    <TableHeader />
+                    <div className="flex flex-col">
+                        {systemConstraints.map(renderRow)}
+                    </div>
                 </div>
             </div>
 
-            {/* Body */}
-            <div className="flex flex-col">
-                {mode === 'global' ? (
-                    <>
-                        {globalConstraints.map(c => (
-                            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateGlobal(c.id, u)} onRemove={() => removeGlobal(c.id)} isMobile={false} />
-                        ))}
-                        <div className="flex items-center hover:bg-white/5 transition-colors cursor-pointer group/add" onClick={addGlobal}>
-                            <div className="w-12 shrink-0"></div>
-                            <div className="w-32 sm:w-40 shrink-0 border-r border-[#DC8379]/10 py-2 px-3 text-center">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors" style={{ fontFamily: 'cursive' }}>——</span>
+            {/* Custom Table */}
+            <div className="flex flex-col gap-3">
+                <SectionLabel>Custom Constraints</SectionLabel>
+                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl overflow-hidden w-full flex flex-col">
+                    <TableHeader />
+                    <div className="flex flex-col">
+                        {customConstraints.map(renderRow)}
+                        {customConstraints.length === 0 && (
+                            <div className="py-12 text-center text-[#DC8379]/40 italic" style={{ fontFamily: 'cursive' }}>
+                                No custom constraints added yet. Use the buttons below to add rules.
                             </div>
-                            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-2 px-3 text-center">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors" style={{ fontFamily: 'cursive' }}>——</span>
-                            </div>
-                            <div className="flex-1 py-2 px-3">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors italic" style={{ fontFamily: 'cursive' }}>Choose to add constraint</span>
-                            </div>
-                        </div>
-                    </>
-                ) : (
-                    <>
-                        {localBlocks.map(b => (
-                            <LocalConstraintBlock key={b.id} block={b} onChange={(u) => updateLocal(b.id, u)} onRemove={() => removeLocal(b.id)} isMobile={false} />
-                        ))}
-                        <div className="flex items-center hover:bg-white/5 transition-colors cursor-pointer group/add" onClick={addLocalBlock}>
-                            <div className="w-12 shrink-0"></div>
-                            <div className="w-32 sm:w-40 shrink-0 border-r border-[#DC8379]/10 py-2 px-3 text-center">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors" style={{ fontFamily: 'cursive' }}>——</span>
-                            </div>
-                            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-2 px-3 text-center">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors" style={{ fontFamily: 'cursive' }}>——</span>
-                            </div>
-                            <div className="flex-1 py-2 px-3">
-                                <span className="text-[#DC8379]/40 text-base group-hover/add:text-[#DC8379]/80 transition-colors italic" style={{ fontFamily: 'cursive' }}>Choose to add new block</span>
-                            </div>
-                        </div>
-                    </>
-                )}
+                        )}
+                    </div>
+                </div>
+                
+                <div className="flex items-center gap-4 mt-2">
+                    <button onClick={addConstraint} className="flex-1 py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
+                        + Add Constraint
+                    </button>
+                    <button onClick={addBlock} className="flex-1 py-4 rounded-2xl border-2 border-dashed border-[#DC8379]/20 text-[#DC8379]/60 hover:text-[#DC8379] hover:border-[#DC8379]/40 hover:bg-white/5 transition-all font-bold text-lg cursor-pointer" style={{ fontFamily: 'cursive' }}>
+                        + Add Block
+                    </button>
+                </div>
             </div>
         </div>
     );

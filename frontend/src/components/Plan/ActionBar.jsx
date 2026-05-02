@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../UI/Button';
+import PlanStatus from './PlanStatus';
 
 const SparklesIcon = ({ className }) => (
     <svg className={className} viewBox="0 0 24 24">
@@ -28,9 +29,9 @@ const ChevronUpIcon = ({ className }) => (
 
 export default function ActionBar({ onReset, onGenerate, currentView = 'simplified' }) {
     const isStructured = currentView === 'structured';
-    const linkTo = isStructured ? "/plan" : "/plan/structured";
-    const linkTextDesktop = isStructured ? "Simplified Options" : "Advanced Options";
-    const linkTextMobile = isStructured ? "Simplified" : "Advanced";
+    const linkTo = isStructured ? "/plan" : "/plan/constraints";
+    const linkTextDesktop = isStructured ? "Simplified View" : "View All Constraints";
+    const linkTextMobile = isStructured ? "Simplified" : "All Constraints";
     const Icon = isStructured ? ChevronUpIcon : ChevronDownIcon;
 
     return (
@@ -40,12 +41,17 @@ export default function ActionBar({ onReset, onGenerate, currentView = 'simplifi
                     {/* View Toggle */}
                     <Link
                         to={linkTo}
-                        className="flex items-center gap-2 text-[#DC8379]/60 hover:text-[#f97766] transition-all text-sm font-bold group px-4 py-2 rounded-lg hover:bg-white/5 cursor-pointer select-none"
+                        className="flex items-center gap-2 text-[#DC8379]/60 hover:text-[#f97766] transition-all text-sm font-bold group px-4 py-2 rounded-lg hover:bg-white/5 cursor-pointer select-none shrink-0"
                     >
                         <Icon className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
                         <span style={{ fontFamily: 'cursive' }} className="hidden sm:inline">{linkTextDesktop}</span>
                         <span style={{ fontFamily: 'cursive' }} className="sm:hidden">{linkTextMobile}</span>
                     </Link>
+
+                    {/* Status Indicator (Desktop only) */}
+                    <div className="hidden lg:block">
+                        <PlanStatus variant="desktop" />
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-4">
@@ -57,7 +63,7 @@ export default function ActionBar({ onReset, onGenerate, currentView = 'simplifi
                     >
                         Reset
                     </Button>
-                    
+
                     {/* Primary Generate Button */}
                     <Button
                         variant="primary"
