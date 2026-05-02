@@ -10,7 +10,7 @@ app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000', // your frontend
+  origin: ['http://localhost:3000', 'http://localhost'], // support both dev and production proxy
   credentials: true
 }));
 

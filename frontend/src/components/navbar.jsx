@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import icon from '/favicon.svg';
 
 const NAV_ITEMS = [
@@ -14,6 +15,7 @@ export default function Navbar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [clickedItem, setClickedItem] = useState(null);
     const [isDesktopOpen, setIsDesktopOpen] = useState(false);
+    const { user, logout } = useAuth();
     const location = useLocation();
 
     const handleItemClick = (name) => {
@@ -34,8 +36,22 @@ export default function Navbar() {
 
                 {/* Desktop Auth Buttons */}
                 <div className="hidden md:flex flex-row items-center gap-6">
-                    <Link to="/login" className="inline-block text-xl whitespace-nowrap hover:text-white transition-colors px-3">login</Link>
-                    <Link to="/signup" className="inline-block bg-[var(--color-primary)] whitespace-nowrap text-[var(--bg-primary)] px-4 py-2 leading-none rounded-full text-xl font-bold hover:brightness-110 hover:scale-105 transition-all">signup</Link>
+                    {!user ? (
+                        <>
+                            <Link to="/login" className="inline-block text-xl whitespace-nowrap hover:text-white transition-colors px-3">login</Link>
+                            <Link to="/signup" className="inline-block bg-[var(--color-primary)] whitespace-nowrap text-[var(--bg-primary)] px-4 py-2 leading-none rounded-full text-xl font-bold hover:brightness-110 hover:scale-105 transition-all">signup</Link>
+                        </>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                            <span className="text-lg font-bold hidden lg:inline opacity-80">Hi, {user.name}</span>
+                            <button
+                                onClick={logout}
+                                className="text-xl whitespace-nowrap hover:text-red-400 transition-colors px-3"
+                            >
+                                logout
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -142,10 +158,24 @@ export default function Navbar() {
                 </div>
                 {/* Mobile Auth Buttons */}
                 <div className="flex flex-row items-center justify-center gap-6 mt-auto border-t border-[var(--border-subtle)] pt-6 pb-6 sticky bottom-0 bg-accent z-10 w-full shadow-[0_-10px_20px_var(--bg-accent)]">
-                    <Link to="/login" onClick={() => setIsMobileOpen(false)} className="inline-block text-lg px-8 py-3 whitespace-nowrap border border-[var(--color-primary)] rounded-full hover:bg-[var(--bg-accent)] transition-all">login</Link>
-                    <Link to="/signup" onClick={() => setIsMobileOpen(false)} className="inline-block bg-[var(--color-primary)] text-[var(--bg-primary)] px-8 py-4 whitespace-nowrap leading-none rounded-full text-lg font-bold hover:brightness-110 transition-all">signup</Link>
+                    {!user ? (
+                        <>
+                            <Link to="/login" onClick={() => setIsMobileOpen(false)} className="inline-block text-lg px-8 py-3 whitespace-nowrap border border-[var(--color-primary)] rounded-full hover:bg-[var(--bg-accent)] transition-all">login</Link>
+                            <Link to="/signup" onClick={() => setIsMobileOpen(false)} className="inline-block bg-[var(--color-primary)] text-[var(--bg-primary)] px-8 py-4 whitespace-nowrap leading-none rounded-full text-lg font-bold hover:brightness-110 transition-all">signup</Link>
+                        </>
+                    ) : (
+                        <div className="flex flex-col items-center gap-4 w-full">
+                            <span className="text-xl font-bold text-[var(--color-primary)]">Hi, {user.name} ✦</span>
+                            <button
+                                onClick={() => { logout(); setIsMobileOpen(false); }}
+                                className="w-full text-lg px-8 py-3 border border-red-500/50 text-red-400 rounded-full hover:bg-red-500/10 transition-all"
+                            >
+                                logout
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </nav>
     );
-}
+}

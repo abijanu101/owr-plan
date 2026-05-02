@@ -71,27 +71,12 @@ export default function Signup() {
         }
 
         setIsLoading(true);
-        try {
-            const res = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: formData.name,
-                    email: formData.email,
-                    password: formData.password
-                })
-            });
-            const data = await res.json();
+        const result = await signup(formData.name, formData.email, formData.password);
 
-            if (data.success) {
-                login(data.data.user);
-                navigate('/');
-            } else {
-                setError(data.message || 'Signup failed. Please try again.');
-            }
-        } catch (err) {
-            setError('Could not reach the server. Please try again later.');
-        } finally {
+        if (result.success) {
+            navigate('/');
+        } else {
+            setError(result.message);
             setIsLoading(false);
         }
     };

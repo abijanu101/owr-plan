@@ -65,23 +65,12 @@ export default function Login() {
         }
 
         setIsLoading(true);
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
-            const data = await res.json();
+        const result = await login(formData.email, formData.password);
 
-            if (data.success) {
-                login(data.data.user);
-                navigate('/');
-            } else {
-                setError(data.message || 'Login failed. Please check your credentials.');
-            }
-        } catch (err) {
-            setError('Could not reach the server. Please try again later.');
-        } finally {
+        if (result.success) {
+            navigate('/');
+        } else {
+            setError(result.message);
             setIsLoading(false);
         }
     };

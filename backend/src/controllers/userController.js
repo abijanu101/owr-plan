@@ -60,7 +60,7 @@ const registerUser = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      data: { user }
+      data: { user: userResponse }
     });
 
   } catch (error) {
@@ -128,7 +128,7 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: { user }
+      data: { user: userResponse }
     });
 
   } catch (error) {

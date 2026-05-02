@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -6,11 +7,11 @@ const Entity = require('./src/models/Entities');
 const Activity = require('./src/models/Activities');
 const Ledger = require('./src/models/Ledgers');
 
-const MONGODB_URI = 'mongodb://localhost:27017/owrplan';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/owrplan';
 
 async function seed() {
   try {
-    await mongoose.connect(MONGODB_URI);
+    await mongoose.connect(MONGO_URI);
     console.log('Connected to DB');
 
     // Clear existing data

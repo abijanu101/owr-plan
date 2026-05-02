@@ -15,5 +15,3 @@ router.get('/me', protect, getCurrentUser);
 router.post('/logout', protect, logoutUser);
 
 module.exports = router;
-
-module.exports = router;

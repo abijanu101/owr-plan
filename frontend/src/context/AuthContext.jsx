@@ -24,7 +24,43 @@ export function AuthProvider({ children }) {
         checkSession();
     }, []);
 
-    const login = (userData) => setUser(userData);
+    const login = async (email, password) => {
+        try {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.success) {
+                setUser(data.data.user);
+                return { success: true };
+            }
+            return { success: false, message: data.message || 'Login failed' };
+        } catch (err) {
+            return { success: false, message: 'Could not reach the server' };
+        }
+    };
+
+    const signup = async (name, email, password) => {
+        try {
+            const res = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, email, password }),
+                credentials: 'include'
+            });
+            const data = await res.json();
+            if (data.success) {
+                setUser(data.data.user);
+                return { success: true };
+            }
+            return { success: false, message: data.message || 'Signup failed' };
+        } catch (err) {
+            return { success: false, message: 'Could not reach the server' };
+        }
+    };
 
     const logout = async () => {
         try {
@@ -34,7 +70,7 @@ export function AuthProvider({ children }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+        <AuthContext.Provider value={{ user, isLoading, login, signup, logout }}>
             {children}
         </AuthContext.Provider>
     );
