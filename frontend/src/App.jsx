@@ -22,45 +22,43 @@ import EntitiesPage from './pages/EntitiesPage';
 export default function App() {
     return <>
         <AuthProvider>
-        <EntityProvider>
+            <EntityProvider>
+                <BrowserRouter>
+                    <div className="flex flex-col h-full">
+                        <Navbar />
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="max-w-7xl mx-auto">
+                                <Breadcrumbs />
+                            </div>
+                            <Routes>
+                                <Route path='/login' element={<Login />} />
+                                <Route path='/signup' element={<Signup />} />
 
-            <BrowserRouter>
-                <div className="flex flex-col h-full">
-                    <Navbar />
-                    <div className="flex-1 overflow-y-auto">
-                        <div className="max-w-7xl mx-auto">
-                            <Breadcrumbs />
+                                <Route path='/' element={<>hi</>} />
+                                <Route path="/entities" element={<EntitiesPage />} />
+                                <Route path='/entities/:id' element={<EntityDetails />} />
+                                <Route path="/activities" element={<ActivitiesPage />} />
+                                <Route path='/activities/create' element={<CreateActivity />} />
+                                <Route path='/activities/:id/edit' element={<EditActivity />} />
+                                <Route path='/activities/:id' element={<>activity typeshi</>} />
+
+                                <Route path='/visualize' element={<BlockVisualization />} />
+
+                                <Route element={<PlanProvider />}>
+                                    <Route path='/plan' element={<Plan />} />
+                                    <Route path='/plan/constraints' element={<StructuredPlan />} />
+                                    <Route path='/plan/results' element={<PlanResults />} />
+                                </Route>
+
+                                <Route path='/ledgers' element={<Ledger />} />
+                                <Route path='/ledgers/:id' element={<>ledgers id something</>} />
+
+                                <Route path='/playground' element={<Playground />} />
+                            </Routes>
                         </div>
-                        <Routes>
-                            <Route path='/login' element={<Login />} />
-                            <Route path='/signup' element={<Signup />} />
-
-                            <Route path='/' element={<>hi</>} />
-                            <Route path="/entities" element={<EntitiesPage />} />
-                            <Route path='/entities/:id' element={<EntityDetails />} />
-                            <Route path="/activities" element={<ActivitiesPage />} />
-                            <Route path='/activities/create' element={<CreateActivity />} />
-                            <Route path='/activities/:id/edit' element={<EditActivity />} />
-                            <Route path='/activities/:id' element={<>activity typeshi</>} />
-
-                            <Route path='/visualize' element={<BlockVisualization />} />
-
-                            <Route element={<PlanProvider />}>
-                                <Route path='/plan' element={<Plan />} />
-                                <Route path='/plan/constraints' element={<StructuredPlan />} />
-                                <Route path='/plan/results' element={<PlanResults />} />
-                            </Route>
-
-                            <Route path='/ledgers' element={<Ledger />} />
-                            <Route path='/ledgers/:id' element={<>ledgers id something</>} />
-
-                            <Route path='/playground' element={<Playground />} />
-                        </Routes>
                     </div>
-                </div>
-            </BrowserRouter>
-
-        </EntityProvider>
+                </BrowserRouter>
+            </EntityProvider>
         </AuthProvider>
     </>
 }
