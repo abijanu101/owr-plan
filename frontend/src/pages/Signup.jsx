@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Label({ children }) {
     return <span className="text-xs font-bold tracking-widest uppercase text-muted">{children}</span>;
@@ -48,6 +49,7 @@ const SvgBackground = () => (
 
 export default function Signup() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -82,6 +84,7 @@ export default function Signup() {
             const data = await res.json();
 
             if (data.success) {
+                login(data.data.user);
                 navigate('/');
             } else {
                 setError(data.message || 'Signup failed. Please try again.');

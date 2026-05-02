@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 function Label({ children }) {
     return <span className="text-xs font-bold tracking-widest uppercase text-muted">{children}</span>;
@@ -48,6 +49,7 @@ const SvgBackground = () => (
 
 export default function Login() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({ email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -72,6 +74,7 @@ export default function Login() {
             const data = await res.json();
 
             if (data.success) {
+                login(data.data.user);
                 navigate('/');
             } else {
                 setError(data.message || 'Login failed. Please check your credentials.');

@@ -1,18 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EntityChip from './EntityChip';
 import SelectionOverlay from './SelectionOverlay';
-
-// Mock data for demo - in a real app this would come from a prop or context
-const MOCK_ENTITIES = [
-    { id: '1', name: 'Ahmed', type: 'person', color: '#5E5AB2' },
-    { id: '2', name: 'Alizeh', type: 'person', color: '#B23B3B' },
-    { id: '3', name: 'Zoha', type: 'person', color: '#488845' },
-    { id: '4', name: 'Abi', type: 'person', color: '#1B7A7A' },
-    { id: '5', name: 'Haleema', type: 'person', color: '#911B7D' },
-    { id: 'g1', name: 'Section G', type: 'group', color: '#1B5491' },
-    { id: 'g2', name: 'AML-6A', type: 'group', color: '#B29B3B' },
-    { id: 'g3', name: 'owrplan gng', type: 'group', color: '#5E5AB2' },
-];
+import { useAuth } from '../../context/AuthContext';
 
 export default function EntitySelector({
     selectedIds = [],
@@ -20,7 +9,34 @@ export default function EntitySelector({
     variant = 'standalone',
     maxVisible = 4
 }) {
+    const { user } = useAuth();
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+    const [entities, setEntities] = useState([]);
+    const [loadingEntities, setLoadingEntities] = useState(false);
+
+    useEffect(() => {
+        if (!user?._id) return;
+        const fetchEntities = async () => {
+            setLoadingEntities(true);
+            try {
+                const res = await fetch(`/api/entities/user/${user._id}`, { credentials: 'include' });
+                const data = await res.json();
+                if (data.success) {
+                    // Normalize fields: backend uses `faceIcon`, frontend chip uses `color`
+                    setEntities((data.data?.entities || []).map(e => ({
+                        id: e._id,
+                        name: e.name,
+                        type: e.type,
+                        color: e.color || 'var(--color-primary)',
+                    })));
+                }
+            } catch { /* keep empty */ }
+            finally { setLoadingEntities(false); }
+        };
+        fetchEntities();
+    }, [user?._id]);
+
+
 
     const handleToggle = (idOrArray) => {
         if (Array.isArray(idOrArray)) {
@@ -33,7 +49,7 @@ export default function EntitySelector({
         onChange?.(newIds);
     };
 
-    const selectedEntities = MOCK_ENTITIES.filter(e => selectedIds.includes(e.id));
+    const selectedEntities = entities.filter(e => selectedIds.includes(e.id));
     const visibleEntities = selectedEntities.slice(0, maxVisible);
     const remainingCount = Math.max(0, selectedEntities.length - maxVisible);
 
@@ -77,7 +93,7 @@ export default function EntitySelector({
                 onClose={() => setIsOverlayOpen(false)}
                 selectedIds={selectedIds}
                 onToggle={handleToggle}
-                entities={MOCK_ENTITIES}
+                entities={entities}
             />
         </>
     );

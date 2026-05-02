@@ -1,12 +1,10 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { PlanProvider } from './context/PlanContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/navbar'
 import Playground from './pages/playground'
 import Plan from './pages/plan'
 import Breadcrumbs from './components/Breadcrumbs'
-import TimePicker from './components/Pickers/TimePicker'
-import DateTimePicker from './components/Pickers/DateTimePicker'
-import DateTimeRangePicker from './components/Pickers/DateTimeRangePicker'
 import { EntityProvider } from './context/EntityContext'
 import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
@@ -20,6 +18,7 @@ import Signup from './pages/Signup'
 
 export default function App() {
     return <>
+        <AuthProvider>
         <EntityProvider>
 
             <BrowserRouter>
@@ -59,5 +58,6 @@ export default function App() {
             </BrowserRouter>
 
         </EntityProvider>
+        </AuthProvider>
     </>
-}
+}
