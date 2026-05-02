@@ -47,12 +47,11 @@ export default function MultiDatePicker({ initialDates = [], onChange, variant =
         
         const formattedDates = selectedDates.map(d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
         
-        if (selectedDates.length <= 3) {
-            return formattedDates.join(', ');
+        if (selectedDates.length === 1) {
+            return formattedDates[0];
         }
         
-        const firstThree = formattedDates.slice(0, 3).join(', ');
-        return `${firstThree} +${selectedDates.length - 3} more`;
+        return `${formattedDates[0]} +${selectedDates.length - 1}`;
     };
 
     if (variant === 'inline-text') {

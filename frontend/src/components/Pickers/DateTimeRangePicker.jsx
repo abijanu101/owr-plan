@@ -96,13 +96,13 @@ export default function DateTimeRangePicker({ variant = 'default', initialStart,
     return (
         <div className={`relative ${variant === 'inline-text' ? 'inline-block' : 'w-full sm:w-auto'}`} ref={containerRef}>
             {variant === 'inline-text' ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 select-none">
                     <button 
                         onClick={() => setActiveTab(activeTab === 'start' ? null : 'start')}
                         className={`text-[#f97766] border-b-2 border-dotted px-1 font-bold italic transition-all focus:outline-none ${activeTab === 'start' ? 'border-[#f97766] brightness-110' : 'border-[#f97766]/40 hover:border-[#f97766]'}`}
                         style={{ fontFamily: 'cursive' }}
                     >
-                        {startDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {startDateTime.time}
+                        {startDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {startDateTime.time.replace(' ', '').toLowerCase()}
                     </button>
                     <span className="text-[#f97766]/50 font-bold italic" style={{ fontFamily: 'cursive' }}>-</span>
                     <button 
@@ -110,7 +110,7 @@ export default function DateTimeRangePicker({ variant = 'default', initialStart,
                         className={`text-[#f97766] border-b-2 border-dotted px-1 font-bold italic transition-all focus:outline-none ${activeTab === 'end' ? 'border-[#f97766] brightness-110' : 'border-[#f97766]/40 hover:border-[#f97766]'}`}
                         style={{ fontFamily: 'cursive' }}
                     >
-                        {endDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {endDateTime.time}
+                        {endDateTime.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, {endDateTime.time.replace(' ', '').toLowerCase()}
                     </button>
                 </div>
             ) : (

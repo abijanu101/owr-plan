@@ -23,7 +23,7 @@ export default function Navbar() {
     };
 
     return (
-        <nav className="group bg-accent text-[var(--color-primary)] w-full relative z-50" onMouseEnter={() => setIsDesktopOpen(true)} onMouseLeave={() => setIsDesktopOpen(false)}>
+        <nav className="group bg-accent text-[var(--color-primary)] w-full relative z-[100]" onMouseEnter={() => setIsDesktopOpen(true)} onMouseLeave={() => setIsDesktopOpen(false)}>
             {/* Top Bar */}
             <div className="flex flex-row items-center justify-between p-2 relative z-50 bg-accent">
                 {/* Logo */}
@@ -99,7 +99,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile Navigation Dropdown */}
-            <div className={`md:hidden absolute top-[100%] left-0 w-full h-[calc(100vh-56px)] z-40 bg-accent px-4 pt-8 flex flex-col gap-8 overflow-y-auto transition-all duration-300 ease-in-out ${isMobileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-8 pointer-events-none'}`}>
+            <div className={`md:hidden absolute top-[100%] left-0 w-full h-[calc(100vh-56px)] z-[100] bg-accent px-4 pt-8 flex flex-col gap-8 overflow-y-auto transition-all duration-300 ease-in-out ${isMobileOpen ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible -translate-y-8 pointer-events-none'}`}>
                 {/* Mobile Grid Layout for Links */}
                 <div className="grid grid-cols-2 gap-y-5 gap-x-4">
                     {NAV_ITEMS.map((item) => {

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { PlanProvider } from './context/PlanContext';
 import Navbar from './components/navbar'
 import Playground from './pages/playground'
 import Plan from './pages/plan'
@@ -13,10 +14,14 @@ import StructuredPlan from './pages/StructuredPlan'
 import EntityDetails from './pages/EntityDetails'
 import Ledger from './pages/Ledger'
 import BlockVisualization from './pages/BlockVisualization'
+import PlanResults from './pages/PlanResults'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 export default function App() {
     return <>
         <EntityProvider>
+
             <BrowserRouter>
                 <div className="flex flex-col h-full">
                     <Navbar />
@@ -25,10 +30,10 @@ export default function App() {
                             <Breadcrumbs />
                         </div>
                         <Routes>
-                            <Route path='/login' element={<>bye</>} />
-                            <Route path='/signup' element={<>bye</>} />
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/signup' element={<Signup />} />
 
-                            <Route path='/' element={<>home</>} />
+                            <Route path='/' element={<>hi</>} />
                             <Route path='/entities' element={<>entities</>} />
                             <Route path='/entities/:id' element={<EntityDetails />} />
                             <Route path='/activities' element={<>activities</>} />
@@ -37,21 +42,22 @@ export default function App() {
                             <Route path='/activities/:id' element={<>activity typeshi</>} />
 
                             <Route path='/visualize' element={<BlockVisualization />} />
-                            <Route path='/plan' element={<Plan />} />
-                            <Route path='/plan/structured' element={<StructuredPlan />} />
+
+                            <Route element={<PlanProvider />}>
+                                <Route path='/plan' element={<Plan />} />
+                                <Route path='/plan/constraints' element={<StructuredPlan />} />
+                                <Route path='/plan/results' element={<PlanResults />} />
+                            </Route>
+
                             <Route path='/ledgers' element={<Ledger />} />
-                            <Route path='/ledgers/:id' element={<>ledger typeshi</>} />
+                            <Route path='/ledgers/:id' element={<>ledgers id something</>} />
 
                             <Route path='/playground' element={<Playground />} />
-
-                            {/* Individual Component Routes */}
-                            <Route path='/time-picker' element={<div className="p-12 max-w-5xl mx-auto"><TimePicker /></div>} />
-                            <Route path='/date-time-picker' element={<div className="p-12 max-w-5xl mx-auto"><DateTimePicker /></div>} />
-                            <Route path='/date-time-range-picker' element={<div className="p-12 max-w-5xl mx-auto"><DateTimeRangePicker /></div>} />
                         </Routes>
                     </div>
                 </div>
             </BrowserRouter>
+
         </EntityProvider>
     </>
 }
