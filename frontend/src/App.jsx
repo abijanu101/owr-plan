@@ -13,6 +13,8 @@ import EditActivity from './pages/EditActivity'
 import StructuredPlan from './pages/StructuredPlan'
 import EntityDetails from './pages/EntityDetails'
 import PlanResults from './pages/PlanResults'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 
 export default function App() {
     return <>
@@ -26,8 +28,8 @@ export default function App() {
                             <Breadcrumbs />
                         </div>
                         <Routes>
-                            <Route path='/login' element={<>bye</>} />
-                            <Route path='/signup' element={<>bye</>} />
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/signup' element={<Signup />} />
 
                             <Route path='/' element={<>hi</>} />
                             <Route path='/entities' element={<>entities</>} />
