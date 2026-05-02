@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { usePlan } from '../context/PlanContext';
 import EntitySelector from '../components/EntitySelector';
-import SimplifiedConstraintPicker from '../components/Plan/SimplifiedConstraintPicker';
-import ActionBar from '../components/Plan/ActionBar';
-import PlanStatus from '../components/Plan/PlanStatus';
+import SimplifiedConstraintPicker from '../components/Plan/Constraints/SimplifiedConstraintPicker';
+import ActionBar from '../components/Plan/UI/ActionBar';
+import PlanStatus from '../components/Plan/UI/PlanStatus';
 
 export default function Plan() {
     const { constraints, getSimplifiedConstraintParameter, updateSimplifiedConstraint, resetPlan, setIsGenerating, setResults, planStatus } = usePlan();
@@ -30,14 +30,15 @@ export default function Plan() {
         setTimeout(() => {
             setResults({
                 bestOption: {
-                    startTime: "Saturday, May 2 at 02:00 PM",
-                    endTime: "Saturday, May 2 at 03:30 PM",
+                    date: "May 2",
+                    time: "02:00 PM",
+                    duration: "1.5hr",
                     score: 98,
-                    explanation: "This slot fits perfectly within the requested window and matches all attendee availability."
+                    attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara", "Fatima", "Zainab"]
                 },
                 alternatives: [
-                    { startTime: "Saturday, May 2 at 04:00 PM", endTime: "05:30 PM", score: 85, explanation: "Most attendees are free, but Zoha has a potential overlapping activity." },
-                    { startTime: "Sunday, May 3 at 10:00 AM", endTime: "11:30 AM", score: 72, explanation: "Morning slot that works for everyone, but is outside the primary preferred window." }
+                    { date: "May 2", time: "04:30 PM", duration: "1.5hr", score: 85, attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara"] },
+                    { date: "May 3", time: "10:00 AM", duration: "2hr", score: 72, attendees: ["Zoha", "Areeba", "Moomal", "Huda", "Sara", "Fatima"] }
                 ]
             });
             setIsGenerating(false);

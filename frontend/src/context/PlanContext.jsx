@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { getDefaultParameter } from '../components/Plan/ConstraintSchema';
+import { getDefaultParameter } from '../components/Plan/Constraints/ConstraintSchema';
 import Toast from '../components/UI/Toast';
 
 // Context that holds the unified plan state
@@ -35,7 +35,7 @@ export const PlanProvider = ({ children }) => {
             type: 'be between',
             parameter: {
                 start: { date: new Date(), time: '07:00 AM' },
-                end:   { date: new Date(), time: '11:59 PM' },
+                end: { date: new Date(), time: '11:59 PM' },
             },
             isSystem: true,
         },
@@ -74,21 +74,21 @@ export const PlanProvider = ({ children }) => {
     const setConstraints = (update) => {
         setConstraintsInternal(prev => {
             let next = typeof update === 'function' ? update(prev) : update;
-            
+
             // 1. Force custom 'include' constraints to be 'can'
             // 2. Prevent multiple custom 'include' constraints non-destructively
             const prevCustomIncludes = prev.filter(c => !c.isSystem && !c.isBlock && c.type === 'include');
             const nextCustomIncludes = next.filter(c => !c.isSystem && !c.isBlock && c.type === 'include');
-            
+
             if (nextCustomIncludes.length > 1 && nextCustomIncludes.length > prevCustomIncludes.length) {
                 showToast("Only one 'can include' constraint can be added.", "warning");
-                
+
                 // Find the one that was newly changed/added to 'include' and revert it
                 // If it was an addition (next is longer than prev)
                 if (next.length > prev.length) {
                     return prev;
                 }
-                
+
                 // If it was an update (next and prev same length)
                 return prev;
             }
@@ -100,7 +100,7 @@ export const PlanProvider = ({ children }) => {
                 }
                 return c;
             });
-            
+
             return next;
         });
     };
@@ -138,7 +138,7 @@ export const PlanProvider = ({ children }) => {
         // 1. Check start after vs end before (Curfews)
         const startAfter = list.find(c => !c.isBlock && c.type === 'start after' && c.modifier === 'must' && !c.disabled);
         const endBefore = list.find(c => !c.isBlock && c.type === 'end before' && c.modifier === 'must' && !c.disabled);
-        
+
         const parseTime = (t) => {
             if (!t || typeof t !== 'string') return 0;
             const parts = t.split(' ');
@@ -155,13 +155,13 @@ export const PlanProvider = ({ children }) => {
                 return { consistent: false, message: "Constraints inconsistent: Curfew starts after it ends." };
             }
         }
-        
+
         // 2. Check be between start vs end
         const beBetween = list.find(c => !c.isBlock && c.type === 'be between' && c.modifier === 'must' && !c.disabled);
         if (beBetween && beBetween.parameter?.start && beBetween.parameter?.end) {
             const start = new Date(beBetween.parameter.start.date);
             const end = new Date(beBetween.parameter.end.date);
-            
+
             // For simple date check
             const startDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
             const endDate = new Date(end.getFullYear(), end.getMonth(), end.getDate());
@@ -177,7 +177,7 @@ export const PlanProvider = ({ children }) => {
                 // (This is a simplified check assuming the total window between the two dates)
                 const totalMinutes = (end.getTime() - start.getTime()) / (1000 * 60);
                 const durMinutes = (duration.parameter.hours || 0) * 60 + (duration.parameter.minutes || 0);
-                
+
                 if (durMinutes > totalMinutes && totalMinutes > 0) {
                     return { consistent: false, message: "Constraints inconsistent: Duration is longer than the total window." };
                 }
@@ -205,12 +205,12 @@ export const PlanProvider = ({ children }) => {
                 setResults
             }}
         >
-                {toast && (
-                <Toast 
-                    key={toast.id} 
-                    message={toast.message} 
-                    type={toast.type} 
-                    onClose={() => setToast(null)} 
+            {toast && (
+                <Toast
+                    key={toast.id}
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
                 />
             )}
             {children || <Outlet />}
