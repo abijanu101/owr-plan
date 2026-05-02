@@ -121,14 +121,14 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     const [time, setTime] = useState(() => parseTime(initialTime));
     const [isOpen, setIsOpen] = useState(false);
 
-    useEffect(() => {
-        if (onChange) {
-            onChange(`${time.hour.toString().padStart(2, '0')}:${time.minute.toString().padStart(2, '0')} ${time.period}`);
-        }
-    }, [time, onChange]);
-
     const updateTime = (updates) => {
-        setTime(prev => ({ ...prev, ...updates }));
+        setTime(prev => {
+            const newTime = { ...prev, ...updates };
+            if (onChange) {
+                onChange(`${newTime.hour.toString().padStart(2, '0')}:${newTime.minute.toString().padStart(2, '0')} ${newTime.period}`);
+            }
+            return newTime;
+        });
     };
 
     const pickerContent = (

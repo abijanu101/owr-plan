@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TimePicker from '../components/Pickers/TimePicker';
 import DateTimePicker from '../components/Pickers/DateTimePicker';
 import EntitySelector from '../components/EntitySelector';
+import { useAuth } from '../context/AuthContext';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const FREQ = ['Day', 'Week', 'Month'];
@@ -216,6 +217,7 @@ function StepDot({ n, active, done, onClick }) {
 
 export default function CreateActivity() {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     const [step, setStep] = useState(1);
     const [title, setTitle] = useState('');
@@ -254,7 +256,7 @@ export default function CreateActivity() {
     const handleSubmit = async () => {
         setIsSubmitting(true); setSubmitError('');
         try {
-            const payload = { userId: 'demo-user', title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
+            const payload = { userId: user?._id, title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
             const res = await fetch('/api/activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
             if (data.success) navigate('/activities');

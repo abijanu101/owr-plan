@@ -9,18 +9,6 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const FREQ = ['Day', 'Week', 'Month'];
 const defaultSlot = () => ({ id: Date.now(), day: 'Monday', startTime: '08:00 AM', endTime: '09:00 AM', label: '' });
 
-// Mock data — replace with real API fetch
-const MOCK_ACTIVITY = {
-    _id: '1',
-    title: 'AHCI Weekly Lab',
-    participants: ['1', '3', '4'],
-    scheduleMode: 'structured',
-    slots: [
-        { id: 1, day: 'Monday', startTime: '08:30 AM', endTime: '10:00 AM', label: 'AHCI' },
-        { id: 2, day: 'Wednesday', startTime: '02:00 PM', endTime: '03:30 PM', label: 'Lab' },
-    ],
-    recurrence: { enabled: true, interval: 1, frequency: 'Week', endType: 'never', endDate: '', occurrences: 1 },
-};
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 function SectionCard({ children, className = '' }) {
@@ -261,12 +249,12 @@ export default function EditActivity() {
         const load = async () => {
             setLoading(true);
             try {
-                // Replace with real fetch: const res = await fetch(`/api/activities/${id}`); const data = await res.json();
-                const data = { success: true, data: { activity: MOCK_ACTIVITY } };
+                const res = await fetch(`/api/activities/${id}`, { credentials: 'include' });
+                const data = await res.json();
                 if (data.success) {
                     const a = data.data.activity;
                     setTitle(a.title);
-                    setSelectedEntityIds(a.participants || []);
+                    setSelectedEntityIds((a.participants || []).map(p => p._id || p));
                     setSlots((a.slots || []).map((s, i) => ({ ...s, id: s.id || i })));
                     setRecurrence(a.recurrence || { enabled: false, interval: 1, frequency: 'Week', endType: 'never', endDate: '', occurrences: 1 });
                     setOriginal(a);
@@ -296,10 +284,13 @@ export default function EditActivity() {
         setSaveError('');
         try {
             const payload = { title, participants: selectedEntityIds, slots, recurrence };
-            // const res = await fetch(`/api/activities/${id}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-            // const data = await res.json();
-            await new Promise(r => setTimeout(r, 900)); // simulate
-            const data = { success: true };
+            const res = await fetch(`/api/activities/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
             if (data.success) {
                 setSaveState('saved');
                 setTimeout(() => navigate('/activities'), 1500);

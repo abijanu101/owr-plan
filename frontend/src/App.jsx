@@ -1,24 +1,30 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { PlanProvider } from './context/PlanContext';
+import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/navbar'
 import Playground from './pages/playground'
 import Plan from './pages/plan'
 import Breadcrumbs from './components/Breadcrumbs'
-import TimePicker from './components/Pickers/TimePicker'
-import DateTimePicker from './components/Pickers/DateTimePicker'
-import DateTimeRangePicker from './components/Pickers/DateTimeRangePicker'
 import { EntityProvider } from './context/EntityContext'
 import CreateActivity from './pages/CreateActivity'
 import EditActivity from './pages/EditActivity'
 import StructuredPlan from './pages/StructuredPlan'
 import EntityDetails from './pages/EntityDetails'
+import Ledger from './pages/Ledger'
+import BlockVisualization from './pages/BlockVisualization'
+import PlanResults from './pages/PlanResults'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
 import ActivitiesPage from './pages/ActivitiesPage';
 import EntitiesPage from './pages/EntitiesPage';
 
 
 export default function App() {
     return <>
+        <AuthProvider>
         <EntityProvider>
+
             <BrowserRouter>
                 <div className="flex flex-col h-full">
                     <Navbar />
@@ -27,10 +33,10 @@ export default function App() {
                             <Breadcrumbs />
                         </div>
                         <Routes>
-                            <Route path='/login' element={<>bye</>} />
-                            <Route path='/signup' element={<>bye</>} />
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/signup' element={<Signup />} />
 
-                            <Route path='/' element={<>home</>} />
+                            <Route path='/' element={<>hi</>} />
                             <Route path="/entities" element={<EntitiesPage />} />
                             <Route path='/entities/:id' element={<EntityDetails />} />
                             <Route path="/activities" element={<ActivitiesPage />} />
@@ -38,22 +44,25 @@ export default function App() {
                             <Route path='/activities/:id/edit' element={<EditActivity />} />
                             <Route path='/activities/:id' element={<>activity typeshi</>} />
 
-                            <Route path='/visualize' element={<>schedule visualization here</>} />
-                            <Route path='/plan' element={<Plan />} />
-                            <Route path='/plan/structured' element={<StructuredPlan />} />
-                            <Route path='/ledgers' element={<>list of expense ledgers page</>} />
-                            <Route path='/ledgers/:id' element={<>ledger typeshi</>} />
+                            <Route path='/visualize' element={<BlockVisualization />} />
+
+                            <Route element={<PlanProvider />}>
+                                <Route path='/plan' element={<Plan />} />
+                                <Route path='/plan/constraints' element={<StructuredPlan />} />
+                                <Route path='/plan/results' element={<PlanResults />} />
+                            </Route>
+
+                            <Route path='/ledgers' element={<Ledger />} />
+                            <Route path='/ledgers/:id' element={<>ledgers id something</>} />
 
                             <Route path='/playground' element={<Playground />} />
-
-                            {/* Individual Component Routes */}
-                            <Route path='/time-picker' element={<div className="p-12 max-w-5xl mx-auto"><TimePicker /></div>} />
-                            <Route path='/date-time-picker' element={<div className="p-12 max-w-5xl mx-auto"><DateTimePicker /></div>} />
-                            <Route path='/date-time-range-picker' element={<div className="p-12 max-w-5xl mx-auto"><DateTimeRangePicker /></div>} />
                         </Routes>
                     </div>
                 </div>
             </BrowserRouter>
+
         </EntityProvider>
+        </AuthProvider>
     </>
 }
+

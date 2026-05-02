@@ -1,30 +1,23 @@
 const app = require('./app');
-require('dotenv').config(); // Load environment variables from .env file
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'localhost';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/owr-plan';
 
-// Start the server
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Server is running at http://${HOST}:${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-// Graceful shutdown handling
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+// Connect to MongoDB then start server
+mongoose
+  .connect(MONGO_URI)
+  .then(() => {
+    console.log('✅ MongoDB connected');
+    app.listen(PORT, HOST, () => {
+      console.log(`🚀 Server running at http://${HOST}:${PORT}`);
+      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ MongoDB connection failed:', err.message);
+    console.error('   Check MONGO_URI in backend/.env');
+    process.exit(1);
   });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-module.exports = server;
