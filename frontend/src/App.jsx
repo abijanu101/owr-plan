@@ -15,49 +15,53 @@ import BlockVisualization from './pages/BlockVisualization'
 import PlanResults from './pages/PlanResults'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import ActivitiesPage from './pages/ActivitiesPage';
+import EntitiesPage from './pages/EntitiesPage';
+
 
 export default function App() {
     return <>
         <AuthProvider>
-            <EntityProvider>
+        <EntityProvider>
 
-                <BrowserRouter>
-                    <div className="flex flex-col h-full">
-                        <Navbar />
-                        <div className="flex-1 overflow-y-auto">
-                            <div className="max-w-7xl mx-auto">
-                                <Breadcrumbs />
-                            </div>
-                            <Routes>
-                                <Route path='/login' element={<Login />} />
-                                <Route path='/signup' element={<Signup />} />
-
-                                <Route path='/' element={<>hi</>} />
-                                <Route path='/entities' element={<>entities</>} />
-                                <Route path='/entities/:id' element={<EntityDetails />} />
-                                <Route path='/activities' element={<>activities</>} />
-                                <Route path='/activities/create' element={<CreateActivity />} />
-                                <Route path='/activities/:id/edit' element={<EditActivity />} />
-                                <Route path='/activities/:id' element={<>activity typeshi</>} />
-
-                                <Route path='/visualize' element={<BlockVisualization />} />
-
-                                <Route element={<PlanProvider />}>
-                                    <Route path='/plan' element={<Plan />} />
-                                    <Route path='/plan/constraints' element={<StructuredPlan />} />
-                                    <Route path='/plan/results' element={<PlanResults />} />
-                                </Route>
-
-                                <Route path='/ledgers' element={<Ledger />} />
-                                <Route path='/ledgers/:id' element={<>ledgers id something</>} />
-
-                                <Route path='/playground' element={<Playground />} />
-                            </Routes>
+            <BrowserRouter>
+                <div className="flex flex-col h-full">
+                    <Navbar />
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="max-w-7xl mx-auto">
+                            <Breadcrumbs />
                         </div>
-                    </div>
-                </BrowserRouter>
+                        <Routes>
+                            <Route path='/login' element={<Login />} />
+                            <Route path='/signup' element={<Signup />} />
 
-            </EntityProvider>
+                            <Route path='/' element={<>hi</>} />
+                            <Route path="/entities" element={<EntitiesPage />} />
+                            <Route path='/entities/:id' element={<EntityDetails />} />
+                            <Route path="/activities" element={<ActivitiesPage />} />
+                            <Route path='/activities/create' element={<CreateActivity />} />
+                            <Route path='/activities/:id/edit' element={<EditActivity />} />
+                            <Route path='/activities/:id' element={<>activity typeshi</>} />
+
+                            <Route path='/visualize' element={<BlockVisualization />} />
+
+                            <Route element={<PlanProvider />}>
+                                <Route path='/plan' element={<Plan />} />
+                                <Route path='/plan/constraints' element={<StructuredPlan />} />
+                                <Route path='/plan/results' element={<PlanResults />} />
+                            </Route>
+
+                            <Route path='/ledgers' element={<Ledger />} />
+                            <Route path='/ledgers/:id' element={<>ledgers id something</>} />
+
+                            <Route path='/playground' element={<Playground />} />
+                        </Routes>
+                    </div>
+                </div>
+            </BrowserRouter>
+
+        </EntityProvider>
         </AuthProvider>
     </>
 }
+
