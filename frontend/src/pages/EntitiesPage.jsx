@@ -23,14 +23,24 @@ export default function EntitiesPage() {
   const [selected, setSelected] = useState(new Set());
   const [editor, setEditor] = useState({ open: false, draft: null });
 
-  // BACKEND: replace with real GET request, filter on server if needed
-  useEffect(() => { listEntities(tab).then(setItems); setSelected(new Set()); }, [tab]);
+  // BACKEND: Fetch and normalize entities. Filter by tab locally if backend returns all.
+  useEffect(() => { 
+    listEntities(tab).then(data => {
+      const normalized = Array.isArray(data) ? data : [];
+      setItems(normalized);
+    }); 
+    setSelected(new Set()); 
+  }, [tab]);
 
   const visible = useMemo(() => {
-    const arr = items.filter((e) => e.name.toLowerCase().includes(search.toLowerCase()));
+    // Filter by type (person/group) and search query
+    const arr = items.filter((e) => 
+      e.type === tab && 
+      e.name.toLowerCase().includes(search.toLowerCase())
+    );
     return [...arr].sort((a, b) =>
-      sortKey === 'name' ? a.name.localeCompare(b.name) : b.createdAt - a.createdAt);
-  }, [items, search, sortKey]);
+      sortKey === 'name' ? a.name.localeCompare(b.name) : new Date(b.createdAt) - new Date(a.createdAt));
+  }, [items, search, sortKey, tab]);
 
   const toggleSelect = (id) => setSelected((p) => {
     const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n;

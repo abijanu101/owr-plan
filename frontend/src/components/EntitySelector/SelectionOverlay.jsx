@@ -1,16 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { Link } from 'react-router-dom';
 import EntityChip from './EntityChip';
 
 export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggle, entities }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedSections, setExpandedSections] = useState(['people', 'groups']);
-    const [sections, setSections] = useState([
-        { id: 'people', title: 'All People', type: 'person' },
-        { id: 'groups', title: 'All Groups', type: 'group' },
-        { id: 'owrplan-gng', title: 'owrplan gng', type: 'group' },
-        { id: 'section-g', title: 'Section G', type: 'person' },
-    ]);
+
+    // Dynamically derive sections from entities
+    const sections = useMemo(() => {
+        const baseSections = [
+            { id: 'people', title: 'All People', type: 'person' },
+            { id: 'groups', title: 'All Groups', type: 'group' },
+        ];
+
+        // Add a section for each group entity
+        const groupSections = entities
+            .filter(e => e.type === 'group')
+            .map(group => ({
+                id: `group-${group.id}`,
+                title: group.name,
+                type: 'group_members',
+                groupId: group.id,
+                memberIds: group.members || []
+            }));
+
+        return [...baseSections, ...groupSections];
+    }, [entities]);
 
     const [draggedItem, setDraggedItem] = useState(null);
 
@@ -51,15 +67,7 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
 
     const handleDragOver = (e, index) => {
         e.preventDefault();
-        if (draggedItem === null || draggedItem === index) return;
-
-        // Reorder immediately
-        const newSections = [...sections];
-        const [movedItem] = newSections.splice(draggedItem, 1);
-        newSections.splice(index, 0, movedItem);
-
-        setDraggedItem(index);
-        setSections(newSections);
+        // Drag reordering disabled for dynamic sections for now to keep implementation simple
     };
 
     const filteredEntities = entities.filter(e =>
@@ -136,12 +144,15 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                     ) : (
                         sections.map((section, index) => {
                             const sectionEntities = filteredEntities.filter(e => {
-                                if (section.id === 'section-g') return e.id === '1' || e.id === '2';
-                                if (section.id === 'owrplan-gng') return e.id === '3' || e.id === '4';
+                                if (section.type === 'group_members') {
+                                    return section.memberIds.includes(e.id);
+                                }
                                 return e.type === section.type;
                             });
 
                             const isExpanded = expandedSections.includes(section.id);
+                            
+                            // Only hide empty sections if we are searching
                             if (sectionEntities.length === 0 && searchQuery) return null;
 
                             return (
@@ -188,31 +199,46 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                                     </div>
 
                                     {/* Chips Area */}
-                                    <div className={`flex items-start gap-2 md:gap-4 px-3 md:px-8 overflow-hidden transition-all duration-500 rounded-b-[20px] ${isExpanded ? 'opacity-100 bg-black/20 pt-4 pb-8 max-h-[1000px]' : 'max-h-0 opacity-0 pt-0 pb-0'}`}>
-                                        {/* ∀ (Select All) Button */}
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleSelectAll(section.id, sectionEntities);
-                                            }}
-                                            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg mt-1 border border-transparent transition-all active:border-white/40 active:scale-95 bg-[var(--color-primary)] hover:shadow-[0_0_15px_rgba(249,119,102,0.4)]"
-                                            title="Select All / None"
-                                        >
-                                            <span className="text-lg font-bold leading-none">∀</span>
-                                        </button>
+                                    <div className={`flex flex-col px-3 md:px-8 overflow-hidden transition-all duration-500 rounded-b-[20px] ${isExpanded ? 'opacity-100 bg-black/20 pt-4 pb-8 max-h-[1000px]' : 'max-h-0 opacity-0 pt-0 pb-0'}`}>
+                                        {sectionEntities.length === 0 ? (
+                                            <div className="py-6 text-center text-[#DC8379]/40 italic text-sm space-y-2">
+                                                <p>No {section.type === 'group' ? 'groups' : 'members'} found in this category.</p>
+                                                <Link 
+                                                    to={section.type === 'group_members' ? `/entities/${section.groupId}` : "/entities"} 
+                                                    className="inline-block text-primary underline underline-offset-4 hover:text-primary/80 transition-colors not-italic font-bold"
+                                                    onClick={onClose}
+                                                >
+                                                    {section.type === 'group_members' ? 'Edit Group →' : 'Manage Entities →'}
+                                                </Link>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-start gap-2 md:gap-4 w-full">
+                                                {/* ∀ (Select All) Button */}
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleSelectAll(section.id, sectionEntities);
+                                                    }}
+                                                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg mt-1 border border-transparent transition-all active:border-white/40 active:scale-95 bg-[var(--color-primary)] hover:shadow-[0_0_15px_rgba(249,119,102,0.4)]"
+                                                    title="Select All / None"
+                                                >
+                                                    <span className="text-lg font-bold leading-none">∀</span>
+                                                </button>
 
-                                        <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
-                                            {sectionEntities.map(entity => (
-                                                <EntityChip
-                                                    key={entity.id}
-                                                    name={entity.name}
-                                                    color={entity.color}
-                                                    isSelected={selectedIds.includes(entity.id)}
-                                                    isGroup={entity.type === 'group'}
-                                                    onClick={() => onToggle(entity.id)}
-                                                />
-                                            ))}
-                                        </div>
+                                                <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
+                                                    {sectionEntities.map(entity => (
+                                                        <EntityChip
+                                                            key={entity.id}
+                                                            name={entity.name}
+                                                            color={entity.color}
+                                                            isSelected={selectedIds.includes(entity.id)}
+                                                            isGroup={entity.type === 'group'}
+                                                            onClick={() => onToggle(entity.id)}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             );

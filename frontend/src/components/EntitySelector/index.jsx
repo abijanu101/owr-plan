@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import EntityChip from './EntityChip';
 import SelectionOverlay from './SelectionOverlay';
 import { useAuth } from '../../context/AuthContext';
+import { listEntities } from '../../api/entitiesApi';
 
 export default function EntitySelector({
     selectedIds = [],
@@ -19,18 +20,20 @@ export default function EntitySelector({
         const fetchEntities = async () => {
             setLoadingEntities(true);
             try {
-                const res = await fetch(`/api/entities/user/${user._id}`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) {
-                    // Normalize fields: backend uses `faceIcon`, frontend chip uses `color`
-                    setEntities((data.data?.entities || []).map(e => ({
-                        id: e._id,
+                const data = await listEntities('all');
+                
+                // Backend returns a plain array of entities
+                if (Array.isArray(data)) {
+                    setEntities(data.map(e => ({
+                        id: e._id || e.id,
                         name: e.name,
-                        type: e.type,
+                        type: e.type || e.kind,
                         color: e.color || 'var(--color-primary)',
                     })));
                 }
-            } catch { /* keep empty */ }
+            } catch (err) {
+                console.error("Failed to fetch entities:", err);
+            }
             finally { setLoadingEntities(false); }
         };
         fetchEntities();

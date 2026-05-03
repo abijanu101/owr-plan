@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middlewares/auth.middleware');
 const {
   createEntity,
   getEntityById,
@@ -15,7 +16,10 @@ const {
 } = require('../controllers/entityController');
 
 // Routes for entity operations
+router.use(protect); // 👈 PROTECT ALL ROUTES BELOW
+
 router.post('/', createEntity);
+router.get('/', getEntitiesByUser);
 router.get('/user/:userId', getEntitiesByUser);
 router.get('/:id', getEntityById);
 router.put('/:id', updateEntity);

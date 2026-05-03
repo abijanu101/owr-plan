@@ -38,7 +38,7 @@ export default function Navbar() {
                 <div className="hidden md:flex flex-row items-center gap-6">
                     {!user ? (
                         <>
-                            <Link to="/login" className="inline-block text-xl whitespace-nowrap hover:text-white transition-colors px-3">login</Link>
+                            <Link to="/login" className="inline-block text-xl whitespace-nowrap hover:text-neutral transition-colors px-3">login</Link>
                             <Link to="/signup" className="inline-block bg-[var(--color-primary)] whitespace-nowrap text-[var(--bg-primary)] px-4 py-2 leading-none rounded-full text-xl font-bold hover:brightness-110 hover:scale-105 transition-all">signup</Link>
                         </>
                     ) : (
@@ -58,7 +58,7 @@ export default function Navbar() {
                 <div className="md:hidden">
                     <button
                         onClick={() => setIsMobileOpen(!isMobileOpen)}
-                        className="text-[var(--color-primary)] hover:text-white focus:outline-none"
+                        className="text-[var(--color-primary)] hover:text-neutral focus:outline-none"
                     >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             {isMobileOpen ? (
@@ -81,7 +81,7 @@ export default function Navbar() {
                     return (
                         <Link
                             key={item.name}
-                            to={item.path}
+                            to={user ? item.path : '/login'}
                             onClick={() => handleItemClick(item.name)}
                             className={`relative flex flex-col items-center gap-2 group/link transition-all ${isActive ? 'scale-110' : 'hover:scale-105 opacity-80 hover:opacity-100'} ${clickedItem === item.name ? 'pulse' : ''}`}
                         >
@@ -125,7 +125,7 @@ export default function Navbar() {
                         return (
                             <Link
                                 key={item.name}
-                                to={item.path}
+                                to={user ? item.path : '/login'}
                                 onClick={() => {
                                     handleItemClick(item.name);
                                     setTimeout(() => setIsMobileOpen(false), 200);
