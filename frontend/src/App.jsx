@@ -45,13 +45,17 @@ function AppContent() {
                           location.pathname.startsWith('/visualize') ||
                           location.pathname.startsWith('/entities');
 
+    const isLandingPage = location.pathname === '/';
+
     return (
         <div className="flex flex-col h-full">
-            <Navbar />
+            {!isLandingPage && <Navbar />}
             <div className="flex-1 overflow-y-auto">
-                <div className="max-w-7xl mx-auto">
-                    <Breadcrumbs />
-                </div>
+                {!isLandingPage && (
+                    <div className="max-w-7xl mx-auto">
+                        <Breadcrumbs />
+                    </div>
+                )}
                 <Routes>
                     {/* Landing Page - Publicly Accessible, but redirects if logged in */}
                     <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
@@ -89,7 +93,7 @@ function AppContent() {
                     {/* Catch-all 404 Route */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
-                <Footer className={isPlanningPage ? 'pb-32' : ''} />
+                {!isLandingPage && <Footer className={isPlanningPage ? 'pb-32' : ''} />}
             </div>
         </div>
     );
