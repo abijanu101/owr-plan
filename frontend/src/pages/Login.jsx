@@ -44,7 +44,7 @@ const PatternSides = () => (
             {/* Overlay that hides the pattern in the center and reveals it on the edges */}
             <rect width="100%" height="100%" fill="url(#vignette)" />
         </svg>
-        
+
         {/* Animated ambient glow behind the form */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] bg-[var(--color-primary)]/10 rounded-full blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '6s' }} />
     </div>

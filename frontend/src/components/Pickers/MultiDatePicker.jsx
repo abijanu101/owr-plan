@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const CalendarIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -34,6 +35,7 @@ export default function MultiDatePicker({ initialDates = [], onChange, variant =
 
     useEffect(() => {
         const handleClickOutside = (event) => {
+            if (event.target.closest('.picker-modal-content')) return;
             if (containerRef.current && !containerRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
@@ -56,36 +58,30 @@ export default function MultiDatePicker({ initialDates = [], onChange, variant =
 
     if (variant === 'inline-text') {
         return (
-            <div className="relative inline-block select-none" ref={containerRef}>
+            <div className="relative inline-block" ref={containerRef}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="text-[#f97766] hover:brightness-110 transition-all border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
+                    className="flex items-center gap-1.5 text-[#f97766] hover:brightness-110 transition-all border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
                     style={{ fontFamily: 'cursive' }}
                 >
-                    {formatDatesText()}
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                    <span>{formatDatesText()}</span>
                 </button>
 
-                {isOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
-                            if (el) {
-                                const handler = (e) => {
-                                    if (e.target === el.parentElement) setIsOpen(false);
-                                };
-                                el.parentElement.addEventListener('mousedown', handler);
-                                return () => el.parentElement.removeEventListener('mousedown', handler);
-                            }
-                        }}>
-                            <MultiDatePickerPanel
-                                selectedDates={selectedDates}
-                                setSelectedDates={setSelectedDates}
-                                onClose={() => {
-                                    setIsOpen(false);
-                                    if (onChange) onChange(selectedDates);
-                                }}
-                            />
+                {isOpen && createPortal(
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
+                        <div className="picker-modal-content relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200">
+                        <MultiDatePickerPanel
+                            selectedDates={selectedDates}
+                            setSelectedDates={setSelectedDates}
+                            onClose={() => {
+                                setIsOpen(false);
+                                if (onChange) onChange(selectedDates);
+                            }}
+                        />
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
         );
@@ -196,10 +192,10 @@ function MultiDatePickerPanel({ selectedDates, setSelectedDates, onClose }) {
                     key={d}
                     onClick={() => handleDateClick(d)}
                     className={`w-9 h-9 flex items-center justify-center rounded-full text-[15px] font-bold transition-all cursor-pointer ${selected
-                            ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] shadow-[0_0_15px_rgba(249,119,102,0.4)] scale-110'
+                            ? 'bg-[#f97766] text-[#1A0B16] shadow-[0_0_15px_rgba(249,119,102,0.4)] scale-110'
                             : currentDay
-                                ? 'border border-primary text-primary hover:bg-[var(--color-primary)]/20'
-                                : 'text-primary/90 hover:bg-[var(--bg-raised)] hover:text-primary'
+                                ? 'border border-[#f97766] text-[#f97766] hover:bg-[#f97766]/20'
+                                : 'text-[#DC8379] hover:bg-white/5 hover:text-[#f97766]'
                         }`}
                 >
                     {d}

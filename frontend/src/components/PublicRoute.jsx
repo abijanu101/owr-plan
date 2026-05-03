@@ -13,7 +13,7 @@ const PublicRoute = ({ children }) => {
     }
 
     if (user) {
-        return <Navigate to="/activities" replace />;
+        return <Navigate to="/dashboard" replace />;
     }
 
     return children ? children : <Outlet />;
