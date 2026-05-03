@@ -74,7 +74,7 @@ export default function Signup() {
         const result = await signup(formData.name, formData.email, formData.password);
 
         if (result.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else {
             setError(result.message);
             setIsLoading(false);

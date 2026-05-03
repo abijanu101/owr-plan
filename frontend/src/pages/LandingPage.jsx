@@ -34,7 +34,7 @@ export default function LandingPage() {
 
 
             {/* --- Hero Section --- */}
-            <main className="relative z-10 flex flex-col items-center pt-16 md:pt-24 px-4 text-center">
+            <main className="relative z-10 flex flex-col items-center pt-28 md:pt-36 px-4 text-center">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-raised)] border border-[var(--border-subtle)] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--text-muted)]">Now with AI Scheduling</span>
@@ -65,7 +65,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* --- Gorgeous Mockup Showcase --- */}
-                <div className="relative mt-20 w-full max-w-6xl mx-auto px-4 sm:px-10 pb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
+                <div className="relative mt-16 md:mt-24 w-full max-w-6xl mx-auto px-4 sm:px-10 pb-20 md:pb-32 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-500">
                     {/* Main Laptop Image */}
                     <div className="relative z-10 rounded-2xl md:rounded-[2rem] overflow-hidden border border-[var(--border-subtle)]/50 shadow-[0_20px_60px_-15px_rgba(255,163,132,0.2)] bg-[var(--bg-raised)]">
                         <div className="absolute inset-0 bg-gradient-to-t from-[var(--bg-primary)]/80 via-transparent to-transparent z-10 pointer-events-none" />
@@ -75,7 +75,7 @@ export default function LandingPage() {
                             className="w-full h-auto object-cover opacity-90 hover:opacity-100 transition-opacity duration-500"
                         />
                         {/* Overlay text in the gradient */}
-                        <div className="absolute bottom-6 left-8 right-8 z-20 flex justify-between items-end">
+                        <div className="absolute bottom-6 left-8 right-8 z-20 hidden md:flex justify-between items-end">
                             <div>
                                 <h3 className="text-2xl font-bold text-[var(--text-neutral)]">Powerful Scheduling</h3>
                                 <p className="text-[var(--text-muted)] text-sm">Constraint-based auto generation</p>
@@ -84,7 +84,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Overlapping Mobile Image - Floating Right */}
-                    <div className="absolute -bottom-10 -right-4 sm:-right-8 md:right-8 z-20 w-48 sm:w-64 md:w-80 rounded-3xl overflow-hidden border-4 border-[var(--bg-primary)] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] rotate-2 hover:rotate-0 transition-transform duration-500">
+                    <div className="absolute -bottom-8 md:-bottom-10 -right-2 sm:-right-8 md:right-8 z-20 w-36 sm:w-56 md:w-80 rounded-2xl md:rounded-3xl overflow-hidden border-2 md:border-4 border-[var(--bg-primary)] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.8)] rotate-2 hover:rotate-0 transition-transform duration-500">
                         <img 
                             src={mobilePlan} 
                             alt="OwrPlan Mobile Interface" 
@@ -93,7 +93,7 @@ export default function LandingPage() {
                     </div>
                     
                     {/* Overlapping Results Image - Floating Left */}
-                    <div className="absolute top-1/2 -left-4 sm:-left-8 md:left-0 -translate-y-1/2 z-0 w-56 sm:w-72 md:w-96 rounded-2xl overflow-hidden border border-[var(--border-subtle)]/50 shadow-[0_20px_50px_-10px_rgba(0,0,0,0.5)] -rotate-3 hover:rotate-0 transition-transform duration-500 opacity-60 hover:opacity-100 hover:z-30">
+                    <div className="absolute top-1/2 -left-2 sm:-left-8 md:left-0 -translate-y-1/2 z-0 w-40 sm:w-64 md:w-96 rounded-xl md:rounded-2xl overflow-hidden border border-[var(--border-subtle)]/50 shadow-[0_15px_30px_-5px_rgba(0,0,0,0.5)] -rotate-3 hover:rotate-0 transition-transform duration-500 opacity-60 hover:opacity-100 hover:z-30">
                         <img 
                             src={laptopResults} 
                             alt="OwrPlan Results" 
@@ -104,7 +104,7 @@ export default function LandingPage() {
             </main>
 
             {/* --- Features Grid (Glassmorphism) --- */}
-            <section className="relative z-10 py-32 px-6 bg-[var(--bg-primary)]">
+            <section className="relative z-10 py-20 md:py-32 px-6 bg-[var(--bg-primary)]">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-20">
                         <h2 className="text-4xl md:text-5xl font-black text-[var(--text-neutral)] mb-6">Everything you need to <span className="text-[var(--color-primary)]">unite</span> your group.</h2>
@@ -152,7 +152,7 @@ export default function LandingPage() {
             </section>
 
             {/* --- CTA Section --- */}
-            <section className="relative z-10 py-24 px-6 border-t border-[var(--border-subtle)]/30">
+            <section className="relative z-10 py-16 md:py-24 px-6 border-t border-[var(--border-subtle)]/30">
                 <div className="max-w-4xl mx-auto text-center">
                     <h2 className="text-4xl font-black text-[var(--text-neutral)] mb-8">Ready to bring the group chat to life?</h2>
                     <Link to="/signup" className="inline-flex items-center justify-center px-10 py-5 font-black text-xl text-[var(--bg-primary)] bg-[var(--color-primary)] rounded-full hover:brightness-110 hover:shadow-[0_0_30px_rgba(255,163,132,0.4)] transition-all active:scale-95">
