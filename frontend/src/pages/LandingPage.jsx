@@ -19,7 +19,7 @@ export default function LandingPage() {
                         <rect width="100" height="100" fill="url(#grid)" />
                     </svg>
                 </div>
-                
+
                 <div className="max-w-6xl mx-auto text-center relative z-10">
                     <h1 className="text-6xl md:text-8xl font-black mb-6 tracking-tighter animate-fade-in">
                         <span className="text-primary italic">Plan</span> Together. <br />
@@ -28,7 +28,7 @@ export default function LandingPage() {
                     <p className="text-xl md:text-2xl text-neutral max-w-2xl mx-auto mb-12 opacity-80 leading-relaxed">
                         OwrPlan helps groups coordinate schedules, manage activities, and settle expenses in one unified experience.
                     </p>
-                    
+
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                         <Link to="/signup">
                             <Button className="px-10 py-5 text-xl">
@@ -47,7 +47,7 @@ export default function LandingPage() {
                 <div className="mt-24 relative max-w-5xl mx-auto">
                     <div className="absolute -top-12 -left-12 w-64 h-64 bg-primary/20 rounded-full blur-[100px]" />
                     <div className="absolute -bottom-12 -right-12 w-64 h-64 bg-accent/30 rounded-full blur-[100px]" />
-                    
+
                     <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                         <div className="group relative rounded-2xl overflow-hidden border border-primary/20 shadow-2xl transition-transform hover:-translate-y-2">
                             <img src={planPreview} alt="Plan Interface" className="w-full h-auto opacity-90 group-hover:opacity-100 transition-opacity" />
@@ -78,7 +78,7 @@ export default function LandingPage() {
                             <h3 className="text-2xl font-bold text-neutral mb-4">Availability Sync</h3>
                             <p className="text-neutral opacity-70">Find the perfect time for everyone without the endless "when are you free?" messages.</p>
                         </div>
-                        
+
                         <div className="p-8 rounded-3xl bg-raised border border-primary/10 hover:border-primary/30 transition-colors">
                             <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6">
                                 <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
