@@ -15,6 +15,38 @@ const timeStringToDate = (timeStr, baseDate = new Date()) => {
   }
 };
 
+const transformActivity = (activity) => {
+  const slots = activity.slots || [];
+  
+  // compute timeRange (e.g. from first slot)
+  let timeRange = '';
+  if (slots.length > 0) {
+    timeRange = `${slots[0].startTime} - ${slots[0].endTime}`;
+  }
+
+  // compute days (e.g. ['M', 'T', 'W'])
+  const dayMap = { 'Monday': 'M', 'Tuesday': 'T', 'Wednesday': 'W', 'Thursday': 'TH', 'Friday': 'F', 'Saturday': 'SA', 'Sunday': 'S' };
+  const days = [...new Set(slots.map(s => dayMap[s.day] || s.day))];
+
+  // compute date string
+  let date = '';
+  if (activity.recurrence?.enabled) {
+    date = `Every ${activity.recurrence.interval > 1 ? activity.recurrence.interval + ' ' : ''}${activity.recurrence.frequency}s`;
+  } else {
+    date = 'One-time';
+  }
+
+  return {
+    id: activity._id?.toString(),
+    title: activity.title,
+    timeRange,
+    date,
+    days,
+    participants: activity.participants?.map(p => p.name || p.toString()) || [],
+    createdAt: activity.createdAt ? new Date(activity.createdAt).getTime() : Date.now(),
+  };
+};
+
 // POST /api/activities
 const createActivity = async (req, res) => {
   try {
@@ -181,6 +213,82 @@ const getBestTimeSlots = async (req, res) => {
   res.status(200).json({ success: true, data: { slots: [] } });
 };
 
+// GET /api/activities
+const listActivities = async (req, res) => {
+  try {
+    const activities = await Activity.find()
+      .populate('participants', 'name icon color')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const transformed = activities.map(transformActivity);
+
+    res.status(200).json({ 
+      success: true, 
+      data: transformed
+    });
+  } catch (err) {
+    console.error('listActivities error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch activities' });
+  }
+};
+
+// DELETE /api/activities/bulk
+const bulkDeleteActivities = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'ids array is required' });
+    }
+
+    await Activity.deleteMany({ _id: { $in: ids } });
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('bulkDeleteActivities error:', err);
+    res.status(500).json({ success: false, message: 'Failed to delete activities' });
+  }
+};
+
+// POST /api/activities/duplicate
+const duplicateActivities = async (req, res) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ success: false, message: 'ids array is required' });
+    }
+
+    const originals = await Activity.find({ _id: { $in: ids } }).populate('participants', 'name icon color').lean();
+
+    if (originals.length === 0) {
+      return res.status(404).json({ success: false, message: 'No activities found to duplicate' });
+    }
+
+    const duplicates = originals.map(original => {
+      const { _id, __v, createdAt, updatedAt, ...rest } = original;
+      return {
+        ...rest,
+        title: `${rest.title} (copy)`,
+        participants: original.participants.map(p => p._id),
+      };
+    });
+
+    const created = await Activity.insertMany(duplicates);
+    
+    // Populate participants so transformActivity gets names
+    const populated = await Activity.find({ _id: { $in: created.map(c => c._id) } }).populate('participants', 'name icon color').lean();
+    
+    const transformed = populated.map(transformActivity);
+
+    res.status(201).json({ success: true, data: transformed });
+  } catch (err) {
+    console.error('duplicateActivities error:', err);
+    res.status(500).json({ success: false, message: 'Failed to duplicate activities' });
+  }
+};
+
 module.exports = {
   createActivity,
   bulkCreateActivities,
@@ -191,4 +299,7 @@ module.exports = {
   deleteActivity,
   getAvailabilityVisualization,
   getBestTimeSlots,
+  listActivities,
+  bulkDeleteActivities,
+  duplicateActivities,
 };

@@ -1,13 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import Toolbar from '../components/Toolbar';
-import Modal from '../components/Modal';
 import ActivityList from '../components/ActivityList';
-import ActivityForm from '../components/ActivityForm';
 import {
   listActivities,
-  createActivity,
-  updateActivity,
   deleteActivities,
   duplicateActivities,
 } from '../api/activitiesApi';
@@ -30,8 +27,8 @@ export default function ActivitiesPage() {
   const [sortKey, setSortKey] = useState('recent');
   const [filterKey, setFilterKey] = useState('all');
   const [selected, setSelected] = useState(new Set());
-  const [editor, setEditor] = useState({ open: false, draft: null });
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   // ✅ Safe API call (prevents blank screen crash)
   useEffect(() => {
@@ -82,32 +79,12 @@ export default function ActivitiesPage() {
     });
   };
 
-  const openCreate = () => setEditor({ open: true, draft: null });
+  const openCreate = () => navigate('/activities/create');
 
   const openEdit = () => {
     if (selected.size !== 1) return;
     const id = [...selected][0];
-    const found = items.find((i) => i.id === id);
-    setEditor({ open: true, draft: found });
-  };
-
-  const onSubmit = async (data) => {
-    try {
-      if (editor.draft) {
-        const updated = await updateActivity(editor.draft.id, data);
-        setItems((prev) =>
-          prev.map((i) => (i.id === updated.id ? updated : i))
-        );
-      } else {
-        const created = await createActivity(data);
-        setItems((prev) => [created, ...prev]);
-      }
-    } catch (err) {
-      console.error('Save failed:', err);
-    }
-
-    setEditor({ open: false, draft: null });
-    setSelected(new Set());
+    navigate(`/activities/${id}/edit`);
   };
 
   const onDelete = async () => {
@@ -165,32 +142,6 @@ export default function ActivitiesPage() {
           onToggleSelect={toggleSelect}
         />
       </div>
-
-      <Modal
-        open={editor.open}
-        title={editor.draft ? 'Edit activity' : 'Create activity'}
-        onClose={() => setEditor({ open: false, draft: null })}
-        footer={
-          <>
-            <button
-              className="btn-pill"
-              onClick={() => setEditor({ open: false, draft: null })}
-            >
-              Cancel
-            </button>
-            <button
-              className="btn-pill"
-              data-active="true"
-              form="activity-form"
-              type="submit"
-            >
-              Save
-            </button>
-          </>
-        }
-      >
-        <ActivityForm initial={editor.draft} onSubmit={onSubmit} />
-      </Modal>
     </div>
   );
 }

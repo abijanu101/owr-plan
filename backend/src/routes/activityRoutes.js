@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-// 👈 CHANGED: Import from activityController1 instead of activityController
+// 👈 CHANGED: Import from activityController
 const {
   createActivity,
   listActivities,
+  getActivityById,
   updateActivity,
+  deleteActivity,
   bulkDeleteActivities,
   duplicateActivities,
-} = require('../controllers/activityController1');
+} = require('../controllers/activityController');
 
 // IMPORTANT: Specific routes MUST come BEFORE parameterized routes
 
@@ -24,7 +26,13 @@ router.get('/', listActivities);
 // POST create activity
 router.post('/', createActivity);
 
+// GET /api/activities/:id
+router.get('/:id', getActivityById);
+
 // PUT /api/activities/:id
 router.put('/:id', updateActivity);
+
+// DELETE /api/activities/:id
+router.delete('/:id', deleteActivity);
 
 module.exports = router;

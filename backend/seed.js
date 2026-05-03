@@ -11,8 +11,11 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/owrplan';
 
 async function seed() {
   try {
-    await mongoose.connect(MONGO_URI);
-    console.log('Connected to DB');
+    // Only connect if not already connected
+    if (mongoose.connection.readyState !== 1) {
+       await mongoose.connect(MONGO_URI);
+       console.log('Connected to DB in seed script');
+    }
 
     // Clear existing data
     await User.deleteMany({});
@@ -128,8 +131,15 @@ async function seed() {
   } catch (error) {
     console.error('Error seeding database:', error);
   } finally {
-    mongoose.connection.close();
+    // Only close if we are running this as a standalone script
+    if (require.main === module) {
+       mongoose.connection.close();
+    }
   }
 }
 
-seed();
+if (require.main === module) {
+  seed();
+}
+
+module.exports = seed;
