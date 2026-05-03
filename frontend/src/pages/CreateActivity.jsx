@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import TimePicker from '../components/Pickers/TimePicker';
 import DateTimePicker from '../components/Pickers/DateTimePicker';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
@@ -224,12 +224,13 @@ function StepDot({ n, active, done, onClick }) {
 
 export default function CreateActivity() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
 
     const [step, setStep] = useState(1);
     const [title, setTitle] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
-    const [selectedEntityIds, setSelectedEntityIds] = useState([]);
+    const [selectedEntityIds, setSelectedEntityIds] = useState(location.state?.entityId ? [location.state.entityId] : []);
     const [scheduleMode, setScheduleMode] = useState('structured');
     const [slots, setSlots] = useState([defaultSlot()]);
     const [range, setRange] = useState(null);
