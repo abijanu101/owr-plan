@@ -1,14 +1,22 @@
-const API_BASE = 'http://localhost:5000/api';
+const OPTS = { credentials: 'include' };
 
 export async function listActivities() {
-  const response = await fetch(`${API_BASE}/activities`);
+  const response = await fetch('/api/activities', OPTS);
   if (!response.ok) throw new Error('Failed to fetch activities');
   const result = await response.json();
   return result.data || [];
 }
 
+export async function getActivity(id) {
+  const response = await fetch(`/api/activities/${id}`, OPTS);
+  if (!response.ok) throw new Error('Failed to fetch activity');
+  const result = await response.json();
+  return result.data?.activity || result.data;
+}
+
 export async function createActivity(data) {
-  const response = await fetch(`${API_BASE}/activities`, {
+  const response = await fetch('/api/activities', {
+    ...OPTS,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -22,7 +30,8 @@ export async function createActivity(data) {
 }
 
 export async function updateActivity(id, data) {
-  const response = await fetch(`${API_BASE}/activities/${id}`, {
+  const response = await fetch(`/api/activities/${id}`, {
+    ...OPTS,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -33,7 +42,8 @@ export async function updateActivity(id, data) {
 }
 
 export async function deleteActivities(ids) {
-  await fetch(`${API_BASE}/activities/bulk`, {
+  await fetch('/api/activities/bulk', {
+    ...OPTS,
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
@@ -41,7 +51,8 @@ export async function deleteActivities(ids) {
 }
 
 export async function duplicateActivities(ids) {
-  const response = await fetch(`${API_BASE}/activities/duplicate`, {
+  const response = await fetch('/api/activities/duplicate', {
+    ...OPTS,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
@@ -49,4 +60,4 @@ export async function duplicateActivities(ids) {
   if (!response.ok) throw new Error('Failed to duplicate activities');
   const result = await response.json();
   return result.data;
-}
+}

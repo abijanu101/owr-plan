@@ -244,6 +244,7 @@ export default function CreateActivity() {
         try {
             const res = await fetch('/api/activities/parse', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ rawText: pasteText }),
             });
             const data = await res.json();
@@ -257,7 +258,7 @@ export default function CreateActivity() {
         setIsSubmitting(true); setSubmitError('');
         try {
             const payload = { userId: user?._id, title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
-            const res = await fetch('/api/activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const res = await fetch('/api/activities', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
             if (data.success) navigate('/activities');
             else setSubmitError(data.message || 'Failed to create activity.');

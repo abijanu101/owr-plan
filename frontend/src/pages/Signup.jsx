@@ -49,7 +49,7 @@ const SvgBackground = () => (
 
 export default function Signup() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { signup } = useAuth();
     const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
