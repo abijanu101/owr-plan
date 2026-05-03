@@ -30,7 +30,6 @@ export default function ActivitiesPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // ✅ Safe API call (prevents blank screen crash)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -110,12 +109,18 @@ export default function ActivitiesPage() {
   };
 
   if (loading) {
-    return <div style={{ padding: 20 }}>Loading activities...</div>;
+    return (
+      <div className="stage">
+        <div style={{ padding: 40, color: 'var(--text-neutral)', textAlign: 'center' }}>
+          Loading activities...
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="stage">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 960, margin: '0 auto' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 960, margin: '0 auto', padding: '20px' }}>
         <SearchBar
           value={search}
           onChange={setSearch}
@@ -140,6 +145,8 @@ export default function ActivitiesPage() {
           items={visible}
           selectedIds={selected}
           onToggleSelect={toggleSelect}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
         />
       </div>
     </div>
