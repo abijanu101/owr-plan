@@ -8,11 +8,15 @@ const {
   getActivityById,
   updateActivity,
   deleteActivity,
+  parseSchedule,
   bulkDeleteActivities,
   duplicateActivities,
 } = require('../controllers/activityController');
 
 // IMPORTANT: Specific routes MUST come BEFORE parameterized routes
+
+// POST /api/activities/parse  ← AI schedule parsing (MUST be before /:id)
+router.post('/parse', parseSchedule);
 
 // POST /api/activities/duplicate (MUST be before /:id)
 router.post('/duplicate', duplicateActivities);

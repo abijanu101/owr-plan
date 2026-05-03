@@ -104,59 +104,92 @@ const bulkCreateActivities = async (req, res) => {
   }
 };
 
-// POST /api/activities/parse-schedule
-// Accepts free-form text and uses an LLM to extract structured slots.
-// Falls back to returning an empty array with a hint when no API key is set.
+// POST /api/activities/parse
+// Uses Groq LLM to parse free-form schedule text into structured slots.
 const parseSchedule = async (req, res) => {
   try {
     const { rawText } = req.body;
-    if (!rawText) {
+
+    if (!rawText || !rawText.trim()) {
       return res.status(400).json({ success: false, message: 'rawText is required.' });
     }
 
-    const apiKey = process.env.OPENAI_API_KEY || process.env.GEMINI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY;
 
     if (!apiKey) {
-      // No key configured – return stub response so FE can still demo
       return res.status(200).json({
         success: true,
         parsed: [],
-        warning: 'No LLM API key configured. Set OPENAI_API_KEY or GEMINI_API_KEY in .env to enable AI parsing.'
+        warning: 'No GROQ_API_KEY configured in .env. Add your Groq API key to enable AI parsing.'
       });
     }
 
-    // --- OpenAI path ---
-    if (process.env.OPENAI_API_KEY) {
-      const { default: OpenAI } = await import('openai');
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const Groq = require('groq-sdk');
+    const groq = new Groq({ apiKey });
 
-      const systemPrompt = `You are a schedule parser. Extract time slots from the user's text and return ONLY a JSON array.
-Each element must have: { "day": "Monday|Tuesday|...|Sunday", "startTime": "HH:MM AM/PM", "endTime": "HH:MM AM/PM", "label": "string" }.
-Return [] if nothing parseable is found. No markdown, no explanation.`;
+    const systemPrompt = `You are a schedule parser. Your only job is to extract time slots from the user's text.
 
-      const chat = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user',   content: rawText }
-        ],
-        temperature: 0,
-      });
+Return ONLY a valid JSON array. No markdown, no explanation, no extra text — just the raw JSON array.
 
-      const parsed = JSON.parse(chat.choices[0].message.content.trim());
-      return res.status(200).json({ success: true, parsed });
-    }
+Each element in the array must have exactly these fields:
+- "day": one of "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+- "startTime": in "HH:MM AM" or "HH:MM PM" format (12-hour clock, always padded e.g. "09:00 AM", "02:30 PM")
+- "endTime": in the same "HH:MM AM"/"HH:MM PM" format
+- "label": a short string label/course code/subject if mentioned, otherwise an empty string ""
 
-    // --- Gemini path (stub, extend as needed) ---
-    return res.status(200).json({
-      success: true,
-      parsed: [],
-      warning: 'Gemini parsing not yet implemented. Add logic in parseSchedule controller.'
+Rules:
+- Convert 24-hour times to 12-hour AM/PM format.
+- Expand short day names: Mon→Monday, Tue→Tuesday, Wed→Wednesday, Thu→Thursday, Fri→Friday, Sat→Saturday, Sun→Sunday.
+- If a slot repeats across multiple days, create one entry per day.
+- If no valid slots are found, return an empty array: []
+- Never include any text outside the JSON array.`;
+
+    const chat = await groq.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user',   content: rawText.trim() }
+      ],
+      temperature: 0,
+      max_tokens: 1024,
     });
+
+    const raw = chat.choices[0]?.message?.content?.trim() || '[]';
+
+    // Strip any accidental markdown code fences
+    const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      console.error('Groq returned non-JSON:', cleaned);
+      return res.status(200).json({
+        success: true,
+        parsed: [],
+        warning: 'AI returned an unreadable response. Please try rephrasing your schedule.'
+      });
+    }
+
+    // Validate/sanitise each slot
+    const VALID_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const TIME_RE = /^\d{1,2}:\d{2} (AM|PM)$/;
+
+    const sanitised = parsed
+      .filter(s => s && typeof s === 'object')
+      .map(s => ({
+        day:       VALID_DAYS.includes(s.day) ? s.day : null,
+        startTime: TIME_RE.test(s.startTime) ? s.startTime : null,
+        endTime:   TIME_RE.test(s.endTime)   ? s.endTime   : null,
+        label:     typeof s.label === 'string' ? s.label.trim() : '',
+      }))
+      .filter(s => s.day && s.startTime && s.endTime);
+
+    return res.status(200).json({ success: true, parsed: sanitised });
 
   } catch (err) {
     console.error('parseSchedule error:', err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ success: false, message: 'AI parsing failed: ' + err.message });
   }
 };
 
