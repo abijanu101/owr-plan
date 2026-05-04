@@ -1,292 +1,503 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { PersonIcon, GroupIcon } from '../components/EntityIcons';
-import EntityList from '../components/EntityList';
-import EditEntityModal from '../components/EntityModal';
+import { useParams, useNavigate } from 'react-router-dom';
+import Avatar from '../components/avatar';
+import EntityModal from '../components/EntityModal';
+import EntityChip from '../components/EntitySelector/EntityChip';
+import SelectionOverlay from '../components/EntitySelector/SelectionOverlay';
+import Button from '../components/UI/Button';
 
-const MOCK_DATA = {
+// ─── Mock Data ────────────────────────────────────────────────
+const MOCK_ENTITIES = {
   "123": {
-    _id: "123",
-    name: "zoha",
-    type: "person",
-    color: "var(--color-primary)",
-    faceIcon: "/avatar/face/happy.svg",
-    accessoryIcon: "/avatar/accessories/crown.svg",
+    _id: "123", name: "Zoha", type: "person",
+    color: "#f97766",
+    face: "face/happy.svg",
+    accessories: ["accessories/crown.svg"],
+    groups: [{ _id: "678", name: "Dev Team", color: "#488845" }],
     members: [],
-    groups: [
-      { _id: "678", name: "Dev Team", color: "var(--color-success)" }
-    ]
   },
   "456": {
-    _id: "456",
-    name: "alizeh",
-    type: "person",
-    color: "var(--text-neutral)",
-    faceIcon: "/avatar/face/sassy.svg",
-    accessoryIcon: "/avatar/accessories/flower.svg",
+    _id: "456", name: "Alizeh", type: "person",
+    color: "#dc8379",
+    face: "face/sassy.svg",
+    accessories: [],
+    groups: [{ _id: "678", name: "Dev Team", color: "#488845" }],
     members: [],
-    groups: [
-      { _id: "678", name: "Dev Team", color: "var(--color-success)" }
-    ]
   },
   "678": {
-    _id: "678",
-    name: "Dev Team",
-    type: "group",
-    color: "var(--color-success)",
-    faceIcon: "/avatar/face/happy-g.svg",
-    accessoryIcon: "/avatar/accessories/glasses-g.svg",
+    _id: "678", name: "Dev Team", type: "group",
+    color: "#488845",
+    face: "face/happy-g.svg",
+    accessories: [],
+    groups: [],
     members: [
-      { _id: "123", name: "zoha", color: "var(--color-primary)" },
-      { _id: "456", name: "alizeh", color: "var(--text-neutral)" }
+      { _id: "123", name: "Zoha", color: "#f97766" },
+      { _id: "456", name: "Alizeh", color: "#dc8379" },
     ],
-    groups: []
-  }
+  },
 };
 
+const MOCK_ACTIVITIES = [
+  {
+    _id: "a1", title: "Ca Class University",
+    participants: ["123", "456"],
+    slots: [
+      { day: "Monday", startTime: "09:00 AM", endTime: "11:30 AM" },
+      { day: "Monday", startTime: "02:00 PM", endTime: "03:30 PM" },
+    ],
+  },
+  {
+    _id: "a2", title: "Meeting",
+    participants: ["123", "678"],
+    slots: [{ day: "Monday", startTime: "04:00 PM", endTime: "05:00 PM" }],
+  },
+  {
+    _id: "a3", title: "Gym Session",
+    participants: ["456"],
+    slots: [
+      { day: "Monday", startTime: "06:00 AM", endTime: "07:30 AM" },
+      { day: "Tuesday", startTime: "06:00 AM", endTime: "07:30 AM" },
+    ],
+  },
+];
+
+// All mock entities as a flat array for the SelectionOverlay
+const ALL_MOCK_ENTITIES_LIST = Object.values(MOCK_ENTITIES).map(e => ({
+  id: e._id,
+  name: e.name,
+  type: e.type,
+  color: e.color,
+}));
+
+// ─── CollapsibleSection ───────────────────────────────────────
+// Reusable collapsible section with a divider line, bold heading,
+// and an animated inverted triangle toggle.
+// The `action` prop lets you slot in a button (like +) next to the heading.
+function CollapsibleSection({ title, children, defaultOpen = true, action }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ marginBottom: 28 }}>
+      {/* Divider line above heading */}
+      <div style={{
+        width: "100%", height: 1,
+        background: "var(--text-muted)",
+        opacity: 0.35,
+        marginBottom: 10,
+      }} />
+
+      {/* Heading row: title + optional action + toggle arrow */}
+      <div style={{
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: open ? 14 : 0,
+      }}>
+        {/* Left: title + optional action (e.g. + button) */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <h2 style={{
+            color: "var(--color-primary)",
+            fontFamily: "inherit",
+            fontWeight: 900,
+            fontSize: 18,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            margin: 0,
+          }}>
+            {title}
+          </h2>
+          {/* + button slotted in next to heading */}
+          {action}
+        </div>
+
+        {/* Right: triangle toggle */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            padding: 4, display: "flex", alignItems: "center",
+          }}
+        >
+          <svg
+            style={{
+              width: 20, height: 20,
+              color: "var(--text-muted)",
+              transform: open ? "rotate(0deg)" : "rotate(-90deg)",
+              transition: "transform 0.2s ease",
+            }}
+            fill="currentColor" viewBox="0 0 24 24"
+          >
+            <path d="M7 10l5 5 5-5z" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Collapsible content */}
+      {open && children}
+    </div>
+  );
+}
+
+// ─── AddButton ───────────────────────────────────────────────
+// Small circular + button placed next to section headings.
+// Opens the SelectionOverlay to add members or groups.
+function AddButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      title="Add"
+      style={{
+        width: 24, height: 24,
+        borderRadius: "50%",
+        border: "2px solid var(--color-primary)",
+        background: "none",
+        color: "var(--color-primary)",
+        fontFamily: "inherit",
+        fontWeight: 900,
+        fontSize: 16,
+        lineHeight: 1,
+        cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        flexShrink: 0,
+        transition: "background 0.15s, color 0.15s",
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = "var(--color-primary)";
+        e.currentTarget.style.color = "var(--bg-primary)";
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = "none";
+        e.currentTarget.style.color = "var(--color-primary)";
+      }}
+    >
+      +
+    </button>
+  );
+}
+
+// ─── ActivityRow ──────────────────────────────────────────────
+// A single activity card. Shows first slot inline; clicking the
+// triangle expands all slots beneath a divider.
+function ActivityRow({ activity }) {
+  const [expanded, setExpanded] = useState(false);
+  const slots = activity.slots || [];
+  const firstSlot = slots[0];
+
+  return (
+    <div style={{
+      borderRadius: 14,
+      border: "1px solid var(--text-muted)",
+      overflow: "hidden",
+      marginBottom: 10,
+    }}>
+      {/* Collapsed header */}
+      <button
+        onClick={() => setExpanded(o => !o)}
+        style={{
+          width: "100%", background: "none", border: "none",
+          cursor: "pointer", padding: "12px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 12,
+        }}
+      >
+        <span style={{
+          color: "var(--text-neutral)",
+          fontFamily: "inherit", fontWeight: 700,
+          fontSize: 15, textAlign: "left",
+        }}>
+          {activity.title}
+        </span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {firstSlot && (
+            <div style={{
+              textAlign: "right", color: "var(--text-muted)",
+              fontSize: 12, lineHeight: 1.5, fontFamily: "inherit",
+            }}>
+              <div>{firstSlot.startTime} – {firstSlot.endTime}</div>
+              <div>{firstSlot.day}</div>
+              {slots.length > 1 && (
+                <div style={{ color: "var(--color-primary)", fontSize: 11 }}>
+                  +{slots.length - 1} more
+                </div>
+              )}
+            </div>
+          )}
+          <svg
+            style={{
+              width: 18, height: 18, color: "var(--text-muted)",
+              transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
+              transition: "transform 0.2s ease", flexShrink: 0,
+            }}
+            fill="currentColor" viewBox="0 0 24 24"
+          >
+            <path d="M7 10l5 5 5-5z" />
+          </svg>
+        </div>
+      </button>
+
+      {/* Expanded: all slots */}
+      {expanded && (
+        <div style={{
+          borderTop: "1px solid var(--text-muted)",
+          padding: "10px 16px",
+          display: "flex", flexDirection: "column", gap: 6,
+        }}>
+          {slots.map((slot, i) => (
+            <div key={i} style={{
+              display: "flex", justifyContent: "space-between",
+              color: "var(--text-muted)", fontSize: 13, fontFamily: "inherit",
+            }}>
+              <span style={{ fontWeight: 700 }}>{slot.day}</span>
+              <span>{slot.startTime} – {slot.endTime}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Page ─────────────────────────────────────────────────
 export default function EntityDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [entity, setEntity] = useState(null);
+  const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
+  // SelectionOverlay state — tracks which items are selected
+  // and which "mode" we're adding (members vs groups)
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const [selectorMode, setSelectorMode] = useState(null); // "members" | "groups"
+
+  // ── Fetch entity + activities ──
   useEffect(() => {
-    const fetchEntity = async () => {
-      try {
-        setLoading(true);
-        
-        // Mock data logic
-        if (import.meta.env.MODE === 'development' && MOCK_DATA[id]) {
-          setEntity(MOCK_DATA[id]);
-          setLoading(false);
-          return;
-        }
-
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/entities/${id}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch entity details');
-        }
-
-        const data = await response.json();
-        setEntity(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) {
-      fetchEntity();
+    setLoading(true);
+    const found = MOCK_ENTITIES[id];
+    if (found) {
+      setEntity(found);
+      setActivities(MOCK_ACTIVITIES.filter(a => a.participants.includes(id)));
+      setLoading(false);
+      return;
     }
+    const token = localStorage.getItem('token');
+    Promise.all([
+      fetch(`/api/entities/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
+      fetch(`/api/entities/${id}/activities`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => []),
+    ])
+      .then(([entityData, activityData]) => {
+        setEntity(entityData);
+        setActivities(Array.isArray(activityData) ? activityData : []);
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const toModalEntity = (e) => {
-    if (!e) return null;
-    const rawFace = e.faceIcon || 'face/happy.svg';
-    const faceIcon = rawFace.startsWith('/avatar/') ? rawFace.replace('/avatar/', '') : rawFace;
+  // ── Save from edit modal ──
+  const handleSave = (saved) => setEntity(prev => ({ ...prev, ...saved }));
 
-    // Keep mock data untouched; adapt to modal shape.
-    const accessories = Array.isArray(e.accessories)
-      ? e.accessories.map(a => (a.startsWith('/avatar/') ? a.replace('/avatar/', '') : a))
-      : (e.accessoryIcon
-          ? [(e.accessoryIcon.startsWith('/avatar/') ? e.accessoryIcon.replace('/avatar/', '') : e.accessoryIcon)]
-          : []);
-
-    return {
-      _id: e._id,
-      name: e.name ?? '',
-      type: e.type ?? 'person',
-      color: e.color ?? 'var(--color-primary)',
-      faceIcon,
-      accessories
-    };
+  // ── Open selector in the right mode ──
+  const openSelector = (mode) => {
+    setSelectorMode(mode);
+    setSelectorOpen(true);
   };
 
-  const applySavedEntityToView = (saved) => {
-    // Accept either backend response shape (faceIcon like "face/happy.svg")
-    // or modal mock shape; convert to the view shape expected here ("/avatar/...").
-    const rawFace = saved?.faceIcon || entity?.faceIcon || '/avatar/face/happy.svg';
-    const normalizedFace = rawFace.startsWith('/avatar/') ? rawFace : `/avatar/${rawFace}`;
+  // ── Handle selection from overlay ──
+  // The overlay calls onToggle with an array of selected IDs.
+  // We find the full entity objects from MOCK_ENTITIES and patch
+  // the entity's members or groups list.
+  const handleSelectionChange = (newIds) => {
+    if (!entity) return;
+    const resolved = newIds.map(sid => {
+      const e = MOCK_ENTITIES[sid];
+      if (!e) return null;
+      return { _id: e._id, name: e.name, color: e.color };
+    }).filter(Boolean);
 
-    const normalizedAccessories = Array.isArray(saved?.accessories)
-      ? saved.accessories.map(a => (a.startsWith('/avatar/') ? a : `/avatar/${a}`))
-      : [];
-
-    setEntity(prev => {
-      const next = { ...(prev || {}), ...(saved || {}) };
-      next.faceIcon = normalizedFace;
-
-      // For backward compat with existing UI, keep accessoryIcon as the "first accessory".
-      next.accessories = normalizedAccessories;
-      next.accessoryIcon = normalizedAccessories[0] || null;
-
-      return next;
-    });
-  };
-
-  // Handlers for Add/Remove
-  const handleAddGroup = () => {
-    console.log('Add group to person', id);
-    // Future API call here
-  };
-
-  const handleRemoveGroup = (groupId) => {
-    console.log('Remove group', groupId, 'from person', id);
-    // Future API call here
-    if (entity && entity.groups) {
-      setEntity({
-        ...entity,
-        groups: entity.groups.filter(g => g._id !== groupId)
-      });
+    if (selectorMode === "members") {
+      setEntity(prev => ({ ...prev, members: resolved }));
+    } else {
+      setEntity(prev => ({ ...prev, groups: resolved }));
     }
   };
 
-  const handleAddMember = () => {
-    console.log('Add member to group', id);
-    // Future API call here
-  };
+  // Current selected IDs for the overlay (pre-tick the already-added items)
+  const currentSelectedIds = selectorMode === "members"
+    ? (entity?.members || []).map(m => m._id)
+    : (entity?.groups || []).map(g => g._id);
 
-  const handleRemoveMember = (memberId) => {
-    console.log('Remove member', memberId, 'from group', id);
-    // Future API call here
-    if (entity && entity.members) {
-      setEntity({
-        ...entity,
-        members: entity.members.filter(m => m._id !== memberId)
-      });
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-8">
-        <div className="text-2xl animate-pulse text-muted">Loading...</div>
+  // ── Loading / error states ──
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 32 }}>
+      <div style={{ color: "var(--text-muted)", fontSize: 20, fontFamily: "inherit" }} className="animate-pulse">
+        Loading...
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !entity) {
-    return (
-      <div className="w-full h-full flex items-center justify-center p-8">
-        <div className="text-xl" style={{ color: 'var(--color-error)' }}>
-          {error || 'Entity not found'}
-        </div>
+  if (error || !entity) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 32 }}>
+      <div style={{ color: "var(--color-error)", fontSize: 18, fontFamily: "inherit" }}>
+        {error || "Entity not found"}
       </div>
-    );
-  }
+    </div>
+  );
+
+  const isGroup = entity.type === "group";
+  const listItems = isGroup ? (entity.members || []) : (entity.groups || []);
+  const listTitle = isGroup ? "Members" : "Groups";
+  const selectorModeForSection = isGroup ? "members" : "groups";
 
   return (
-    <div className="w-full min-h-full p-6 md:p-12 flex flex-col items-center">
-      
-      {/* Responsive layout: column on mobile, row on desktop for header area if needed, 
-          but design shows vertical stacked with the avatar centered or aligned left. 
-          We'll use flex-col on mobile, md:flex-row if it was complex, but for avatar + list 
-          the prompt says "Desktop -> horizontal layout, Mobile -> vertical stacked". 
-          We'll wrap the avatar area and the list area. */}
-      
-      <div className="w-full max-w-4xl flex flex-col md:flex-row md:items-start md:space-x-12">
-        
-        {/* Left Side (or Top on mobile): Avatar and Name */}
-        <div className="flex flex-col items-center mb-8 md:mb-0 md:w-1/3 shrink-0">
-          
-          <div className="w-48 h-48 sm:w-64 sm:h-64 mb-4 relative group">
-            {entity.type === 'person' ? (
-              <PersonIcon color={entity.color} faceIcon={entity.faceIcon} accessoryIcon={entity.accessoryIcon} className="w-full h-full shadow-lg" />
-            ) : (
-              <GroupIcon color={entity.color} faceIcon={entity.faceIcon} accessoryIcon={entity.accessoryIcon} className="w-full h-full shadow-lg" />
-            )}
-          </div>
+    <div style={{
+      width: "100%", minHeight: "100%",
+      padding: "32px 24px", boxSizing: "border-box",
+      overflowY: "auto",
+    }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
 
-          <div className="flex items-center justify-center space-x-3 mt-2">
-            <h1 
-              className="text-3xl sm:text-4xl text-white px-6 py-2 rounded-full shadow-md drop-shadow text-center font-bold tracking-widest uppercase"
-              style={{ backgroundColor: entity.color || 'var(--bg-accent)' }}
-            >
-              {entity.name}
-            </h1>
-            {/* Edit icon pill */}
-            <button 
-              className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-neutral hover:brightness-125 transition-all shadow-md shrink-0 cursor-pointer"
+        {/* ── Avatar + Name ── */}
+        <div style={{
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: 16, marginBottom: 36,
+        }}>
+          <div style={{ position: "relative" }}>
+            <Avatar
+              face={entity.face}
+              accessories={entity.accessories || []}
+              color={entity.color}
+              size={180}
+              isGroup={isGroup}
+              bgColor={entity.color + "22"}
+              rounded="24px"
+            />
+            {/* Edit button overlaid on avatar corner */}
+            <button
               onClick={() => setIsEditOpen(true)}
-              title="Edit Profile"
+              title="Edit"
+              style={{
+                position: "absolute", bottom: 8, right: 8,
+                width: 32, height: 32, borderRadius: "50%",
+                background: "var(--bg-raised)",
+                border: "2px solid var(--text-muted)",
+                color: "var(--text-neutral)",
+                cursor: "pointer", fontSize: 15,
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}
             >
-              &#9998;
+              ✎
             </button>
+          </div>
+
+          {/* Name badge */}
+          <div style={{
+            padding: "8px 28px", borderRadius: 9999,
+            background: entity.color || "var(--color-primary)",
+            color: "#fff", fontFamily: "inherit",
+            fontWeight: 900, fontSize: 22,
+            letterSpacing: "0.15em", textTransform: "uppercase",
+            boxShadow: `0 4px 20px ${entity.color}55`,
+          }}>
+            {entity.name}
           </div>
         </div>
 
-        {/* Right Side (or Bottom on mobile): Lists */}
-        <div className="flex-grow w-full md:w-2/3 flex flex-col">
-          
-          {entity.type === 'person' && (
-            <EntityList 
-              title="groups" 
-              items={entity.groups || []} 
-              onAdd={handleAddGroup} 
-              onRemove={handleRemoveGroup} 
-            />
-          )}
-
-          {entity.type === 'group' && (
-            <EntityList 
-              title="members" 
-              items={entity.members || []} 
-              onAdd={handleAddMember} 
-              onRemove={handleRemoveMember} 
-            />
-          )}
-
-          {/* Activities Placeholder (as seen in image) */}
-          <div className="w-full mt-10">
-            <div className="w-full h-[2px] mb-4 opacity-50 rounded-full bg-neutral" />
-            <h2 className="text-muted font-bold text-xs uppercase tracking-widest mb-4">Activities</h2>
-            
-            <div className="space-y-4">
-              <div className="w-full rounded-xl border border-[var(--border-subtle)] bg-transparent px-4 py-3 flex justify-between items-center text-neutral">
-                <span>Activity 11</span>
-                <div className="text-right text-sm leading-tight mr-4 text-muted">
-                  <div>2 - 4 pm</div>
-                  <div>monday</div>
-                  <div>23 feb</div>
-                </div>
-                <div className="text-2xl opacity-80 text-muted">&#9660;</div>
-              </div>
-              
-              <div className="w-full rounded-xl border border-[var(--border-subtle)] bg-transparent px-4 py-3 flex justify-between items-center text-neutral">
-                <span>Activity 11</span>
-                <div className="text-right text-sm leading-tight mr-4 text-muted">
-                  <div>2 - 4 pm</div>
-                  <div>monday</div>
-                  <div>23 feb</div>
-                </div>
-                <div className="text-2xl opacity-80 text-muted">&#9660;</div>
-              </div>
+        {/* ── Groups / Members ── */}
+        {/* 
+          CollapsibleSection receives an `action` prop = the + button.
+          Clicking + opens SelectionOverlay in the right mode.
+          Items render as EntityChip (your existing component) — 
+          isSelected=true so they show the filled chip style,
+          and clicking navigates to that entity's details page.
+        */}
+        <CollapsibleSection
+          title={listTitle}
+          defaultOpen={true}
+          action={
+            <AddButton onClick={() => openSelector(selectorModeForSection)} />
+          }
+        >
+          {listItems.length === 0 ? (
+            <p style={{ color: "var(--text-muted)", fontFamily: "inherit", fontSize: 13, margin: 0 }}>
+              No {listTitle.toLowerCase()} yet. Hit + to add.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {listItems.map(item => (
+                <EntityChip
+                  key={item._id}
+                  name={item.name}
+                  color={item.color}
+                  isSelected={true}
+                  isGroup={isGroup}
+                  onClick={() => navigate(`/entities/${item._id}`)}
+                />
+              ))}
             </div>
+          )}
+        </CollapsibleSection>
 
-            <button className="mt-6 rounded-full border border-[var(--border-subtle)] px-6 py-2 flex items-center text-neutral hover:bg-neutral hover:text-primary transition-colors font-bold tracking-wider">
-              <span className="text-2xl mr-3 leading-none font-bold">+</span> SCHEDULE NEW ACTIVITY
-            </button>
-          </div>
+        {/* ── Activities ── */}
+        {/*
+          Activities filtered from MOCK_ACTIVITIES by participant ID.
+          "Schedule New Activity" uses your existing Button component
+          from components/UI/Button.jsx — no custom inline button.
+        */}
+        <CollapsibleSection title="Activities" defaultOpen={true}>
+          {activities.length === 0 ? (
+            <p style={{ color: "var(--text-muted)", fontFamily: "inherit", fontSize: 13, margin: "0 0 12px" }}>
+              No activities yet.
+            </p>
+          ) : (
+            <div style={{ marginBottom: 12 }}>
+              {activities.map(a => (
+                <ActivityRow key={a._id} activity={a} />
+              ))}
+            </div>
+          )}
 
-        </div>
+          {/* Uses your reusable Button component */}
+          <Button
+            onClick={() => navigate('/activities/create')}
+            variant="outline"
+          >
+            + Schedule New Activity
+          </Button>
+        </CollapsibleSection>
 
       </div>
 
-      <EditEntityModal
+      {/* ── Edit Modal ── */}
+      <EntityModal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
-        editingEntity={toModalEntity(entity)}
-        onSuccess={(saved) => applySavedEntityToView(saved)}
+        mode="edit"
+        entityType={entity.type}
+        initial={{
+          name: entity.name,
+          face: entity.face,
+          accessories: entity.accessories || [],
+          color: entity.color,
+        }}
+        onSave={handleSave}
+      />
+
+      {/* ── Selection Overlay ── */}
+      {/*
+        SelectionOverlay is a portal that renders over everything.
+        We pass ALL_MOCK_ENTITIES_LIST as the entities pool.
+        currentSelectedIds pre-ticks whatever is already in the list.
+        onToggle receives a new array of IDs and we resolve them
+        back to full objects to update entity state.
+      */}
+      <SelectionOverlay
+        isOpen={selectorOpen}
+        onClose={() => setSelectorOpen(false)}
+        selectedIds={currentSelectedIds}
+        onToggle={handleSelectionChange}
+        entities={ALL_MOCK_ENTITIES_LIST}
       />
     </div>
   );
