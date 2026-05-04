@@ -39,11 +39,11 @@ export default function App() {
 function AppContent() {
     const { user } = useAuth();
     const location = useLocation();
-    
+
     // Pages that have fixed action bars need bottom padding to avoid covering the footer
-    const isPlanningPage = location.pathname.startsWith('/plan') || 
-                          location.pathname.startsWith('/visualize') ||
-                          location.pathname.startsWith('/entities');
+    const isPlanningPage = location.pathname.startsWith('/plan') ||
+        location.pathname.startsWith('/visualize') ||
+        location.pathname.startsWith('/entities');
 
     const isLandingPage = location.pathname === '/';
 
@@ -73,8 +73,7 @@ function AppContent() {
                         <Route path='/entities/:id' element={<EntityDetails />} />
                         <Route path="/activities" element={<ActivitiesPage />} />
                         <Route path='/activities/create' element={<CreateActivity />} />
-                        <Route path='/activities/:id/edit' element={<EditActivity />} />
-                        <Route path='/activities/:id' element={<Navigate to='edit' replace />} />
+                        <Route path='/activities/:id' element={<EditActivity />} />
 
                         <Route path='/visualize' element={<BlockVisualization />} />
 

@@ -72,6 +72,8 @@ export const PlanProvider = ({ children }) => {
     };
 
     const setConstraints = (update) => {
+        let needsToast = false;
+        
         setConstraintsInternal(prev => {
             let next = typeof update === 'function' ? update(prev) : update;
 
@@ -81,15 +83,7 @@ export const PlanProvider = ({ children }) => {
             const nextCustomIncludes = next.filter(c => !c.isSystem && !c.isBlock && c.type === 'include');
 
             if (nextCustomIncludes.length > 1 && nextCustomIncludes.length > prevCustomIncludes.length) {
-                showToast("Only one 'can include' constraint can be added.", "warning");
-
-                // Find the one that was newly changed/added to 'include' and revert it
-                // If it was an addition (next is longer than prev)
-                if (next.length > prev.length) {
-                    return prev;
-                }
-
-                // If it was an update (next and prev same length)
+                needsToast = true;
                 return prev;
             }
 
@@ -103,6 +97,10 @@ export const PlanProvider = ({ children }) => {
 
             return next;
         });
+
+        if (needsToast) {
+            showToast("Only one 'can include' constraint can be added.", "warning");
+        }
     };
 
     const resetPlan = () => setConstraints([...hiddenDefaults, ...exampleConstraints]);
@@ -182,6 +180,12 @@ export const PlanProvider = ({ children }) => {
                     return { consistent: false, message: "Constraints inconsistent: Duration is longer than the total window." };
                 }
             }
+        }
+
+        // 4. Check if attendees are selected (Required for generation)
+        const include = list.find(c => !c.isBlock && c.type === 'include' && c.modifier === 'must' && !c.disabled);
+        if (include && (!include.parameter || include.parameter.length === 0)) {
+            return { consistent: false, message: "Select at least one attendee to generate a plan." };
         }
 
         return { consistent: true, message: "Constraints consistent, you may generate." };

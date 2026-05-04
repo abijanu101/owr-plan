@@ -4,8 +4,10 @@ import Button from '../../UI/Button';
 import PlanStatus from './PlanStatus';
 
 const SparklesIcon = ({ className }) => (
-    <svg className={className} viewBox="0 0 24 24">
-        <path d="M11.5,2L10,5L7,6.5L10,8L11.5,11L13,8L16,6.5L13,5L11.5,2M19,10L17.5,13L14.5,14.5L17.5,16L19,19L20.5,16L23.5,14.5L20.5,13L19,10M7,12L5.5,15L2.5,16.5L5.5,18L7,21L8.5,18L11.5,16.5L8.5,15L7,12Z" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z" />
+        <path d="M5 18l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" />
+        <path d="M19 5l.5 1.5 1.5.5-1.5.5-.5 1.5-.5-1.5-1.5-.5 1.5-.5.5-1.5z" />
     </svg>
 );
 
@@ -27,7 +29,7 @@ const ChevronUpIcon = ({ className }) => (
     </svg>
 );
 
-export default function ActionBar({ onReset, onGenerate, currentView = 'simplified' }) {
+export default function ActionBar({ onReset, onGenerate, currentView = 'simplified', generateDisabled = false }) {
     const isStructured = currentView === 'structured';
     const linkTo = isStructured ? "/plan" : "/plan/constraints";
     const linkTextDesktop = isStructured ? "Simplified View" : "View All Constraints";
@@ -69,6 +71,7 @@ export default function ActionBar({ onReset, onGenerate, currentView = 'simplifi
                         variant="primary"
                         onClick={onGenerate}
                         icon={SparklesIcon}
+                        disabled={generateDisabled}
                     >
                         Generate
                     </Button>

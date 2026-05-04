@@ -8,6 +8,7 @@ const entityRoutes = require('./entity.routes');
 const iconRoutes = require('./icon.routes');
 const activityRoutes = require('./activity.routes');
 const ledgerRoutes = require('./ledger.routes');
+const planRoutes = require('./plan.routes');
 
 // Mount routes
 router.use('/users', userRoutes);
@@ -16,6 +17,7 @@ router.use('/entities', entityRoutes);
 router.use('/icons', iconRoutes);
 router.use('/activities', activityRoutes);
 router.use('/ledgers', ledgerRoutes);
+router.use('/plan', planRoutes);
 
 // Health check route
 router.get('/health', (req, res) => {

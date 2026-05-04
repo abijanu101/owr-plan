@@ -1,5 +1,24 @@
 @import "tailwindcss";
 
+/* Color Palette */
+
+:root {
+  --color-primary: #f97766;
+
+  --bg-accent: #4c0e36;
+  --bg-primary: #200412;
+  --bg-raised: #290917;
+  --bg-purple: #4c0e36;
+
+  --text-neutral: #dc8379;
+  --text-muted: #743c40;
+
+  --border-subtle: var(--text-muted);
+
+  --color-success: #488845;
+  --color-error: #990101;
+}
+
 /* ========== ENTITY CARD GRID ========== */
 .entity-grid {
   display: grid;
@@ -17,10 +36,13 @@
   cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
-  align-items: flex-start;  /* Changed from center to flex-start */
+  align-items: flex-start;
+  /* Changed from center to flex-start */
   gap: 16px;
-  min-height: 120px;  /* Add this */
-  height: 100%;  /* Add this */
+  min-height: 120px;
+  /* Add this */
+  height: 100%;
+  /* Add this */
 }
 
 .entity-card:hover {
@@ -161,9 +183,17 @@
 
 
 
-.border-subtle { border: 1px solid var(--border-subtle); }
-.bg-error      { background-color: var(--color-error); }
-.text-error    { color: var(--color-error); }
+.border-subtle {
+  border: 1px solid var(--border-subtle);
+}
+
+.bg-error {
+  background-color: var(--color-error);
+}
+
+.text-error {
+  color: var(--color-error);
+}
 
 /* Pill row used everywhere (activity row, person row, group row) */
 .pill {
@@ -179,10 +209,12 @@
   outline: 2px solid transparent;
   border: 1px dashed var(--border-subtle);
 }
-.pill:hover { 
+
+.pill:hover {
   transform: translateY(-1px);
   border-color: var(--color-primary);
 }
+
 .pill[data-selected="true"] {
   outline-color: var(--color-primary);
   border-color: var(--color-primary);
@@ -190,18 +222,31 @@
 
 /* Circular icon button */
 .icon-btn {
-  width: 36px; height: 36px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
-  display: inline-flex; align-items: center; justify-content: center;
-  background: transparent; color: var(--text-neutral);
-  border: none; cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-neutral);
+  border: none;
+  cursor: pointer;
 }
-.icon-btn:hover { background: var(--bg-raised); }
-.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.icon-btn:hover {
+  background: var(--bg-raised);
+}
+
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 
 /* Pill-shaped button (Sort by, tabs, etc.) */
 .btn-pill {
-  background: transparent;  /* Default - no background */
+  background: transparent;
+  /* Default - no background */
   color: var(--text-neutral);
   border: 1px solid var(--border-subtle);
   border-radius: 9999px;
@@ -212,7 +257,8 @@
 }
 
 .btn-pill:hover {
-  background: var(--bg-accent);  /* Shows on hover */
+  background: var(--bg-accent);
+  /* Shows on hover */
   border-color: var(--color-primary);
 }
 
@@ -221,6 +267,7 @@
   border-color: var(--color-primary);
   background: var(--bg-accent);
 }
+
 /* Header wave area below the navbar */
 /* Header wave area below the navbar */
 .stage {
@@ -238,6 +285,7 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
+
 .interactive-area:hover {
   border-color: var(--color-primary);
   background-color: rgba(249, 119, 102, 0.05);
@@ -253,20 +301,33 @@
   padding: 10px 14px;
   font-family: inherit;
 }
-.input:focus { outline: 2px solid var(--color-primary); }
 
-.label { display:block; color: var(--text-muted); margin-bottom: 6px; font-size: 14px; }
+.input:focus {
+  outline: 2px solid var(--color-primary);
+}
+
+.label {
+  display: block;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  font-size: 14px;
+}
 
 /* Day pill (M T W TH F SA S) */
 .day {
-  min-width: 28px; height: 28px;
-  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 9999px;
-  font-size: 12px; font-weight: 700;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
 }
+
 .day[data-on="true"] {
   color: var(--color-primary);
   background: var(--bg-accent);
@@ -274,11 +335,15 @@
 
 /* Modal */
 .modal-backdrop {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.6);
-  display: flex; align-items: center; justify-content: center;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 50;
 }
+
 .modal {
   background: var(--bg-raised);
   color: var(--text-neutral);
@@ -289,24 +354,6 @@
 }
 
 
-/* Color Palette */
-
-:root {
-  --color-primary: #f97766;
-
-  --bg-accent: #4c0e36;
-  --bg-primary: #200412;
-  --bg-raised: #290917;
-  --bg-purple: #4c0e36;
-
-  --text-neutral: #dc8379;
-  --text-muted: #743c40;
-
-  --border-subtle: var(--text-muted);
-
-  --color-success: #488845;
-  --color-error: #990101;
-}
 
 /* Entity modal responsive layout (portrait: stacked, landscape: side-by-side) */
 .entity-modal-shell {
@@ -419,8 +466,13 @@
 }
 
 @keyframes glint {
-  0% { transform: translateX(-120%) skewX(-20deg); }
-  100% { transform: translateX(300%) skewX(-20deg); }
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+
+  100% {
+    transform: translateX(300%) skewX(-20deg);
+  }
 }
 
 .animate-glint {

@@ -144,23 +144,33 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
                     className={`p-3 flex items-center justify-between cursor-pointer hover:bg-[var(--bg-accent)]/20 transition-colors ${isMobileExpanded ? 'border-b border-[var(--border-subtle)]/20' : ''}`}
                     onClick={() => setIsMobileExpanded(!isMobileExpanded)}
                 >
-                    <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex-1 min-w-0 pr-2">
                         {getSummary()}
                     </div>
-                    {constraint.isSystem && (constraint.type === 'start after' || constraint.type === 'end before') ? (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onChange({ ...constraint, disabled: !constraint.disabled }); }}
-                            className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${!constraint.disabled ? 'text-[#DC8379] bg-[#DC8379]/10' : 'text-[#DC8379]/40 bg-white/5'}`}
+                    
+                    <div className="flex items-center gap-3">
+                        <svg 
+                            className={`w-4 h-4 text-[#DC8379]/60 transition-transform duration-300 ${isMobileExpanded ? 'rotate-180' : ''}`} 
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
                         >
-                            {constraint.disabled ? (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
-                            ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                            )}
-                        </button>
-                    ) : !constraint.isSystem && (
-                        <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="shrink-0 w-6 h-6 rounded-full bg-[#1A0B16] text-red-400 border border-[var(--border-subtle)]/40 flex items-center justify-center font-bold text-sm active:scale-90 transition-all hover:bg-red-500/10">×</button>
-                    )}
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
+
+                        {constraint.isSystem && (constraint.type === 'start after' || constraint.type === 'end before') ? (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onChange({ ...constraint, disabled: !constraint.disabled }); }}
+                                className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${!constraint.disabled ? 'text-[#DC8379] bg-[#DC8379]/10' : 'text-[#DC8379]/40 bg-white/5'}`}
+                            >
+                                {constraint.disabled ? (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                                ) : (
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                )}
+                            </button>
+                        ) : !constraint.isSystem && (
+                            <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="shrink-0 w-6 h-6 rounded-full bg-[#1A0B16] text-red-400 border border-[var(--border-subtle)]/40 flex items-center justify-center font-bold text-sm active:scale-90 transition-all hover:bg-red-500/10">×</button>
+                        )}
+                    </div>
                 </div>
 
                 {isMobileExpanded && (

@@ -4,36 +4,31 @@ import ActionBar from '../components/Plan/UI/ActionBar';
 import { usePlan } from '../context/PlanContext';
 import { useNavigate } from 'react-router-dom';
 import PlanStatus from '../components/Plan/UI/PlanStatus';
+import { generatePlan } from '../api/planApi';
 
 export default function StructuredPlan() {
-    const { constraints, setConstraints, resetPlan, setIsGenerating, setResults } = usePlan();
+    const { constraints, setConstraints, resetPlan, setIsGenerating, setResults, showToast, planStatus } = usePlan();
     const navigate = useNavigate();
 
     const handleReset = () => {
         resetPlan();
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         setIsGenerating(true);
         navigate('/plan/results');
 
-        // Mock generation delay and results
-        setTimeout(() => {
-            setResults({
-                bestOption: {
-                    date: "May 2",
-                    time: "02:00 PM",
-                    duration: "1.5hr",
-                    score: 98,
-                    attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara", "Fatima", "Zainab"]
-                },
-                alternatives: [
-                    { date: "May 2", time: "04:30 PM", duration: "1.5hr", score: 85, attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara"] },
-                    { date: "May 3", time: "10:00 AM", duration: "2hr", score: 72, attendees: ["Zoha", "Areeba", "Moomal", "Huda", "Sara", "Fatima"] }
-                ]
-            });
+        try {
+            const results = await generatePlan(constraints);
+            setResults(results);
+        } catch (error) {
+            console.error('Failed to generate plan:', error);
+            showToast('Failed to generate plan. Please try again.', 'error');
+            // Optionally navigate back if generation failed
+            // navigate('/plan/constraints');
+        } finally {
             setIsGenerating(false);
-        }, 2000);
+        }
     };
 
     // Mobile detection
@@ -77,7 +72,7 @@ export default function StructuredPlan() {
                 onReset={handleReset}
                 onGenerate={handleGenerate}
                 currentView="structured"
-                status={status}
+                generateDisabled={!planStatus.consistent}
             />
         </div>
     );
