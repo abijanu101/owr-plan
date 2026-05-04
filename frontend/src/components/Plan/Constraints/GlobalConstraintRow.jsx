@@ -6,8 +6,9 @@ import DurationPicker from '../../Pickers/DurationPicker';
 import TimePicker from '../../Pickers/TimePicker';
 import EntitySelector from '../../EntitySelector';
 import MultiDatePicker from '../../Pickers/MultiDatePicker';
+import Dropdown from '../../UI/Dropdown';
 
-export default function GlobalConstraintRow({ constraint, onChange, onRemove, isMobile }) {
+export default function GlobalConstraintRow({ constraint, onChange, onRemove, isMobile, hasInclude }) {
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
     const schema = CONSTRAINT_SCHEMA[constraint.type];
@@ -137,6 +138,31 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
         }
     };
 
+    const getTypeOptions = () => {
+        const options = [];
+        const groups = {};
+        
+        Object.keys(CONSTRAINT_SCHEMA).forEach(k => {
+            if (CONSTRAINT_SCHEMA[k].localOnly) return;
+            if (k === 'include' && hasInclude && constraint.type !== 'include') return;
+            
+            const cat = CONSTRAINT_SCHEMA[k].category;
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(k);
+        });
+
+        Object.keys(groups).forEach((cat, idx) => {
+            if (idx > 0) options.push({ isDivider: true });
+            options.push({ isLabel: true, label: cat });
+            groups[cat].forEach(k => options.push({ label: k, value: k }));
+        });
+        
+        return options;
+    };
+
+    const typeOptions = getTypeOptions();
+    const modifierOptions = schema?.allowedModifiers.map(m => ({ label: m, value: m })) || [];
+
     if (isMobile) {
         return (
             <div className={`bg-[var(--bg-accent)]/10 border-l-4 border-[var(--color-primary)] rounded-r-2xl flex flex-col relative mb-4 shadow-sm transition-opacity duration-300 ${constraint.disabled ? 'opacity-40' : 'opacity-100'}`}>
@@ -177,28 +203,24 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
                     <div className="p-4 flex flex-col gap-4 animate-in slide-in-from-top-2 fade-in duration-200">
                         <div className="flex gap-4">
                             <div className="flex flex-col gap-1 w-1/2 relative">
-                                <select value={constraint.modifier} onChange={(e) => onChange({ ...constraint, modifier: e.target.value })} disabled={constraint.isSystem} className={`bg-transparent text-[#DC8379] font-bold text-lg outline-none cursor-pointer appearance-none border-b border-[var(--border-subtle)] pb-1 pr-6 ${constraint.isSystem ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ fontFamily: 'cursive' }}>
-                                    {schema?.allowedModifiers.map(m => (
-                                        <option key={m} value={m} className="bg-[var(--bg-raised)] text-neutral">{m}</option>
-                                    ))}
-                                </select>
-                                {!constraint.isSystem && (
-                                    <div className="absolute right-0 bottom-1.5 pointer-events-none text-[#DC8379]/60 bg-[#DC8379]/5 border border-[#DC8379]/10 rounded p-[1px]">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                    </div>
-                                )}
+                                <Dropdown 
+                                    value={constraint.modifier} 
+                                    onChange={(val) => onChange({ ...constraint, modifier: val })} 
+                                    options={modifierOptions} 
+                                    disabled={constraint.isSystem} 
+                                    className="w-full" 
+                                    style={{ fontFamily: 'cursive' }}
+                                />
                             </div>
                             <div className="flex flex-col gap-1 w-1/2 relative">
-                                <select value={constraint.type} onChange={(e) => handleTypeChange(e.target.value)} disabled={constraint.isSystem} className={`bg-transparent text-[#DC8379] font-bold text-lg outline-none cursor-pointer appearance-none border-b border-[var(--border-subtle)] pb-1 pr-6 ${constraint.isSystem ? 'opacity-50 cursor-not-allowed' : ''}`} style={{ fontFamily: 'cursive' }}>
-                                    {Object.keys(CONSTRAINT_SCHEMA).filter(k => !CONSTRAINT_SCHEMA[k].localOnly).map(k => (
-                                        <option key={k} value={k} className="bg-[var(--bg-raised)] text-neutral">{k}</option>
-                                    ))}
-                                </select>
-                                {!constraint.isSystem && (
-                                    <div className="absolute right-0 bottom-1.5 pointer-events-none text-[#DC8379]/60 bg-[#DC8379]/5 border border-[#DC8379]/10 rounded p-[1px]">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                    </div>
-                                )}
+                                <Dropdown 
+                                    value={constraint.type} 
+                                    onChange={handleTypeChange} 
+                                    options={typeOptions} 
+                                    disabled={constraint.isSystem} 
+                                    className="w-full" 
+                                    style={{ fontFamily: 'cursive' }}
+                                />
                             </div>
                         </div>
                         <div className="flex flex-col gap-1">
@@ -240,43 +262,27 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
             </div>
 
             {/* Modifier Cell */}
-            <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/10 py-1.5 pl-3 relative flex items-center hover:bg-white/5 transition-colors">
-                <select
-                    value={constraint.modifier}
-                    onChange={(e) => onChange({ ...constraint, modifier: e.target.value })}
-                    disabled={constraint.isSystem}
-                    className={`w-full bg-transparent text-[#DC8379] text-base outline-none cursor-pointer appearance-none text-center pr-8 ${constraint.isSystem ? 'opacity-50 cursor-not-allowed' : ''}`}
+            <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+                <Dropdown 
+                    value={constraint.modifier} 
+                    onChange={(val) => onChange({ ...constraint, modifier: val })} 
+                    options={modifierOptions} 
+                    disabled={constraint.isSystem} 
+                    className="w-full" 
                     style={{ fontFamily: 'cursive' }}
-                >
-                    {schema?.allowedModifiers.map(m => (
-                        <option key={m} value={m} className="bg-[var(--bg-raised)] text-neutral">{m}</option>
-                    ))}
-                </select>
-                {!constraint.isSystem && (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 border-l border-[#DC8379]/10 bg-white/[0.02] flex items-center justify-center pointer-events-none text-[#DC8379]/60">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
-                )}
+                />
             </div>
 
             {/* Constraint Cell */}
-            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 pl-3 relative flex items-center hover:bg-white/5 transition-colors">
-                <select
-                    value={constraint.type}
-                    onChange={(e) => handleTypeChange(e.target.value)}
-                    disabled={constraint.isSystem}
-                    className={`w-full bg-transparent text-[#DC8379] text-base outline-none cursor-pointer appearance-none text-center pr-8 ${constraint.isSystem ? 'opacity-50 cursor-not-allowed' : ''}`}
+            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+                <Dropdown 
+                    value={constraint.type} 
+                    onChange={handleTypeChange} 
+                    options={typeOptions} 
+                    disabled={constraint.isSystem} 
+                    className="w-full" 
                     style={{ fontFamily: 'cursive' }}
-                >
-                    {Object.keys(CONSTRAINT_SCHEMA).filter(k => !CONSTRAINT_SCHEMA[k].localOnly).map(k => (
-                        <option key={k} value={k} className="bg-[var(--bg-raised)] text-neutral">{k}</option>
-                    ))}
-                </select>
-                {!constraint.isSystem && (
-                    <div className="absolute right-0 top-0 bottom-0 w-8 border-l border-[#DC8379]/10 bg-white/[0.02] flex items-center justify-center pointer-events-none text-[#DC8379]/60">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
-                )}
+                />
             </div>
 
             {/* Parameter Cell */}

@@ -6,8 +6,9 @@ import DurationPicker from '../../Pickers/DurationPicker';
 import TimePicker from '../../Pickers/TimePicker';
 import EntitySelector from '../../EntitySelector';
 import MultiDatePicker from '../../Pickers/MultiDatePicker';
+import Dropdown from '../../UI/Dropdown';
 
-export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile }) {
+export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile, hasInclude }) {
     const [isMobileCardExpanded, setIsMobileCardExpanded] = useState(false);
 
     const handleEntityChange = (entities) => {
@@ -74,6 +75,28 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
         }
     };
 
+    const getTypeOptions = (currentType) => {
+        const options = [];
+        const groups = {};
+        
+        Object.keys(CONSTRAINT_SCHEMA).forEach(k => {
+            if (CONSTRAINT_SCHEMA[k].localOnly) return;
+            if (k === 'include' && hasInclude && currentType !== 'include') return;
+            
+            const cat = CONSTRAINT_SCHEMA[k].category;
+            if (!groups[cat]) groups[cat] = [];
+            groups[cat].push(k);
+        });
+
+        Object.keys(groups).forEach((cat, idx) => {
+            if (idx > 0) options.push({ isDivider: true });
+            options.push({ isLabel: true, label: cat });
+            groups[cat].forEach(k => options.push({ label: k, value: k }));
+        });
+        
+        return options;
+    };
+
     if (isMobile) {
         return (
             <div className="bg-[var(--bg-accent)]/10 border-l-4 border-[var(--color-primary)] rounded-r-2xl flex flex-col relative mb-4 shadow-sm">
@@ -103,14 +126,14 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                         <div className="flex flex-col gap-2 mt-2">
                             <div className="flex gap-4">
                                 <div className="flex flex-col gap-1 w-1/2 relative">
-                                    <select value={displayedModifier} onChange={e => handleModifierChange(e.target.value)} className="bg-transparent text-[#DC8379] font-bold text-lg outline-none cursor-pointer appearance-none border-b border-[var(--border-subtle)] pb-1 pr-6" style={{ fontFamily: 'cursive' }}>
-                                        <option value="" disabled className="hidden"></option>
-                                        <option value="must" className="bg-[var(--bg-raised)] text-neutral">must</option>
-                                        <option value="should" className="bg-[var(--bg-raised)] text-neutral">should</option>
-                                    </select>
-                                    <div className="absolute right-0 bottom-1.5 pointer-events-none text-[#DC8379]/60 bg-[#DC8379]/5 border border-[#DC8379]/10 rounded p-[1px]">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                    </div>
+                                    <Dropdown 
+                                        value={displayedModifier} 
+                                        onChange={handleModifierChange} 
+                                        options={[{ label: 'must', value: 'must' }, { label: 'should', value: 'should' }]} 
+                                        placeholder="Modifier"
+                                        className="w-full" 
+                                        style={{ fontFamily: 'cursive' }}
+                                    />
                                 </div>
                                 <div className="flex flex-col gap-1 w-1/2 relative cursor-pointer" onClick={toggleExpand}>
                                     <div className="flex items-center gap-2 border-b border-[var(--border-subtle)] pb-1">
@@ -133,17 +156,13 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                                     <div key={child.id} className="bg-[var(--bg-raised)]/60 rounded-xl p-3 flex flex-col gap-2 relative">
                                         <button onClick={() => removeChild(child.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center font-bold text-sm active:scale-90 transition-all">×</button>
                                         <div className="flex flex-col gap-1 pr-8 relative">
-                                            <select
-                                                value={child.type}
-                                                onChange={(e) => updateChild(child.id, { ...child, type: e.target.value, modifier: getDefaultModifier(e.target.value), parameter: getDefaultParameter(e.target.value) })}
-                                                className="bg-transparent text-[#DC8379] text-base outline-none cursor-pointer appearance-none border-b border-[var(--border-subtle)] pb-1 pr-6"
+                                            <Dropdown 
+                                                value={child.type} 
+                                                onChange={(val) => updateChild(child.id, { ...child, type: val, modifier: getDefaultModifier(val), parameter: getDefaultParameter(val) })} 
+                                                options={getTypeOptions(child.type)} 
+                                                className="w-full" 
                                                 style={{ fontFamily: 'cursive' }}
-                                            >
-                                                {Object.keys(CONSTRAINT_SCHEMA).map(k => <option key={k} value={k} className="bg-[var(--bg-raised)] text-neutral">{k}</option>)}
-                                            </select>
-                                            <div className="absolute right-8 bottom-1.5 pointer-events-none text-[#DC8379]/60 bg-[#DC8379]/5 border border-[#DC8379]/10 rounded p-[1px]">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                            </div>
+                                            />
                                         </div>
                                         <div className="mt-1">
                                             {renderParameterInput(child, (updated) => updateChild(child.id, updated))}
@@ -169,15 +188,15 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                 <div className="w-12 shrink-0 flex justify-center">
                     <button onClick={onRemove} className="w-5 h-5 rounded-full bg-[#DC8379]/20 text-[#DC8379] hover:bg-[#DC8379] hover:text-[#1A0B16] flex items-center justify-center font-bold text-xs opacity-50 group-hover:opacity-100 transition-all cursor-pointer shadow-sm">×</button>
                 </div>
-                <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/10 py-1.5 pl-3 relative flex items-center hover:bg-white/5 transition-colors">
-                    <select value={displayedModifier} onChange={e => handleModifierChange(e.target.value)} className="w-full bg-transparent text-[#DC8379] text-base outline-none cursor-pointer appearance-none text-center pr-8" style={{ fontFamily: 'cursive' }}>
-                        <option value="" disabled className="hidden"></option>
-                        <option value="must" className="bg-[var(--bg-raised)] text-neutral">must</option>
-                        <option value="should" className="bg-[var(--bg-raised)] text-neutral">should</option>
-                    </select>
-                    <div className="absolute right-0 top-0 bottom-0 w-8 border-l border-[#DC8379]/10 bg-white/[0.02] flex items-center justify-center pointer-events-none text-[#DC8379]/60">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
+                <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+                    <Dropdown 
+                        value={displayedModifier} 
+                        onChange={handleModifierChange} 
+                        options={[{ label: 'must', value: 'must' }, { label: 'should', value: 'should' }]} 
+                        placeholder="Modifier"
+                        className="w-full" 
+                        style={{ fontFamily: 'cursive' }}
+                    />
                 </div>
                 <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 pl-3 relative flex items-center justify-center cursor-pointer select-none hover:bg-white/5 transition-colors" onClick={toggleExpand}>
                     <span className="text-[#DC8379] text-base" style={{ fontFamily: 'cursive' }}>for</span>
@@ -209,23 +228,23 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
 
                                     {/* Optional modifier for children */}
                                     {schema?.allowedModifiers && schema.allowedModifiers[0] !== '' && (
-                                        <>
-                                            <select value={child.modifier} onChange={e => updateChild(child.id, { ...child, modifier: e.target.value })} className="pl-6 w-full bg-transparent text-[#DC8379]/60 text-sm outline-none cursor-pointer appearance-none text-center pr-8" style={{ fontFamily: 'cursive' }}>
-                                                {schema.allowedModifiers.map(m => <option key={m} value={m} className="bg-[var(--bg-raised)] text-neutral">{m}</option>)}
-                                            </select>
-                                            <div className="absolute right-0 top-0 bottom-0 w-8 border-l border-[#DC8379]/10 bg-white/[0.02] flex items-center justify-center pointer-events-none text-[#DC8379]/60">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                            </div>
-                                        </>
+                                        <Dropdown 
+                                            value={child.modifier} 
+                                            onChange={val => updateChild(child.id, { ...child, modifier: val })} 
+                                            options={schema.allowedModifiers.map(m => ({ label: m, value: m }))} 
+                                            className="w-full pl-6" 
+                                            style={{ fontFamily: 'cursive' }}
+                                        />
                                     )}
                                 </div>
-                                <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 pl-3 relative flex items-center hover:bg-white/5 transition-colors">
-                                    <select value={child.type} onChange={e => updateChild(child.id, { ...child, type: e.target.value, modifier: getDefaultModifier(e.target.value), parameter: getDefaultParameter(e.target.value) })} className="w-full bg-transparent text-[#DC8379] text-base outline-none cursor-pointer appearance-none text-center pr-8" style={{ fontFamily: 'cursive' }}>
-                                        {Object.keys(CONSTRAINT_SCHEMA).map(k => <option key={k} value={k} className="bg-[var(--bg-raised)] text-neutral">{k}</option>)}
-                                    </select>
-                                    <div className="absolute right-0 top-0 bottom-0 w-8 border-l border-[#DC8379]/10 bg-white/[0.02] flex items-center justify-center pointer-events-none text-[#DC8379]/60">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                                    </div>
+                                <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+                                    <Dropdown 
+                                        value={child.type} 
+                                        onChange={val => updateChild(child.id, { ...child, type: val, modifier: getDefaultModifier(val), parameter: getDefaultParameter(val) })} 
+                                        options={getTypeOptions(child.type)} 
+                                        className="w-full" 
+                                        style={{ fontFamily: 'cursive' }}
+                                    />
                                 </div>
                                 <div className="flex-1 py-1.5 px-3 min-w-[200px] flex items-center hover:bg-white/5 transition-colors">
                                     {renderParameterInput(child, (updated) => updateChild(child.id, updated))}

@@ -1,6 +1,7 @@
 export const MODIFIERS = {
     STANDARD: ['must', 'should'],
-    PLACEMENT: ['can', 'can not', 'must'], // Blending SRS and mockup
+    PLACEMENT: ['can', 'can not'], // Blending SRS and mockup
+    SHOULD_ONLY: ['should']
 };
 
 export const CONSTRAINT_SCHEMA = {
@@ -18,13 +19,13 @@ export const CONSTRAINT_SCHEMA = {
     },
     'last for': {
         category: 'Durational',
-        allowedModifiers: MODIFIERS.STANDARD,
+        allowedModifiers: MODIFIERS.SHOULD_ONLY,
         parameterType: 'DurationPicker',
         label: 'Duration'
     },
     'include': {
         category: 'Inclusion',
-        allowedModifiers: [...MODIFIERS.STANDARD, 'can'],
+        allowedModifiers: MODIFIERS.SHOULD_ONLY,
         parameterType: 'EntitySelector',
         label: 'Entities'
     },

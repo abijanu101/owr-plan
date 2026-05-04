@@ -49,11 +49,13 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
         onChange(constraints.filter(c => c.id !== id));
     };
 
+    const hasInclude = customConstraints.some(c => c.type === 'include');
+
     const renderRow = (c) => (
         c.isBlock ? (
-            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
         ) : (
-            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
         )
     );
 
