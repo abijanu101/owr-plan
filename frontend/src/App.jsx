@@ -74,7 +74,7 @@ function AppContent() {
                         <Route path="/activities" element={<ActivitiesPage />} />
                         <Route path='/activities/create' element={<CreateActivity />} />
                         <Route path='/activities/:id/edit' element={<EditActivity />} />
-                        <Route path='/activities/:id' element={<>activity typeshi</>} />
+                        <Route path='/activities/:id' element={<Navigate to='edit' replace />} />
 
                         <Route path='/visualize' element={<BlockVisualization />} />
 
