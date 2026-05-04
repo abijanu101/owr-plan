@@ -451,30 +451,6 @@ export default function PlanResults() {
                             </div>
                         </div>
 
-                        {/* Mobile Action Bar (At the end of content) */}
-                        <div className="lg:hidden mt-8 mb-4 animate-in slide-in-from-bottom-4 duration-700 delay-400">
-                            <div className="flex flex-col gap-3">
-                                <button
-                                    onClick={handleCreateActivity}
-                                    disabled={isCreating}
-                                    className="w-full py-4 rounded-2xl bg-[#f97766] text-[#1A0B16] font-bold text-sm shadow-glow flex items-center justify-center gap-2 active:scale-[0.98] transition-all disabled:opacity-50"
-                                >
-                                    {isCreating ? (
-                                        <div className="w-5 h-5 border-2 border-[#1A0B16]/30 border-t-[#1A0B16] rounded-full animate-spin" />
-                                    ) : (
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
-                                    )}
-                                    {isCreating ? 'Creating Activity...' : 'Create Activity'}
-                                </button>
-                                <button
-                                    onClick={() => navigate('/plan')}
-                                    className="w-full py-4 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-bold text-sm active:scale-[0.98] transition-all"
-                                >
-                                    Return to Constraints
-                                </button>
-                            </div>
-                        </div>
-
 
                         {/* Mobile Fixed Option Picker */}
                         <div
@@ -486,6 +462,7 @@ export default function PlanResults() {
                                 <div className="flex items-center gap-3">
                                     <div className="w-1.5 h-1.5 rounded-full bg-[#f97766] animate-pulse shadow-[0_0_8px_#f97766]" />
                                     <span className="text-[10px] font-black text-[#f97766] uppercase tracking-[0.25em]">Select a timeslot</span>
+
                                 </div>
                                 <button
                                     onClick={(e) => {
@@ -500,6 +477,7 @@ export default function PlanResults() {
                                 </button>
                             </div>
 
+
                             {/* Carousel Area */}
                             <div className={`flex overflow-x-auto gap-3 px-6 py-6 no-scrollbar snap-x snap-mandatory items-center transition-all duration-300 ${isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
                                 {allOptions.map((res, i) => (
@@ -512,6 +490,9 @@ export default function PlanResults() {
                                         resolveEntity={getEntityData}
                                     />
                                 ))}
+
+
+
                             </div>
                         </div>
                     </div>
@@ -520,29 +501,29 @@ export default function PlanResults() {
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(249, 119, 102, 0.1); border-radius: 10px; }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(249, 119, 102, 0.2); }
-                .shadow-glow { box-shadow: 0 0 15px rgba(249, 119, 102, 0.2); }
+@@ -319,7 +525,26 @@ export default function PlanResults() {
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
                 @keyframes particle-out { 0% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 100% { transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) scale(0); opacity: 0; } }
-                
-                @keyframes results-entrance {
-                    0% {
-                        transform: translateY(60vh);
-                        opacity: 0;
-                    }
-                    20% {
-                        opacity: 0;
-                    }
-                    100% {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-                .results-entrance {
-                    animation: results-entrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-                }
-            `}</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    `}</style>
+
                 </div>
             )}
         </div>
