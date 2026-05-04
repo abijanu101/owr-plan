@@ -2,9 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import Tabs from '../components/Tabs';
 import Toolbar from '../components/Toolbar';
-import Modal from '../components/Modal';
 import EntityList from '../components/EntityList1';
-import EntityForm from '../components/EntityForm';
+import EntityModal from '../components/EntityModal';
 import { listEntities, createEntity, updateEntity, deleteEntities, duplicateEntities } from '../api/entitiesApi';
 
 const SORT = [
@@ -52,13 +51,14 @@ export default function EntitiesPage() {
     setEditor({ open: true, draft: items.find(i => i.id === id) });
   };
 
-  const onSubmit = async (data) => {
+  // Called by EntityModal's onSuccess with the saved entity object
+  const onModalSuccess = (saved) => {
     if (editor.draft) {
-      const updated = await updateEntity(editor.draft.id, data);
-      setItems(p => p.map(i => i.id === updated.id ? updated : i));
+      // Edit mode — replace the existing item
+      setItems(p => p.map(i => (i.id === saved.id || i._id === saved._id) ? { ...i, ...saved } : i));
     } else {
-      const created = await createEntity({ ...data, kind: tab });
-      setItems(p => [created, ...p]);
+      // Create mode — prepend the new item
+      setItems(p => [saved, ...p]);
     }
     setEditor({ open: false, draft: null });
     setSelected(new Set());
@@ -119,19 +119,13 @@ export default function EntitiesPage() {
         />
       </div>
 
-      <Modal
-        open={editor.open}
-        title={`${editor.draft ? 'Edit' : 'Create'} ${tab}`}
+      <EntityModal
+        isOpen={editor.open}
         onClose={() => setEditor({ open: false, draft: null })}
-        footer={
-          <>
-            <button className="btn-pill" onClick={() => setEditor({ open: false, draft: null })}>Cancel</button>
-            <button className="btn-pill" data-active="true" form="entity-form" type="submit">Save</button>
-          </>
-        }
-      >
-        <EntityForm initial={editor.draft} kind={tab} onSubmit={onSubmit} />
-      </Modal>
+        entityType={tab}
+        editingEntity={editor.draft ?? null}
+        onSuccess={onModalSuccess}
+      />
     </div>
   );
 }
