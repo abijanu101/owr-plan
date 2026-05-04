@@ -510,18 +510,6 @@ export default function PlanResults() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
                     `}</style>
 
                 </div>
