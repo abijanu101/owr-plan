@@ -1,7 +1,7 @@
 import React from 'react';
 import GlobalConstraintRow from './GlobalConstraintRow';
 import ConstraintBlockRow from './ConstraintBlockRow';
-import { getDefaultParameter } from './ConstraintSchema';
+import { getDefaultParameter, getDefaultModifier } from './ConstraintSchema';
 
 const TableHeader = () => (
     <div className="flex items-center border-b border-[#DC8379]/20 bg-[var(--bg-purple)] text-center">
@@ -32,7 +32,8 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
     const customConstraints = constraints.filter(c => !c.isSystem);
 
     const addConstraint = () => {
-        const newConstraint = { id: Date.now(), isBlock: false, modifier: 'must', type: 'be between', parameter: getDefaultParameter('be between') };
+        const defaultType = 'be between';
+        const newConstraint = { id: Date.now(), isBlock: false, modifier: getDefaultModifier(defaultType), type: defaultType, parameter: getDefaultParameter(defaultType) };
         onChange([...constraints, newConstraint]);
     };
 
