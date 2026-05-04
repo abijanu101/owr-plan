@@ -1,23 +1,5 @@
+
 @import "tailwindcss";
-
-/* Color Palette */
-
-:root {
-  --color-primary: #f97766;
-
-  --bg-accent: #4c0e36;
-  --bg-primary: #200412;
-  --bg-raised: #290917;
-  --bg-purple: #4c0e36;
-
-  --text-neutral: #dc8379;
-  --text-muted: #743c40;
-
-  --border-subtle: var(--text-muted);
-
-  --color-success: #488845;
-  --color-error: #990101;
-}
 
 /* ========== ENTITY CARD GRID ========== */
 .entity-grid {
@@ -37,12 +19,9 @@
   transition: all 0.25s ease;
   display: flex;
   align-items: flex-start;
-  /* Changed from center to flex-start */
   gap: 16px;
   min-height: 120px;
-  /* Add this */
   height: 100%;
-  /* Add this */
 }
 
 .entity-card:hover {
@@ -102,7 +81,6 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
 
 .card-group-info {
   font-size: 12px;
@@ -181,19 +159,9 @@
 
 /* ---------- Added for Activities + Entities pages ---------- */
 
-
-
-.border-subtle {
-  border: 1px solid var(--border-subtle);
-}
-
-.bg-error {
-  background-color: var(--color-error);
-}
-
-.text-error {
-  color: var(--color-error);
-}
+.border-subtle { border: 1px solid var(--border-subtle); }
+.bg-error      { background-color: var(--color-error); }
+.text-error    { color: var(--color-error); }
 
 /* Pill row used everywhere (activity row, person row, group row) */
 .pill {
@@ -209,12 +177,10 @@
   outline: 2px solid transparent;
   border: 1px dashed var(--border-subtle);
 }
-
 .pill:hover {
   transform: translateY(-1px);
   border-color: var(--color-primary);
 }
-
 .pill[data-selected="true"] {
   outline-color: var(--color-primary);
   border-color: var(--color-primary);
@@ -222,31 +188,18 @@
 
 /* Circular icon button */
 .icon-btn {
-  width: 36px;
-  height: 36px;
+  width: 36px; height: 36px;
   border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  color: var(--text-neutral);
-  border: none;
-  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--text-neutral);
+  border: none; cursor: pointer;
 }
-
-.icon-btn:hover {
-  background: var(--bg-raised);
-}
-
-.icon-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
+.icon-btn:hover { background: var(--bg-raised); }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Pill-shaped button (Sort by, tabs, etc.) */
 .btn-pill {
   background: transparent;
-  /* Default - no background */
   color: var(--text-neutral);
   border: 1px solid var(--border-subtle);
   border-radius: 9999px;
@@ -258,7 +211,6 @@
 
 .btn-pill:hover {
   background: var(--bg-accent);
-  /* Shows on hover */
   border-color: var(--color-primary);
 }
 
@@ -268,7 +220,6 @@
   background: var(--bg-accent);
 }
 
-/* Header wave area below the navbar */
 /* Header wave area below the navbar */
 .stage {
   background: var(--bg-primary);
@@ -285,7 +236,6 @@
   cursor: pointer;
   transition: border-color 0.2s ease, background-color 0.2s ease;
 }
-
 .interactive-area:hover {
   border-color: var(--color-primary);
   background-color: rgba(249, 119, 102, 0.05);
@@ -301,33 +251,20 @@
   padding: 10px 14px;
   font-family: inherit;
 }
+.input:focus { outline: 2px solid var(--color-primary); }
 
-.input:focus {
-  outline: 2px solid var(--color-primary);
-}
-
-.label {
-  display: block;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-  font-size: 14px;
-}
+.label { display:block; color: var(--text-muted); margin-bottom: 6px; font-size: 14px; }
 
 /* Day pill (M T W TH F SA S) */
 .day {
-  min-width: 28px;
-  height: 28px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  min-width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
   border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 12px; font-weight: 700;
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
 }
-
 .day[data-on="true"] {
   color: var(--color-primary);
   background: var(--bg-accent);
@@ -335,15 +272,13 @@
 
 /* Modal */
 .modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
   z-index: 50;
+  padding: 16px;
 }
-
 .modal {
   background: var(--bg-raised);
   color: var(--text-neutral);
@@ -353,7 +288,239 @@
   border: 1px solid var(--border-subtle);
 }
 
+/* Entity Modal Specific Styles */
+.entity-modal {
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  width: min(420px, 96vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 24px 20px;
+  gap: 0;
+}
 
+.entity-modal-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.entity-modal-name-input {
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--text-muted);
+  color: var(--color-primary);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  outline: none;
+  width: 100%;
+  padding: 4px 0;
+}
+
+.entity-modal-name-input::placeholder {
+  color: var(--text-muted);
+}
+
+.entity-modal-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--text-muted);
+  margin-bottom: 20px;
+}
+
+.entity-modal-tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 0;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s;
+}
+
+.entity-modal-tab-btn.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.entity-modal-tab-content {
+  min-height: 120px;
+}
+
+.entity-modal-face-swiper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.entity-modal-arrow-btn {
+  background: none;
+  border: 2px solid var(--text-muted);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  color: var(--text-neutral);
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.entity-modal-arrow-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.entity-modal-preview-box {
+  width: 140px;
+  height: 130px;
+  border-radius: 16px;
+  border: 2px solid var(--text-muted);
+  background-color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
+.entity-modal-preview-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.entity-modal-accessories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.entity-modal-accessory-item {
+  position: relative;
+}
+
+.entity-modal-accessory-box {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  border: 2px solid var(--text-muted);
+  background-color: var(--bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+.entity-modal-accessory-box.active {
+  border-color: var(--color-primary);
+}
+
+.entity-modal-accessory-box img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain;
+}
+
+.entity-modal-accessory-toggle {
+  position: relative;
+  bottom: 2px;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--text-muted);
+  color: var(--bg-primary);
+  transition: background-color 0.15s;
+  font-family: inherit;
+}
+
+.entity-modal-accessory-toggle.active {
+  background-color: var(--color-primary);
+}
+
+.entity-modal-color-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.entity-modal-color-btn {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  border: 3px solid transparent;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.1s, border 0.1s;
+  font-family: inherit;
+}
+
+.entity-modal-color-btn:hover {
+  transform: scale(1.1);
+}
+
+.entity-modal-color-btn.active {
+  border-color: white;
+  outline: 2px solid;
+  outline-offset: 2px;
+  transform: scale(1.15);
+}
+
+.entity-modal-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* Color Palette */
+:root {
+  --color-primary: #f97766;
+
+  --bg-accent: #4c0e36;
+  --bg-primary: #200412;
+  --bg-raised: #290917;
+  --bg-purple: #4c0e36;
+
+  --text-neutral: #dc8379;
+  --text-muted: #743c40;
+
+  --border-subtle: var(--text-muted);
+
+  --color-success: #488845;
+  --color-error: #990101;
+}
 
 /* Entity modal responsive layout (portrait: stacked, landscape: side-by-side) */
 .entity-modal-shell {
@@ -376,87 +543,44 @@
   }
 }
 
-
 /* Config */
-
 #app {
   background-color: var(--bg-primary);
   width: 100%;
   height: 100vh;
   overflow: hidden;
-
   color: var(--text-neutral);
   font-family: cursive;
 }
 
-
 /* Utility Classes for Inline CSS */
-
-.text-neutral {
-  color: var(--text-neutral);
-}
-
-.text-muted {
-  color: var(--text-muted);
-}
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.bg-accent {
-  background-color: var(--bg-accent);
-}
-
-.bg-default {
-  background-color: var(--bg-primary);
-}
-
-.bg-raised {
-  background-color: var(--bg-raised);
-}
+.text-neutral { color: var(--text-neutral); }
+.text-muted   { color: var(--text-muted); }
+.text-primary { color: var(--color-primary); }
+.bg-accent    { background-color: var(--bg-accent); }
+.bg-default   { background-color: var(--bg-primary); }
+.bg-raised    { background-color: var(--bg-raised); }
 
 @keyframes burst {
-  0% {
-    transform: scale(0.2) rotate(0deg);
-    opacity: 1;
-  }
-
-  100% {
-    transform: scale(2.5) rotate(60deg);
-    opacity: 0;
-  }
+  0%   { transform: scale(0.2) rotate(0deg);  opacity: 1; }
+  100% { transform: scale(2.5) rotate(60deg); opacity: 0; }
 }
 
-/* Burst animation applied to the SVG container */
 .animate-burst {
   animation: burst 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
   transform-origin: center;
 }
 
-/* Pulse animation for the clicked nav item */
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
-
-  30% {
-    transform: scale(1.3);
-    filter: brightness(2) drop-shadow(0 0 15px var(--color-primary));
-  }
-
-  100% {
-    transform: scale(1);
-    filter: brightness(1);
-  }
+  0%   { transform: scale(1);   filter: brightness(1); }
+  30%  { transform: scale(1.3); filter: brightness(2) drop-shadow(0 0 15px var(--color-primary)); }
+  100% { transform: scale(1);   filter: brightness(1); }
 }
 
 .pulse {
   animation: pulse 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   z-index: 70;
 }
-
 
 .burst-line {
   stroke: var(--color-primary);
@@ -466,13 +590,8 @@
 }
 
 @keyframes glint {
-  0% {
-    transform: translateX(-120%) skewX(-20deg);
-  }
-
-  100% {
-    transform: translateX(300%) skewX(-20deg);
-  }
+  0%   { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(300%) skewX(-20deg); }
 }
 
 .animate-glint {
@@ -480,25 +599,11 @@
 }
 
 /* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: 10px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary);
-}
-
-/* Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--text-muted) transparent;

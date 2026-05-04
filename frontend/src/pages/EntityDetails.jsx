@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { PersonIcon, GroupIcon } from '../components/EntityIcons';
 import EntityList from '../components/EntityList';
-import EditEntityModal from '../components/EditEntityModal';
+import EditEntityModal from '../components/EntityModal';
 
 const MOCK_DATA = {
   "123": {
