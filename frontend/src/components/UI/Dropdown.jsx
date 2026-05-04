@@ -34,10 +34,11 @@ export default function Dropdown({
     }, []);
 
     const selectedOption = options.find(
-        (opt) =>
-            !opt?.isDivider &&
-            !opt?.isLabel &&
-            (typeof opt === 'string' ? opt : opt?.value) === value
+        (opt) => {
+            if (opt?.isDivider || opt?.isLabel) return false;
+            const val = typeof opt === 'string' ? opt : opt?.value;
+            return String(val).trim() === String(value).trim();
+        }
     );
     const displayValue = selectedOption
         ? typeof selectedOption === 'string'
