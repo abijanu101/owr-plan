@@ -322,15 +322,55 @@ export default function PlanResults() {
             )}
 
             {showContent && (
-                <div className="relative results-entrance">
+                <>
                     {/* Full Viewport Blur Overlay */}
                     <div
                         onClick={() => setIsExpanded(false)}
-                        className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-md transition-opacity duration-500 lg:hidden ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                        className={`fixed inset-0 z-40 bg-[#1A0B16]/60 backdrop-blur-md transition-opacity duration-500 lg:hidden ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     />
 
-                    <div className={`max-w-7xl mx-auto flex flex-col gap-6 transition-all duration-500 ${isExpanded ? 'pb-[220px]' : 'pb-12'} lg:pb-0 pt-6 lg:pt-12`}>
-                        <div className={`flex-1 flex flex-col lg:flex-row gap-8 lg:gap-16 transition-all duration-500`}>
+                    {/* Mobile Fixed Option Picker */}
+                    <div
+                        onClick={() => !isExpanded && setIsExpanded(true)}
+                        className={`lg:hidden fixed bottom-0 left-0 right-0 bg-[#1A0B16] z-50 border-t-2 border-[#f97766]/30 backdrop-blur-md transition-all duration-500 ease-in-out shadow-[0_-10px_40px_rgba(26,11,22,0.8)] animate-in slide-in-from-bottom-8 ${isExpanded ? 'h-[200px]' : 'h-[48px] cursor-pointer'}`}
+                    >
+                        {/* Tray Header */}
+                        <div className="flex items-center justify-between px-6 h-[48px] border-b border-[#f97766]/20 bg-[#3A0B25] shadow-lg relative z-[60]">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#f97766] animate-pulse shadow-[0_0_8px_#f97766]" />
+                                <span className="text-[10px] font-black text-[#f97766] uppercase tracking-[0.25em]">Select a timeslot</span>
+                            </div>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsExpanded(!isExpanded);
+                                }}
+                                className="w-8 h-8 rounded-full bg-[#1A0B16]/40 flex items-center justify-center text-[#f97766] active:scale-95 transition-all border border-[#f97766]/20"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform duration-500 ${isExpanded ? 'rotate-0' : 'rotate-180'}`}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Carousel Area */}
+                        <div className={`flex overflow-x-auto gap-3 px-6 py-6 no-scrollbar snap-x snap-mandatory items-center transition-all duration-300 ${isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                            {allOptions.map((res, i) => (
+                                <ResultCard
+                                    key={i}
+                                    result={res}
+                                    index={i}
+                                    isSelected={selectedIdx === i}
+                                    onClick={() => setSelectedIdx(i)}
+                                    resolveEntity={getEntityData}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className={`relative results-entrance transition-all duration-500 ${isExpanded ? 'blur-sm scale-[0.98] opacity-80' : ''}`}>
+                        <div className={`max-w-7xl mx-auto flex flex-col gap-6 transition-all duration-500 ${isExpanded ? 'pb-[220px]' : 'pb-12'} lg:pb-0 pt-6 lg:pt-12`}>
+                            <div className={`flex-1 flex flex-col lg:flex-row gap-8 lg:gap-16 transition-all duration-500`}>
                             {/* Left Column: Detail View */}
                             <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-left-32 zoom-in-95 duration-1000 animate-ease-out-back">
                                 <div className="flex flex-col gap-2">
@@ -475,45 +515,6 @@ export default function PlanResults() {
                             </div>
                         </div>
 
-
-                        {/* Mobile Fixed Option Picker */}
-                        <div
-                            onClick={() => !isExpanded && setIsExpanded(true)}
-                            className={`lg:hidden fixed bottom-0 left-0 right-0 bg-[#1A0B16] z-50 border-t-2 border-[#f97766]/30 backdrop-blur-md transition-all duration-500 ease-in-out ${isExpanded ? 'h-[200px]' : 'h-[48px] cursor-pointer'}`}
-                        >
-                            {/* Tray Header */}
-                            <div className="flex items-center justify-between px-6 h-[48px] border-b border-[#f97766]/20 bg-[#3A0B25] shadow-lg relative z-[60]">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#f97766] animate-pulse shadow-[0_0_8px_#f97766]" />
-                                    <span className="text-[10px] font-black text-[#f97766] uppercase tracking-[0.25em]">Select a timeslot</span>
-                                </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsExpanded(!isExpanded);
-                                    }}
-                                    className="w-8 h-8 rounded-full bg-[#1A0B16]/40 flex items-center justify-center text-[#f97766] active:scale-95 transition-all border border-[#f97766]/20"
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform duration-500 ${isExpanded ? 'rotate-0' : 'rotate-180'}`}>
-                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Carousel Area */}
-                            <div className={`flex overflow-x-auto gap-3 px-6 py-6 no-scrollbar snap-x snap-mandatory items-center transition-all duration-300 ${isExpanded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
-                                {allOptions.map((res, i) => (
-                                    <ResultCard
-                                        key={i}
-                                        result={res}
-                                        index={i}
-                                        isSelected={selectedIdx === i}
-                                        onClick={() => setSelectedIdx(i)}
-                                        resolveEntity={getEntityData}
-                                    />
-                                ))}
-                            </div>
-                        </div>
                     </div>
 
                     <style>{`
@@ -543,7 +544,8 @@ export default function PlanResults() {
                     animation: results-entrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                 }
             `}</style>
-                </div>
+                    </div>
+                </>
             )}
         </div>
     );
