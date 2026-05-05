@@ -16,32 +16,55 @@ const timeStringToDate = (timeStr, baseDate = new Date()) => {
 };
 
 const transformActivity = (activity) => {
-  const slots = activity.slots || [];
-  
-  // compute timeRange (e.g. from first slot)
-  let timeRange = '';
-  if (slots.length > 0) {
-    timeRange = `${slots[0].startTime} - ${slots[0].endTime}`;
+  const type = activity.activityType || 'non-recurring';
+
+  // ── Non-recurring ───────────────────────────────────────────────────────
+  if (type === 'non-recurring') {
+    const start = activity.rangeStart ? new Date(activity.rangeStart) : null;
+    const end   = activity.rangeEnd   ? new Date(activity.rangeEnd)   : null;
+    const fmt = (d) => d ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '?';
+    const fmtTime = (d) => d ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
+    return {
+      id: activity._id?.toString(),
+      title: activity.title,
+      activityType: 'non-recurring',
+      rangeStart: activity.rangeStart,
+      rangeEnd:   activity.rangeEnd,
+      timeRange: start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : '',
+      dateLabel: start ? fmt(start) : '',
+      participants: activity.participants?.map(p => p.name || p.toString()) || [],
+      createdAt: activity.createdAt ? new Date(activity.createdAt).getTime() : Date.now(),
+    };
   }
 
-  // compute days (e.g. ['M', 'T', 'W'])
-  const dayMap = { 'Monday': 'M', 'Tuesday': 'T', 'Wednesday': 'W', 'Thursday': 'TH', 'Friday': 'F', 'Saturday': 'SA', 'Sunday': 'S' };
-  const days = [...new Set(slots.map(s => dayMap[s.day] || s.day))];
+  // ── Recurring ────────────────────────────────────────────────────────────
+  const interval  = activity.everyInterval || 1;
+  const unit      = activity.everyUnit || 'Week';
+  const plural    = interval > 1 ? `${interval} ${unit}s` : unit;
+  const everyStr  = `Every ${plural}`;
 
-  // compute date string
-  let date = '';
-  if (activity.recurrence?.enabled) {
-    date = `Every ${activity.recurrence.interval > 1 ? activity.recurrence.interval + ' ' : ''}${activity.recurrence.frequency}s`;
-  } else {
-    date = 'One-time';
+  const day = activity.recurringDay;
+  const scheduleStr = day ? `${everyStr} on ${day}` : everyStr;
+
+  let expiryStr = 'No expiry';
+  if (activity.expiryType === 'on_date' && activity.expiryDate) {
+    expiryStr = `Until ${new Date(activity.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  } else if (activity.expiryType === 'after') {
+    expiryStr = `After ${activity.expiryOccurrences} occurrence${activity.expiryOccurrences !== 1 ? 's' : ''}`;
   }
 
   return {
     id: activity._id?.toString(),
     title: activity.title,
-    timeRange,
-    date,
-    days,
+    activityType: 'recurring',
+    recurringStartTime: activity.recurringStartTime,
+    recurringEndTime:   activity.recurringEndTime,
+    everyInterval:  interval,
+    everyUnit:      unit,
+    recurringDay:   day,
+    scheduleStr,
+    expiryStr,
+    timeRange: `${activity.recurringStartTime || ''} – ${activity.recurringEndTime || ''}`,
     participants: activity.participants?.map(p => p.name || p.toString()) || [],
     createdAt: activity.createdAt ? new Date(activity.createdAt).getTime() : Date.now(),
   };
@@ -51,40 +74,43 @@ const transformActivity = (activity) => {
 const createActivity = async (req, res) => {
   try {
     const {
-      userId,
-      title,
-      description,
-      participants,
-      scheduleMode,
-      slots,
-      pastedScheduleRaw,
-      parsedSlots,
-      recurrence,
+      userId, title, description, participants,
+      activityType,
+      // non-recurring
+      rangeStart, rangeEnd,
+      // recurring
+      recurringStartTime, recurringEndTime,
+      everyInterval, everyUnit,
+      recurringDay, recurringStartDate,
+      expiryType, expiryDate, expiryOccurrences,
     } = req.body;
 
     if (!userId || !title) {
       return res.status(400).json({ success: false, message: 'userId and title are required.' });
     }
 
-    const activeSlots = scheduleMode === 'paste' ? (parsedSlots || []) : (slots || []);
+    const type = activityType || 'non-recurring';
 
     const activity = new Activity({
-      userId,
-      title,
-      description,
+      userId, title, description,
       participants: participants || [],
-      scheduleMode: scheduleMode || 'structured',
-      slots: scheduleMode === 'structured' ? activeSlots : [],
-      pastedScheduleRaw: scheduleMode === 'paste' ? pastedScheduleRaw : '',
-      parsedSlots: scheduleMode === 'paste' ? activeSlots : [],
-      recurrence: recurrence || {},
-      // Legacy: set startTime/endTime from first slot if available
-      startTime: activeSlots[0] ? timeStringToDate(activeSlots[0].startTime) : undefined,
-      endTime:   activeSlots[0] ? timeStringToDate(activeSlots[0].endTime)   : undefined,
+      activityType: type,
+      // non-recurring
+      rangeStart: type === 'non-recurring' ? rangeStart : undefined,
+      rangeEnd:   type === 'non-recurring' ? rangeEnd   : undefined,
+      // recurring
+      recurringStartTime: type === 'recurring' ? (recurringStartTime || '08:00 AM') : undefined,
+      recurringEndTime:   type === 'recurring' ? (recurringEndTime   || '09:00 AM') : undefined,
+      everyInterval:      type === 'recurring' ? (everyInterval || 1)   : undefined,
+      everyUnit:          type === 'recurring' ? (everyUnit || 'Week')   : undefined,
+      recurringDay:       type === 'recurring' ? (recurringDay || null)  : undefined,
+      recurringStartDate: type === 'recurring' ? recurringStartDate      : undefined,
+      expiryType:         type === 'recurring' ? (expiryType || 'never') : undefined,
+      expiryDate:         type === 'recurring' ? expiryDate              : undefined,
+      expiryOccurrences:  type === 'recurring' ? (expiryOccurrences || 1): undefined,
     });
 
     await activity.save();
-
     res.status(201).json({ success: true, data: { activity } });
   } catch (err) {
     console.error('createActivity error:', err);

@@ -1,30 +1,15 @@
 const mongoose = require("mongoose");
 
-const scheduleSlotSchema = new mongoose.Schema({
-  day: {
-    type: String,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-    required: true
-  },
-  startTime: { type: String, required: true }, // "08:30 AM"
-  endTime:   { type: String, required: true }, // "10:00 AM"
-  label:     { type: String, default: '' }
-}, { _id: false });
-
-const recurrenceSchema = new mongoose.Schema({
-  enabled:     { type: Boolean, default: false },
-  interval:    { type: Number, default: 1 },           // every N
-  frequency:   { type: String, enum: ['Day', 'Week', 'Month'], default: 'Week' },
-  endType:     { type: String, enum: ['never', 'on_date', 'after'], default: 'never' },
-  endDate:     { type: Date },
-  occurrences: { type: Number, default: 1 }
-}, { _id: false });
+// ─── Recurring Activity Schema ────────────────────────────────────────────────
+// A recurring activity repeats on a schedule: "Every N Day/Week/Month"
+// It has a single time window per occurrence (startTime → endTime)
+// and an optional expiry.
 
 const activitySchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    required: true
+    required: true,
   },
 
   title:       { type: String, required: true, trim: true },
@@ -32,25 +17,64 @@ const activitySchema = new mongoose.Schema({
 
   participants: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Entity"
+    ref: "Entity",
   }],
 
-  scheduleMode: {
+  // ── Activity type ──────────────────────────────────────────────────────────
+  activityType: {
     type: String,
-    enum: ['structured', 'paste'],
-    default: 'structured'
+    enum: ['recurring', 'non-recurring'],
+    default: 'non-recurring',
   },
 
-  slots: [scheduleSlotSchema],
+  // ── Non-Recurring fields (simple date-time range) ─────────────────────────
+  rangeStart: { type: Date },
+  rangeEnd:   { type: Date },
 
-  pastedScheduleRaw: { type: String, default: '' }, // original pasted text
-  parsedSlots:       [scheduleSlotSchema],           // LLM-parsed result from paste
+  // ── Recurring fields ───────────────────────────────────────────────────────
+  // Time window per occurrence
+  recurringStartTime: { type: String, default: '08:00 AM' }, // "HH:MM AM/PM"
+  recurringEndTime:   { type: String, default: '09:00 AM' },
 
-  recurrence: { type: recurrenceSchema, default: () => ({}) },
+  // Period: "Every N unit(s)"
+  everyInterval: { type: Number, default: 1, min: 1 },
+  everyUnit: {
+    type: String,
+    enum: ['Day', 'Week'],
+    default: 'Week',
+  },
 
-  // Legacy / computed fields
-  startTime: Date,
-  endTime:   Date,
+  // Day of week for weekly recurrence (null means "every day" or "every month date")
+  recurringDay: {
+    type: String,
+    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', null],
+    default: null,
+  },
+
+  // Optional start date for first occurrence
+  recurringStartDate: { type: Date },
+
+  // Expiry of the recurrence
+  expiryType: {
+    type: String,
+    enum: ['never', 'on_date', 'after'],
+    default: 'never',
+  },
+  expiryDate:        { type: Date },
+  expiryOccurrences: { type: Number, default: 1 },
+
+  // ── Legacy fields (kept for backward compat, not used in new UI) ──────────
+  scheduleMode: {
+    type: String,
+    enum: ['structured', 'paste', 'range'],
+    default: 'structured',
+  },
+  slots: [new mongoose.Schema({
+    day: { type: String },
+    startTime: { type: String },
+    endTime:   { type: String },
+    label:     { type: String, default: '' },
+  }, { _id: false })],
 
 }, { timestamps: true });
 
