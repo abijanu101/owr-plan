@@ -3,230 +3,182 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Avatar from '../components/avatar';
 import EntityModal from '../components/EntityModal';
 import EntityChip from '../components/EntitySelector/EntityChip';
-import SelectionOverlay from '../components/EntitySelector/SelectionOverlay';
 import Button from '../components/UI/Button';
 
-// ─── Mock Data ────────────────────────────────────────────────
-const MOCK_ENTITIES = {
-  "123": {
-    _id: "123", name: "Zoha", type: "person",
-    color: "#f97766",
-    face: "face/happy.svg",
-    accessories: ["accessories/crown.svg"],
-    groups: [{ _id: "678", name: "Dev Team", color: "#488845" }],
-    members: [],
-  },
-  "456": {
-    _id: "456", name: "Alizeh", type: "person",
-    color: "#dc8379",
-    face: "face/sassy.svg",
-    accessories: [],
-    groups: [{ _id: "678", name: "Dev Team", color: "#488845" }],
-    members: [],
-  },
-  "678": {
-    _id: "678", name: "Dev Team", type: "group",
-    color: "#488845",
-    face: "face/happy-g.svg",
-    accessories: [],
-    groups: [],
-    members: [
-      { _id: "123", name: "Zoha", color: "#f97766" },
-      { _id: "456", name: "Alizeh", color: "#dc8379" },
-    ],
-  },
+// ─── MOCK DATA (mirrors seed.js exactly) ─────────────────────
+// People: Ahmed, Alizeh, Zoha, Abi, Ansa
+// Groups: Section G, AML-6A, owrplan gng
+// Activities: exactly as in seed
+// Group memberships: assigned logically since seed doesn't define them
+
+const M = {
+  // ── People ──
+  p_ahmed:  { _id: 'p_ahmed',  name: 'Ahmed',  type: 'person', color: '#5E5AB2', face: 'face/happy.svg',   accessories: [] },
+  p_alizeh: { _id: 'p_alizeh', name: 'Alizeh', type: 'person', color: '#B23B3B', face: 'face/sassy.svg',   accessories: [] },
+  p_zoha:   { _id: 'p_zoha',   name: 'Zoha',   type: 'person', color: '#488845', face: 'face/happy.svg',   accessories: [] },
+  p_abi:    { _id: 'p_abi',    name: 'Abi',    type: 'person', color: '#1B7A7A', face: 'face/naughty.svg', accessories: [] },
+  p_ansa:   { _id: 'p_ansa',   name: 'Ansa',   type: 'person', color: '#911B7D', face: 'face/happy.svg',   accessories: [] },
+  // ── Groups ──
+  g_secg:   { _id: 'g_secg',   name: 'Section G',   type: 'group', color: '#1B5491', face: 'face/happy-g.svg',   accessories: [] },
+  g_aml:    { _id: 'g_aml',    name: 'AML-6A',      type: 'group', color: '#B29B3B', face: 'face/sassy-g.svg',   accessories: [] },
+  g_owrplan:{ _id: 'g_owrplan',name: 'owrplan gng', type: 'group', color: '#5E5AB2', face: 'face/naughty-g.svg', accessories: [] },
 };
 
+// Assign group memberships (seed doesn't define these, so we assign logically)
+M.g_secg.members    = [ref(M.p_alizeh), ref(M.p_abi), ref(M.p_ansa), ref(M.p_zoha)];
+M.g_aml.members     = [ref(M.p_ahmed),  ref(M.p_alizeh), ref(M.p_zoha)];
+M.g_owrplan.members = [ref(M.p_ahmed),  ref(M.p_alizeh), ref(M.p_zoha), ref(M.p_abi), ref(M.p_ansa)];
+
+// Assign each person's groups
+M.p_ahmed.groups  = [ref(M.g_aml),    ref(M.g_owrplan)];
+M.p_alizeh.groups = [ref(M.g_secg),   ref(M.g_aml), ref(M.g_owrplan)];
+M.p_zoha.groups   = [ref(M.g_aml),    ref(M.g_owrplan)];
+M.p_abi.groups    = [ref(M.g_secg),   ref(M.g_owrplan)];
+M.p_ansa.groups   = [ref(M.g_secg),   ref(M.g_owrplan)];
+
+// Groups have no groups
+M.g_secg.groups    = [];
+M.g_aml.groups     = [];
+M.g_owrplan.groups = [];
+
+// People have no members
+M.p_ahmed.members  = [];
+M.p_alizeh.members = [];
+M.p_zoha.members   = [];
+M.p_abi.members    = [];
+M.p_ansa.members   = [];
+
+function ref(e) {
+  return { _id: e._id, name: e.name, color: e.color };
+}
+
+const MOCK_ENTITIES = M;
+
+// Activities exactly as in seed
 const MOCK_ACTIVITIES = [
   {
-    _id: "a1", title: "Ca Class University",
-    participants: ["123", "456"],
+    _id: 'a1',
+    title: 'Ca Class University',
+    participants: ['p_alizeh', 'p_abi', 'p_ansa'],
     slots: [
-      { day: "Monday", startTime: "09:00 AM", endTime: "11:30 AM" },
-      { day: "Monday", startTime: "02:00 PM", endTime: "03:30 PM" },
+      { day: 'Monday', startTime: '09:00 AM', endTime: '11:30 AM' },
+      { day: 'Monday', startTime: '02:00 PM', endTime: '03:30 PM' },
     ],
   },
   {
-    _id: "a2", title: "Meeting",
-    participants: ["123", "678"],
-    slots: [{ day: "Monday", startTime: "04:00 PM", endTime: "05:00 PM" }],
+    _id: 'a2',
+    title: 'Meeting',
+    participants: ['p_ahmed', 'p_abi', 'p_ansa'],
+    slots: [
+      { day: 'Monday', startTime: '04:00 PM', endTime: '05:00 PM' },
+    ],
   },
   {
-    _id: "a3", title: "Gym Session",
-    participants: ["456"],
+    _id: 'a3',
+    title: 'Gym Session',
+    participants: ['p_ahmed', 'p_alizeh'],
     slots: [
-      { day: "Monday", startTime: "06:00 AM", endTime: "07:30 AM" },
-      { day: "Tuesday", startTime: "06:00 AM", endTime: "07:30 AM" },
+      { day: 'Monday',  startTime: '06:00 AM', endTime: '07:30 AM' },
+      { day: 'Tuesday', startTime: '06:00 AM', endTime: '07:30 AM' },
     ],
   },
 ];
 
-// All mock entities as a flat array for the SelectionOverlay
-const ALL_MOCK_ENTITIES_LIST = Object.values(MOCK_ENTITIES).map(e => ({
-  id: e._id,
-  name: e.name,
-  type: e.type,
-  color: e.color,
-}));
+const PREVIEW_COUNT = 2;
 
 // ─── CollapsibleSection ───────────────────────────────────────
-// Reusable collapsible section with a divider line, bold heading,
-// and an animated inverted triangle toggle.
-// The `action` prop lets you slot in a button (like +) next to the heading.
+
 function CollapsibleSection({ title, children, defaultOpen = true, action }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div style={{ marginBottom: 28 }}>
-      {/* Divider line above heading */}
-      <div style={{
-        width: "100%", height: 1,
-        background: "var(--text-muted)",
-        opacity: 0.35,
-        marginBottom: 10,
-      }} />
-
-      {/* Heading row: title + optional action + toggle arrow */}
-      <div style={{
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between",
-        marginBottom: open ? 14 : 0,
-      }}>
-        {/* Left: title + optional action (e.g. + button) */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: '100%', height: 1, background: 'var(--text-muted)', opacity: 0.35, marginBottom: 10 }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 14 : 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <h2 style={{
-            color: "var(--color-primary)",
-            fontFamily: "inherit",
-            fontWeight: 900,
-            fontSize: 18,
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            margin: 0,
+            color: 'var(--color-primary)', fontFamily: 'inherit', fontWeight: 900,
+            fontSize: 18, letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0,
           }}>
             {title}
           </h2>
-          {/* + button slotted in next to heading */}
           {action}
         </div>
-
-        {/* Right: triangle toggle */}
         <button
           onClick={() => setOpen(o => !o)}
-          style={{
-            background: "none", border: "none", cursor: "pointer",
-            padding: 4, display: "flex", alignItems: "center",
-          }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}
         >
           <svg
-            style={{
-              width: 20, height: 20,
-              color: "var(--text-muted)",
-              transform: open ? "rotate(0deg)" : "rotate(-90deg)",
-              transition: "transform 0.2s ease",
-            }}
+            style={{ width: 20, height: 20, color: 'var(--text-muted)', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease' }}
             fill="currentColor" viewBox="0 0 24 24"
           >
             <path d="M7 10l5 5 5-5z" />
           </svg>
         </button>
       </div>
-
-      {/* Collapsible content */}
       {open && children}
     </div>
   );
 }
 
-// ─── AddButton ───────────────────────────────────────────────
-// Small circular + button placed next to section headings.
-// Opens the SelectionOverlay to add members or groups.
-function AddButton({ onClick }) {
+// ─── EntityPill ───────────────────────────────────────────────
+
+function EntityPill({ name, color, onClick }) {
   return (
     <button
       onClick={onClick}
-      title="Add"
       style={{
-        width: 24, height: 24,
-        borderRadius: "50%",
-        border: "2px solid var(--color-primary)",
-        background: "none",
-        color: "var(--color-primary)",
-        fontFamily: "inherit",
-        fontWeight: 900,
-        fontSize: 16,
-        lineHeight: 1,
-        cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        flexShrink: 0,
-        transition: "background 0.15s, color 0.15s",
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '5px 14px', borderRadius: 9999,
+        background: 'var(--bg-primary)',
+        border: `2px solid ${color || 'var(--text-muted)'}`,
+        color: color || 'var(--text-neutral)',
+        fontFamily: 'inherit', fontWeight: 700, fontSize: 13,
+        letterSpacing: '0.08em', cursor: 'pointer',
+        transition: 'opacity 0.15s',
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = "var(--color-primary)";
-        e.currentTarget.style.color = "var(--bg-primary)";
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = "none";
-        e.currentTarget.style.color = "var(--color-primary)";
-      }}
+      onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
     >
-      +
+      <span style={{ width: 8, height: 8, borderRadius: '50%', background: color || 'var(--text-muted)', flexShrink: 0 }} />
+      {name}
     </button>
   );
 }
 
-// ─── ActivityRow ──────────────────────────────────────────────
-// A single activity card. Shows first slot inline; clicking the
-// triangle expands all slots beneath a divider.
+// ─── ActivityRow ─────────────────────────────────────────────
+
 function ActivityRow({ activity }) {
   const [expanded, setExpanded] = useState(false);
   const slots = activity.slots || [];
   const firstSlot = slots[0];
 
   return (
-    <div style={{
-      borderRadius: 14,
-      border: "1px solid var(--text-muted)",
-      overflow: "hidden",
-      marginBottom: 10,
-    }}>
-      {/* Collapsed header */}
+    <div style={{ borderRadius: 14, border: '1px solid var(--text-muted)', overflow: 'hidden', marginBottom: 10 }}>
       <button
         onClick={() => setExpanded(o => !o)}
         style={{
-          width: "100%", background: "none", border: "none",
-          cursor: "pointer", padding: "12px 16px",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          gap: 12,
+          width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+          padding: '12px 16px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 12,
         }}
       >
-        <span style={{
-          color: "var(--text-neutral)",
-          fontFamily: "inherit", fontWeight: 700,
-          fontSize: 15, textAlign: "left",
-        }}>
+        <span style={{ color: 'var(--text-neutral)', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, textAlign: 'left' }}>
           {activity.title}
         </span>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {firstSlot && (
-            <div style={{
-              textAlign: "right", color: "var(--text-muted)",
-              fontSize: 12, lineHeight: 1.5, fontFamily: "inherit",
-            }}>
+            <div style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.5, fontFamily: 'inherit' }}>
               <div>{firstSlot.startTime} – {firstSlot.endTime}</div>
               <div>{firstSlot.day}</div>
               {slots.length > 1 && (
-                <div style={{ color: "var(--color-primary)", fontSize: 11 }}>
-                  +{slots.length - 1} more
+                <div style={{ color: 'var(--color-primary)', fontSize: 11 }}>
+                  +{slots.length - 1} more slot{slots.length > 2 ? 's' : ''}
                 </div>
               )}
             </div>
           )}
           <svg
-            style={{
-              width: 18, height: 18, color: "var(--text-muted)",
-              transform: expanded ? "rotate(0deg)" : "rotate(-90deg)",
-              transition: "transform 0.2s ease", flexShrink: 0,
-            }}
+            style={{ width: 18, height: 18, color: 'var(--text-muted)', transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease', flexShrink: 0 }}
             fill="currentColor" viewBox="0 0 24 24"
           >
             <path d="M7 10l5 5 5-5z" />
@@ -234,18 +186,10 @@ function ActivityRow({ activity }) {
         </div>
       </button>
 
-      {/* Expanded: all slots */}
-      {expanded && (
-        <div style={{
-          borderTop: "1px solid var(--text-muted)",
-          padding: "10px 16px",
-          display: "flex", flexDirection: "column", gap: 6,
-        }}>
+      {expanded && slots.length > 1 && (
+        <div style={{ borderTop: '1px solid var(--text-muted)', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {slots.map((slot, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between",
-              color: "var(--text-muted)", fontSize: 13, fontFamily: "inherit",
-            }}>
+            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: 13, fontFamily: 'inherit' }}>
               <span style={{ fontWeight: 700 }}>{slot.day}</span>
               <span>{slot.startTime} – {slot.endTime}</span>
             </div>
@@ -256,248 +200,241 @@ function ActivityRow({ activity }) {
   );
 }
 
-// ─── Main Page ─────────────────────────────────────────────────
+// ─── ActivitiesSection ────────────────────────────────────────
+
+function ActivitiesSection({ activities, onSchedule }) {
+  const [showAll, setShowAll] = useState(false);
+  const visible = showAll ? activities : activities.slice(0, PREVIEW_COUNT);
+  const hidden  = activities.length - PREVIEW_COUNT;
+
+  return (
+    <CollapsibleSection title="Activities" defaultOpen={true}>
+      {activities.length === 0 ? (
+        <p style={{ color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: 13, margin: '0 0 12px' }}>
+          No activities yet.
+        </p>
+      ) : (
+        <>
+          <div style={{ marginBottom: 8 }}>
+            {visible.map(a => <ActivityRow key={a._id} activity={a} />)}
+          </div>
+          {activities.length > PREVIEW_COUNT && (
+            <button
+              onClick={() => setShowAll(o => !o)}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                padding: '4px 0 12px', color: 'var(--color-primary)',
+                fontFamily: 'inherit', fontWeight: 700, fontSize: 13,
+                display: 'flex', alignItems: 'center', gap: 6,
+              }}
+            >
+              <svg
+                style={{ width: 16, height: 16, transform: showAll ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease' }}
+                fill="currentColor" viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+              {showAll ? 'Show less' : `Show all ${activities.length} activities (+${hidden} more)`}
+            </button>
+          )}
+        </>
+      )}
+      <Button onClick={onSchedule} variant="outline">
+        + Schedule New Activity
+      </Button>
+    </CollapsibleSection>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────
+
 export default function EntityDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [entity, setEntity] = useState(null);
+  const [entity,     setEntity]     = useState(null);
   const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading,    setLoading]    = useState(true);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
-  // SelectionOverlay state — tracks which items are selected
-  // and which "mode" we're adding (members vs groups)
-  const [selectorOpen, setSelectorOpen] = useState(false);
-  const [selectorMode, setSelectorMode] = useState(null); // "members" | "groups"
-
-  // ── Fetch entity + activities ──
   useEffect(() => {
     setLoading(true);
-    const found = MOCK_ENTITIES[id];
-    if (found) {
-      setEntity(found);
-      setActivities(MOCK_ACTIVITIES.filter(a => a.participants.includes(id)));
-      setLoading(false);
-      return;
-    }
+
+    // ── Try API first (backend seed data) ──
     const token = localStorage.getItem('token');
+    const h = { Authorization: `Bearer ${token}` };
+
+    const normalize = (raw) => {
+      const normalized = {
+        ...raw,
+        _id:         raw._id || raw.id,
+        type:        raw.type || 'person',
+        face:        (raw.faceIcon || raw.face || 'face/happy.svg').replace(/^\/avatar\//, ''),
+        accessories: (raw.accessories || []).map(a => typeof a === 'string' ? a.replace(/^\/avatar\//, '') : a),
+        color:       raw.color || '#ffad8a',
+        members:     (raw.members || []).filter(m => m).map(m => ({ 
+          _id: m._id || m.id, 
+          name: m.name, 
+          color: m.color || '#ffad8a' 
+        })),
+        groups:      (raw.groups || []).filter(g => g).map(g => ({ 
+          _id: g._id || g.id, 
+          name: g.name, 
+          color: g.color || '#ffad8a' 
+        })),
+      };
+      return normalized;
+    };
+
     Promise.all([
-      fetch(`/api/entities/${id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()),
-      fetch(`/api/entities/${id}/activities`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => []),
+      fetch(`/api/entities/${id}`, { headers: h }).then(r => r.ok ? r.json() : Promise.reject('Entity not found')),
+      fetch(`/api/entities/${id}/activities`, { headers: h }).then(r => r.ok ? r.json() : []).catch(() => []),
     ])
       .then(([entityData, activityData]) => {
-        setEntity(entityData);
-        setActivities(Array.isArray(activityData) ? activityData : []);
+        let normalized = normalize(entityData);
+        let activities = Array.isArray(activityData) ? activityData : [];
+        
+        // Merge with mock data if API returned incomplete data
+        const mockEntity = MOCK_ENTITIES[id];
+        if (mockEntity && (!normalized.members?.length || !normalized.groups?.length)) {
+          normalized = {
+            ...normalized,
+            members: normalized.members?.length ? normalized.members : (mockEntity.members || []),
+            groups: normalized.groups?.length ? normalized.groups : (mockEntity.groups || []),
+          };
+        }
+        if (!activities.length && mockEntity) {
+          activities = MOCK_ACTIVITIES.filter(a => a.participants.includes(id));
+        }
+        
+        console.log('✅ API data loaded:', { entity: normalized, activities });
+        setEntity(normalized);
+        setActivities(activities);
+        setLoading(false);
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch(err => {
+        // ── Fallback to MOCK data ──
+        console.log('⚠️ API failed, using mock data:', err);
+        const found = MOCK_ENTITIES[id];
+        if (found) {
+          console.log('✅ Mock entity loaded:', found);
+          setEntity(found);
+          const mockActivities = MOCK_ACTIVITIES.filter(a => a.participants.includes(id));
+          console.log('✅ Mock activities filtered:', mockActivities);
+          setActivities(mockActivities);
+        } else {
+          console.error('❌ Entity not found in mock data');
+          setEntity(null);
+        }
+        setLoading(false);
+      });
   }, [id]);
 
-  // ── Save from edit modal ──
   const handleSave = (saved) => setEntity(prev => ({ ...prev, ...saved }));
 
-  // ── Open selector in the right mode ──
-  const openSelector = (mode) => {
-    setSelectorMode(mode);
-    setSelectorOpen(true);
-  };
-
-  // ── Handle selection from overlay ──
-  // The overlay calls onToggle with an array of selected IDs.
-  // We find the full entity objects from MOCK_ENTITIES and patch
-  // the entity's members or groups list.
-  const handleSelectionChange = (newIds) => {
-    if (!entity) return;
-    const resolved = newIds.map(sid => {
-      const e = MOCK_ENTITIES[sid];
-      if (!e) return null;
-      return { _id: e._id, name: e.name, color: e.color };
-    }).filter(Boolean);
-
-    if (selectorMode === "members") {
-      setEntity(prev => ({ ...prev, members: resolved }));
-    } else {
-      setEntity(prev => ({ ...prev, groups: resolved }));
-    }
-  };
-
-  // Current selected IDs for the overlay (pre-tick the already-added items)
-  const currentSelectedIds = selectorMode === "members"
-    ? (entity?.members || []).map(m => m._id)
-    : (entity?.groups || []).map(g => g._id);
-
-  // ── Loading / error states ──
   if (loading) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 32 }}>
-      <div style={{ color: "var(--text-muted)", fontSize: 20, fontFamily: "inherit" }} className="animate-pulse">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 32 }}>
+      <div style={{ color: 'var(--text-muted)', fontSize: 20, fontFamily: 'inherit' }} className="animate-pulse">
         Loading...
       </div>
     </div>
   );
 
-  if (error || !entity) return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: 32 }}>
-      <div style={{ color: "var(--color-error)", fontSize: 18, fontFamily: "inherit" }}>
-        {error || "Entity not found"}
+  if (!entity) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 32 }}>
+      <div style={{ color: 'var(--color-error)', fontSize: 18, fontFamily: 'inherit' }}>
+        Entity not found. Try: /entities/p_ahmed, /entities/p_alizeh, /entities/g_secg
       </div>
     </div>
   );
 
-  const isGroup = entity.type === "group";
+  const isGroup   = entity.type === 'group';
   const listItems = isGroup ? (entity.members || []) : (entity.groups || []);
-  const listTitle = isGroup ? "Members" : "Groups";
-  const selectorModeForSection = isGroup ? "members" : "groups";
+  const listTitle = isGroup ? 'Members' : 'Groups';
 
   return (
-    <div style={{
-      width: "100%", minHeight: "100%",
-      padding: "32px 24px", boxSizing: "border-box",
-      overflowY: "auto",
-    }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+    <div style={{ width: '100%', minHeight: '100%', padding: '32px 24px', boxSizing: 'border-box', overflowY: 'auto' }}>
+      <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
 
-        {/* ── Avatar + Name ── */}
-        <div style={{
-          display: "flex", flexDirection: "column",
-          alignItems: "center", gap: 16, marginBottom: 36,
-        }}>
-          <div style={{ position: "relative" }}>
-            <Avatar
-              face={entity.face}
-              accessories={entity.accessories || []}
-              color={entity.color}
-              size={180}
-              isGroup={isGroup}
-              bgColor={entity.color + "22"}
-              rounded="24px"
-            />
-            {/* Edit button overlaid on avatar corner */}
+        {/* ── LEFT: Avatar + Name ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0, width: 220 }}>
+          <Avatar
+            key={entity._id}
+            face={entity.face}
+            accessories={entity.accessories || []}
+            size={220}
+            isGroup={isGroup}
+            bgColor={entity.color}
+            shape="rounded"
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              padding: '8px 22px', borderRadius: 9999,
+              background: entity.color || 'var(--color-primary)',
+              color: '#fff', fontFamily: 'inherit', fontWeight: 900,
+              fontSize: 18, letterSpacing: '0.15em', textTransform: 'uppercase',
+              boxShadow: `0 4px 20px ${entity.color}55`,
+            }}>
+              {entity.name}
+            </div>
             <button
               onClick={() => setIsEditOpen(true)}
               title="Edit"
               style={{
-                position: "absolute", bottom: 8, right: 8,
-                width: 32, height: 32, borderRadius: "50%",
-                background: "var(--bg-raised)",
-                border: "2px solid var(--text-muted)",
-                color: "var(--text-neutral)",
-                cursor: "pointer", fontSize: 15,
-                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 32, height: 32, borderRadius: '50%',
+                background: 'var(--bg-raised)', border: '2px solid var(--text-muted)',
+                color: 'var(--text-neutral)', cursor: 'pointer', fontSize: 15,
+                flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
               ✎
             </button>
           </div>
-
-          {/* Name badge */}
-          <div style={{
-            padding: "8px 28px", borderRadius: 9999,
-            background: entity.color || "var(--color-primary)",
-            color: "#fff", fontFamily: "inherit",
-            fontWeight: 900, fontSize: 22,
-            letterSpacing: "0.15em", textTransform: "uppercase",
-            boxShadow: `0 4px 20px ${entity.color}55`,
-          }}>
-            {entity.name}
-          </div>
         </div>
 
-        {/* ── Groups / Members ── */}
-        {/* 
-          CollapsibleSection receives an `action` prop = the + button.
-          Clicking + opens SelectionOverlay in the right mode.
-          Items render as EntityChip (your existing component) — 
-          isSelected=true so they show the filled chip style,
-          and clicking navigates to that entity's details page.
-        */}
-        <CollapsibleSection
-          title={listTitle}
-          defaultOpen={true}
-          action={
-            <AddButton onClick={() => openSelector(selectorModeForSection)} />
-          }
-        >
-          {listItems.length === 0 ? (
-            <p style={{ color: "var(--text-muted)", fontFamily: "inherit", fontSize: 13, margin: 0 }}>
-              No {listTitle.toLowerCase()} yet. Hit + to add.
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {listItems.map(item => (
-                <EntityChip
-                  key={item._id}
-                  name={item.name}
-                  color={item.color}
-                  isSelected={true}
-                  isGroup={isGroup}
-                  onClick={() => navigate(`/entities/${item._id}`)}
-                />
-              ))}
-            </div>
-          )}
-        </CollapsibleSection>
+        {/* ── RIGHT: Sections ── */}
+        <div style={{ flex: 1, minWidth: 280 }}>
 
-        {/* ── Activities ── */}
-        {/*
-          Activities filtered from MOCK_ACTIVITIES by participant ID.
-          "Schedule New Activity" uses your existing Button component
-          from components/UI/Button.jsx — no custom inline button.
-        */}
-        <CollapsibleSection title="Activities" defaultOpen={true}>
-          {activities.length === 0 ? (
-            <p style={{ color: "var(--text-muted)", fontFamily: "inherit", fontSize: 13, margin: "0 0 12px" }}>
-              No activities yet.
-            </p>
-          ) : (
-            <div style={{ marginBottom: 12 }}>
-              {activities.map(a => (
-                <ActivityRow key={a._id} activity={a} />
-              ))}
-            </div>
-          )}
+          <CollapsibleSection title={listTitle} defaultOpen={true}>
+            {listItems.length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: 13, margin: 0 }}>
+                No {listTitle.toLowerCase()} yet.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {listItems.map(item => (
+                  <EntityPill
+                    key={item._id}
+                    name={item.name}
+                    color={item.color}
+                    onClick={() => navigate(`/entities/${item._id}`)}
+                  />
+                ))}
+              </div>
+            )}
+          </CollapsibleSection>
 
-          {/* Uses your reusable Button component */}
-          <Button
-            onClick={() => navigate('/activities/create')}
-            variant="outline"
-          >
-            + Schedule New Activity
-          </Button>
-        </CollapsibleSection>
+          <ActivitiesSection
+            activities={activities}
+            onSchedule={() => navigate('/activities/create')}
+          />
 
+        </div>
       </div>
 
-      {/* ── Edit Modal ── */}
       <EntityModal
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
-        mode="edit"
-        entityType={entity.type}
-        initial={{
-          name: entity.name,
-          face: entity.face,
+        editingEntity={{
+          _id:         entity._id,
+          name:        entity.name,
+          type:        entity.type,
+          face:        entity.face,
+          faceIcon:    entity.face,
           accessories: entity.accessories || [],
-          color: entity.color,
+          color:       entity.color,
         }}
-        onSave={handleSave}
-      />
-
-      {/* ── Selection Overlay ── */}
-      {/*
-        SelectionOverlay is a portal that renders over everything.
-        We pass ALL_MOCK_ENTITIES_LIST as the entities pool.
-        currentSelectedIds pre-ticks whatever is already in the list.
-        onToggle receives a new array of IDs and we resolve them
-        back to full objects to update entity state.
-      */}
-      <SelectionOverlay
-        isOpen={selectorOpen}
-        onClose={() => setSelectorOpen(false)}
-        selectedIds={currentSelectedIds}
-        onToggle={handleSelectionChange}
-        entities={ALL_MOCK_ENTITIES_LIST}
+        onSuccess={handleSave}
       />
     </div>
   );
