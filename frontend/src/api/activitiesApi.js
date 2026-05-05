@@ -7,6 +7,13 @@ export async function listActivities() {
   return result.data || [];
 }
 
+export async function getActivitiesByEntity(entityId) {
+  const response = await fetch(`/api/activities/entity/${entityId}`, OPTS);
+  if (!response.ok) throw new Error('Failed to fetch activities for entity');
+  const result = await response.json();
+  return result.data || [];
+}
+
 export async function getActivity(id) {
   const response = await fetch(`/api/activities/${id}`, OPTS);
   if (!response.ok) throw new Error('Failed to fetch activity');

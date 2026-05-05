@@ -11,6 +11,7 @@ const {
   parseSchedule,
   bulkDeleteActivities,
   duplicateActivities,
+  getActivitiesByEntityID,
 } = require('../controllers/activityController');
 
 // IMPORTANT: Specific routes MUST come BEFORE parameterized routes
@@ -23,6 +24,9 @@ router.post('/duplicate', duplicateActivities);
 
 // DELETE /api/activities/bulk (MUST be before /:id)
 router.delete('/bulk', bulkDeleteActivities);
+
+// GET /api/activities/entity/:entityId
+router.get('/entity/:entityId', getActivitiesByEntityID);
 
 // GET all activities
 router.get('/', listActivities);

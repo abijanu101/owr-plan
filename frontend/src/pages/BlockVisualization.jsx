@@ -1,40 +1,10 @@
 import React, { useState } from 'react';
 import EntitySelector from '../components/EntitySelector';
+import { useAuth } from '../context/AuthContext';
+import { listEntities } from '../api/entitiesApi';
+import { getActivitiesByEntity } from '../api/activitiesApi';
 
-// --- DUMMY DATA based on models/entities & models/activities ---
-const MOCK_ENTITIES = [
-    { id: '1', name: 'Ahmed', type: 'person', color: '#5E5AB2', faceIcon: 'face/happy.svg' },
-    { id: '2', name: 'Alizeh', type: 'person', color: '#B23B3B', faceIcon: 'face/sassy.svg' },
-    { id: '3', name: 'Zoha', type: 'person', color: '#488845', faceIcon: 'face/happy.svg' },
-    { id: '4', name: 'Abi', type: 'person', color: '#1B7A7A', faceIcon: 'face/naughty.svg' },
-    { id: '5', name: 'Ansa', type: 'person', color: '#911B7D', faceIcon: 'face/happy.svg' }
-];
-
-const MOCK_ACTIVITIES = [
-    {
-        title: 'Ca Class University',
-        participants: ['2', '4', '5'],
-        slots: [
-            { day: 'Monday', startTime: '09:00 AM', endTime: '11:30 AM' },
-            { day: 'Monday', startTime: '02:00 PM', endTime: '03:30 PM' }
-        ]
-    },
-    {
-        title: 'Meeting',
-        participants: ['1', '4', '5'],
-        slots: [
-            { day: 'Monday', startTime: '04:00 PM', endTime: '05:00 PM' }
-        ]
-    },
-    {
-        title: 'Gym Session',
-        participants: ['1', '2'],
-        slots: [
-            { day: 'Monday', startTime: '06:00 AM', endTime: '07:30 AM' },
-            { day: 'Tuesday', startTime: '06:00 AM', endTime: '07:30 AM' }
-        ]
-    }
-];
+// --- REMOVED DUMMY DATA ---
 
 const DURATIONS = ['12 hr', '24 hr', '1 week', '1 month'];
 
@@ -119,17 +89,30 @@ function calculateBlockStyle(slot, durationStr, offsetSlots) {
 }
 
 // Individual Timeline Row Component
-const TimelineRow = ({ entityId, durationStr, offsetSlots, onShift }) => {
-    const entity = MOCK_ENTITIES.find(e => e.id === entityId);
-    if (!entity) return null;
+const TimelineRow = ({ entity, durationStr, offsetSlots, onShift }) => {
+    const [activities, setActivities] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Get activities involving this entity
-    const activities = MOCK_ACTIVITIES.filter(act => act.participants.includes(entityId));
+    React.useEffect(() => {
+        const fetchActivities = async () => {
+            setIsLoading(true);
+            try {
+                const data = await getActivitiesByEntity(entity.id);
+                setActivities(data);
+            } catch (err) {
+                console.error("Failed to fetch activities for entity:", entity.id, err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (entity?.id) fetchActivities();
+    }, [entity?.id]);
 
     // Flatten slots into individual blocks
     const blocks = [];
     activities.forEach(act => {
-        act.slots.forEach(slot => {
+        const slots = act.slots || act.parsedSlots || [];
+        slots.forEach(slot => {
             blocks.push({ ...slot, title: act.title });
         });
     });
@@ -205,9 +188,27 @@ const TimelineRow = ({ entityId, durationStr, offsetSlots, onShift }) => {
 
 
 export default function BlockVisualization() {
-    const [selectedEntities, setSelectedEntities] = useState(['4', '5']); // Default some entities to show timeline
+    const { user } = useAuth();
+    const [entities, setEntities] = useState([]);
+    const [selectedEntities, setSelectedEntities] = useState([]);
     const [durationIdx, setDurationIdx] = useState(0); // 0 -> '12 hr'
     const [offsetSlots, setOffsetSlots] = useState(0); // For timeline left/right shift
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch all entities to have metadata available
+    React.useEffect(() => {
+        const fetchEntities = async () => {
+            try {
+                const data = await listEntities('all');
+                setEntities(data);
+            } catch (err) {
+                console.error("Failed to fetch entities:", err);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        if (user) fetchEntities();
+    }, [user]);
 
     const handleNextDuration = () => {
         setDurationIdx(prev => Math.min(prev + 1, DURATIONS.length - 1));
@@ -281,15 +282,19 @@ export default function BlockVisualization() {
 
                         {/* Timelines */}
                         <div className="flex flex-col gap-2">
-                            {selectedEntities.map(entityId => (
-                                <TimelineRow
-                                    key={entityId}
-                                    entityId={entityId}
-                                    durationStr={DURATIONS[durationIdx]}
-                                    offsetSlots={offsetSlots}
-                                    onShift={handleShift}
-                                />
-                            ))}
+                            {selectedEntities.map(entityId => {
+                                const entity = entities.find(e => e.id === entityId);
+                                if (!entity) return null;
+                                return (
+                                    <TimelineRow
+                                        key={entityId}
+                                        entity={entity}
+                                        durationStr={DURATIONS[durationIdx]}
+                                        offsetSlots={offsetSlots}
+                                        onShift={handleShift}
+                                    />
+                                );
+                            })}
                         </div>
 
                         {/* Arrange Plan Button */}

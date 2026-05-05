@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+require('dotenv').config();
 
 // JWT utilities for token creation and verification
 

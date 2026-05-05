@@ -246,6 +246,36 @@ const getBestTimeSlots = async (req, res) => {
   res.status(200).json({ success: true, data: { slots: [] } });
 };
 
+/**
+ * @desc    Get all activities for a specific entity
+ * @route   GET /api/activities/entity/:entityId
+ * @access  Private
+ */
+const getActivitiesByEntityID = async (req, res) => {
+  try {
+    const { entityId } = req.params;
+    
+    // Find activities where participants array contains the entityId
+    const activities = await Activity.find({ 
+      participants: entityId 
+    })
+    .populate('participants', 'name type color faceIcon')
+    .sort({ createdAt: -1 })
+    .lean();
+
+    res.status(200).json({
+      success: true,
+      data: activities
+    });
+  } catch (err) {
+    console.error('getActivitiesByEntityID error:', err);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch activities for this entity' 
+    });
+  }
+};
+
 // GET /api/activities
 const listActivities = async (req, res) => {
   try {
@@ -333,6 +363,7 @@ module.exports = {
   getAvailabilityVisualization,
   getBestTimeSlots,
   listActivities,
+  getActivitiesByEntityID,
   bulkDeleteActivities,
   duplicateActivities,
 };
