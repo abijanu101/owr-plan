@@ -102,8 +102,8 @@ const WheelColumn = ({ items, value, onChange, width = "w-16", label }) => {
                             style={{ height: itemHeight }}
                             className={`w-full flex items-center justify-center shrink-0 snap-center transition-all duration-200 tabular-nums ${
                                 value === item 
-                                    ? 'text-primary scale-110 opacity-100' 
-                                    : 'text-muted opacity-40 hover:opacity-70 scale-90'
+                                    ? 'text-[#f97766] scale-110 opacity-100' 
+                                    : 'text-[#DC8379] opacity-40 hover:opacity-70 scale-90'
                             }`}
                         >
                             {item}
@@ -182,10 +182,11 @@ export default function DurationPicker({ hours = 1, minutes = 30, onChange }) {
         <div className="select-none inline-block">
             <button 
                 onClick={() => setIsOpen(true)}
-                className="text-[#f97766] border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic transition-all focus:outline-none"
+                className="flex items-center gap-1.5 text-[#f97766] border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic transition-all focus:outline-none"
                 style={{ fontFamily: 'cursive' }}
             >
-                {hours}h {minutes}m
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>{hours}h {minutes}m</span>
             </button>
             
             {isOpen && createPortal(modalContent, document.body)}

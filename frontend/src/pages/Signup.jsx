@@ -23,8 +23,8 @@ function PrimaryBtn({ children, onClick, disabled, type = 'submit', className = 
     );
 }
 
-const SvgBackground = () => (
-    <div className="hidden lg:flex flex-1 relative bg-[var(--bg-primary)] overflow-hidden items-center justify-center border-r border-[var(--border-subtle)]/30">
+const PatternSides = () => (
+    <div className="hidden lg:block absolute inset-0 z-0 pointer-events-none">
         <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" className="absolute inset-0">
             <defs>
                 <pattern id="waves" width="240" height="240" patternUnits="userSpaceOnUse">
@@ -35,21 +35,24 @@ const SvgBackground = () => (
                     <circle cx="60" cy="180" r="3" fill="var(--text-neutral)" opacity="0.5" />
                     <circle cx="120" cy="120" r="2" fill="var(--color-primary)" opacity="0.3" />
                 </pattern>
-                <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.15" />
+                <radialGradient id="vignette" cx="50%" cy="50%" r="60%">
+                    <stop offset="30%" stopColor="var(--bg-primary)" stopOpacity="1" />
                     <stop offset="100%" stopColor="var(--bg-primary)" stopOpacity="0" />
                 </radialGradient>
             </defs>
-            <rect width="100%" height="100%" fill="url(#glow)" />
             <rect width="100%" height="100%" fill="url(#waves)" />
+            {/* Overlay that hides the pattern in the center and reveals it on the edges */}
+            <rect width="100%" height="100%" fill="url(#vignette)" />
         </svg>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[var(--bg-primary)] opacity-80" />
+        
+        {/* Animated ambient glow behind the form */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60vw] h-[60vw] md:w-[40vw] md:h-[40vw] bg-[var(--color-primary)]/10 rounded-full blur-[100px] pointer-events-none z-0 animate-pulse" style={{ animationDuration: '6s' }} />
     </div>
 );
 
 export default function Signup() {
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { signup } = useAuth();
     const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -74,7 +77,7 @@ export default function Signup() {
         const result = await signup(formData.name, formData.email, formData.password);
 
         if (result.success) {
-            navigate('/');
+            navigate('/dashboard');
         } else {
             setError(result.message);
             setIsLoading(false);
@@ -82,10 +85,10 @@ export default function Signup() {
     };
 
     return (
-        <div className="min-h-full w-full flex">
-            <SvgBackground />
-            <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-12 lg:px-24">
-                <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="min-h-full w-full relative flex items-center justify-center overflow-hidden bg-[var(--bg-primary)]">
+            <PatternSides />
+            <div className="relative z-10 w-full max-w-md px-4 sm:px-6 py-8">
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <div className="text-center mb-6">
                         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Create Account</h1>
                         <p className="text-muted text-sm sm:text-base">Join us and start planning!</p>

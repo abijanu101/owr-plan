@@ -18,15 +18,16 @@ export default function Button({
     };
 
     const combinedStyle = { fontFamily: 'cursive', ...style };
+    const isDisabled = props.disabled;
 
     return (
         <button 
-            className={`${baseStyles} ${variants[variant]} ${className}`}
-            onClick={onClick}
+            className={`${baseStyles} ${variants[variant]} ${isDisabled ? 'opacity-30 grayscale pointer-events-none cursor-default shadow-none' : ''} ${className}`}
+            onClick={!isDisabled ? onClick : undefined}
             style={combinedStyle}
             {...props}
         >
-            {variant === 'primary' && (
+            {!isDisabled && variant === 'primary' && (
                 <>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-glint" />
                     <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-[var(--color-primary)] blur-2xl transition-opacity duration-500 pointer-events-none" />

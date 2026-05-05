@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" }) => {
     const scrollRef = useRef(null);
@@ -80,8 +81,8 @@ const WheelColumn = ({ items, value, onChange, width = "w-16", align = "center" 
                     style={{ height: itemHeight }}
                     className={`w-full flex items-center justify-${align === 'center' ? 'center' : align === 'left' ? 'start' : 'end'} shrink-0 snap-center transition-all duration-200 cursor-pointer tabular-nums ${
                         value === item 
-                            ? 'text-primary scale-110 opacity-100' 
-                            : 'text-muted opacity-40 hover:opacity-70 scale-90'
+                            ? 'text-[#f97766] scale-110 opacity-100' 
+                            : 'text-[#DC8379] opacity-40 hover:opacity-70 scale-90'
                     }`}
                 >
                     {item}
@@ -121,14 +122,16 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     const [time, setTime] = useState(() => parseTime(initialTime));
     const [isOpen, setIsOpen] = useState(false);
 
+    useEffect(() => {
+        setTime(parseTime(initialTime));
+    }, [initialTime]);
+
     const updateTime = (updates) => {
-        setTime(prev => {
-            const newTime = { ...prev, ...updates };
-            if (onChange) {
-                onChange(`${newTime.hour.toString().padStart(2, '0')}:${newTime.minute.toString().padStart(2, '0')} ${newTime.period}`);
-            }
-            return newTime;
-        });
+        const newTime = { ...time, ...updates };
+        setTime(newTime);
+        if (onChange) {
+            onChange(`${newTime.hour.toString().padStart(2, '0')}:${newTime.minute.toString().padStart(2, '0')} ${newTime.period}`);
+        }
     };
 
     const pickerContent = (
@@ -198,30 +201,36 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
     if (inline) return pickerContent;
 
     if (variant === 'inline-text') {
+        const containerRef = useRef(null);
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (event.target.closest('.picker-modal-content')) return;
+                if (containerRef.current && !containerRef.current.contains(event.target)) {
+                    setIsOpen(false);
+                }
+            };
+            document.addEventListener("mousedown", handleClickOutside);
+            return () => document.removeEventListener("mousedown", handleClickOutside);
+        }, []);
+
         return (
-            <div className="relative inline-block select-none">
+            <div className="relative inline-block select-none" ref={containerRef}>
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="text-[#f97766] border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic transition-all focus:outline-none"
+                    className="flex items-center gap-1.5 text-[#f97766] border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic transition-all focus:outline-none"
                     style={{ fontFamily: 'cursive' }}
                 >
-                    {time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')} {time.period}
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>{time.hour.toString().padStart(2, '0')}:{time.minute.toString().padStart(2, '0')} {time.period}</span>
                 </button>
 
-                {isOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md" ref={(el) => {
-                            if (el) {
-                                const handler = (e) => {
-                                    if (e.target === el.parentElement) setIsOpen(false);
-                                };
-                                el.parentElement.addEventListener('mousedown', handler);
-                                return () => el.parentElement.removeEventListener('mousedown', handler);
-                            }
-                        }}>
+                {isOpen && createPortal(
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
+                        <div className="picker-modal-content relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
                             {pickerContent}
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
         );
@@ -244,20 +253,13 @@ export default function TimePicker({ initialTime = "08:59 AM", onChange, hideHel
                 </div>
             </button>
 
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md" ref={(el) => {
-                        if (el) {
-                            const handler = (e) => {
-                                if (e.target === el.parentElement) setIsOpen(false);
-                            };
-                            el.parentElement.addEventListener('mousedown', handler);
-                            return () => el.parentElement.removeEventListener('mousedown', handler);
-                        }
-                    }}>
+            {isOpen && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
+                    <div className="picker-modal-content relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md">
                         {pickerContent}
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

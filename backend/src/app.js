@@ -36,6 +36,7 @@ app.use((err, req, res, next) => {
 });
 
 app.use((req, res) => {
+  console.log(`404 Not Found: ${req.method} ${req.path}`);
   res.status(404).json({ error: 'Route not found' });
 });
 

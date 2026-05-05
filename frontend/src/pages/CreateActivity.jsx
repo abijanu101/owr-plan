@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import TimePicker from '../components/Pickers/TimePicker';
 import DateTimePicker from '../components/Pickers/DateTimePicker';
+import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
+import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 
@@ -89,10 +91,13 @@ function SlotCard({ slot, index, onChange, onRemove }) {
                     {/* Day */}
                     <div className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all">
                         <span className="text-muted text-sm font-bold">Day</span>
-                        <select value={slot.day} onChange={e => onChange({ ...slot, day: e.target.value })}
-                            className="bg-transparent text-neutral font-bold text-right outline-none cursor-pointer hover:text-primary transition-colors text-sm">
-                            {DAYS.map(d => <option key={d} value={d} className="bg-[var(--bg-raised)]">{d}</option>)}
-                        </select>
+                        <Dropdown 
+                            value={slot.day} 
+                            onChange={v => onChange({ ...slot, day: v })} 
+                            options={DAYS} 
+                            align="right"
+                            className="w-36"
+                        />
                     </div>
 
                     {/* Start Time */}
@@ -159,10 +164,12 @@ function RecurrenceSection({ rec, onChange }) {
             <div className="flex items-center gap-3 flex-wrap">
                 <Label>Every</Label>
                 <Stepper value={rec.interval} onChange={v => set({ interval: v })} />
-                <select value={rec.frequency} onChange={e => set({ frequency: e.target.value })}
-                    className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-neutral font-bold outline-none cursor-pointer hover:border-primary/50 transition-all text-sm">
-                    {FREQ.map(f => <option key={f} value={f} className="bg-[var(--bg-raised)]">{f}{rec.interval > 1 ? 's' : ''}</option>)}
-                </select>
+                <Dropdown 
+                    value={rec.frequency} 
+                    onChange={v => set({ frequency: v })} 
+                    options={FREQ.map(f => ({ value: f, label: `${f}${rec.interval > 1 ? 's' : ''}` }))}
+                    className="w-36 z-50"
+                />
             </div>
 
             {/* Ends */}
@@ -217,14 +224,16 @@ function StepDot({ n, active, done, onClick }) {
 
 export default function CreateActivity() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
 
     const [step, setStep] = useState(1);
     const [title, setTitle] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
-    const [selectedEntityIds, setSelectedEntityIds] = useState([]);
+    const [selectedEntityIds, setSelectedEntityIds] = useState(location.state?.entityId ? [location.state.entityId] : []);
     const [scheduleMode, setScheduleMode] = useState('structured');
     const [slots, setSlots] = useState([defaultSlot()]);
+    const [range, setRange] = useState(null);
     const [pasteText, setPasteText] = useState('');
     const [parsedSlots, setParsedSlots] = useState([]);
     const [isParsing, setIsParsing] = useState(false);
@@ -234,7 +243,9 @@ export default function CreateActivity() {
     const [submitError, setSubmitError] = useState('');
 
     const titleDone = title.trim().length > 0;
-    const scheduleReady = scheduleMode === 'structured' ? slots.length > 0 : parsedSlots.length > 0 || pasteText.trim().length > 0;
+    const scheduleReady = scheduleMode === 'structured' ? slots.length > 0 
+                        : scheduleMode === 'range' ? !!range 
+                        : parsedSlots.length > 0 || pasteText.trim().length > 0;
 
     const updateSlot = (i, updated) => setSlots(prev => prev.map((s, idx) => idx === i ? updated : s));
     const removeSlot = (i) => setSlots(prev => prev.filter((_, idx) => idx !== i));
@@ -244,6 +255,7 @@ export default function CreateActivity() {
         try {
             const res = await fetch('/api/activities/parse', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
                 body: JSON.stringify({ rawText: pasteText }),
             });
             const data = await res.json();
@@ -256,8 +268,8 @@ export default function CreateActivity() {
     const handleSubmit = async () => {
         setIsSubmitting(true); setSubmitError('');
         try {
-            const payload = { userId: user?._id, title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
-            const res = await fetch('/api/activities', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const payload = { userId: user?._id, title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], range: scheduleMode === 'range' ? range : null, pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
+            const res = await fetch('/api/activities', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const data = await res.json();
             if (data.success) navigate('/activities');
             else setSubmitError(data.message || 'Failed to create activity.');
@@ -361,13 +373,17 @@ export default function CreateActivity() {
                     <SectionCard>
                         <Label>Schedule Input Method</Label>
                         <div className="flex gap-3 mt-3 flex-wrap">
-                            {['structured', 'paste'].map(mode => (
-                                <button key={mode} type="button" onClick={() => setScheduleMode(mode)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-sm transition-all cursor-pointer active:scale-95 ${scheduleMode === mode ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] border-[var(--color-primary)] shadow-[0_0_12px_rgba(249,119,102,0.3)]' : 'border-[var(--border-subtle)] text-neutral hover:border-primary/50 hover:bg-white/5'}`}>
-                                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 ${scheduleMode === mode ? 'border-[var(--bg-primary)]' : 'border-current'}`}>
-                                        {scheduleMode === mode && <div className="w-1.5 h-1.5 rounded-full bg-[var(--bg-primary)]" />}
+                            {[
+                                { id: 'structured', label: 'Recurring Slots' }, 
+                                { id: 'range', label: 'Specific Range' }, 
+                                { id: 'paste', label: 'Paste Text' }
+                            ].map(({ id, label }) => (
+                                <button key={id} type="button" onClick={() => setScheduleMode(id)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-sm transition-all cursor-pointer active:scale-95 ${scheduleMode === id ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] border-[var(--color-primary)] shadow-[0_0_12px_rgba(249,119,102,0.3)]' : 'border-[var(--border-subtle)] text-neutral hover:border-primary/50 hover:bg-white/5'}`}>
+                                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 ${scheduleMode === id ? 'border-[var(--bg-primary)]' : 'border-current'}`}>
+                                        {scheduleMode === id && <div className="w-1.5 h-1.5 rounded-full bg-[var(--bg-primary)]" />}
                                     </div>
-                                    {mode === 'structured' ? 'Structured Builder' : 'Paste Schedule'}
+                                    {label}
                                 </button>
                             ))}
                         </div>
@@ -386,6 +402,18 @@ export default function CreateActivity() {
                                 <span className="text-lg leading-none">+</span> Add Slot
                             </GhostBtn>
                         </div>
+                    )}
+
+                    {/* Specific Range Mode */}
+                    {scheduleMode === 'range' && (
+                        <SectionCard className="flex flex-col items-center py-10 z-0">
+                            <Label>Select Event Duration</Label>
+                            <div className="mt-6 w-full flex justify-center">
+                                <DateTimeRangePicker 
+                                    onChange={r => setRange(r)} 
+                                />
+                            </div>
+                        </SectionCard>
                     )}
 
                     {/* Paste mode */}

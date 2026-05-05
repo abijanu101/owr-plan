@@ -20,22 +20,6 @@ export const listEntities = async (kind) => {
     }
 };
 
-export const createEntity = async (data) => {
-    try {
-        const res = await fetch('/api/entities', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-            credentials: 'include'
-        });
-        const result = await res.json();
-        return normalize(result);
-    } catch (err) {
-        console.error('Failed to create entity:', err);
-        throw err;
-    }
-};
-
 export const updateEntity = async (id, data) => {
     try {
         const res = await fetch(`/api/entities/${id}`, {
@@ -62,6 +46,22 @@ export const deleteEntities = async (ids) => {
         ));
     } catch (err) {
         console.error('Failed to delete entities:', err);
+        throw err;
+    }
+};
+
+export const createEntity = async (data) => {
+    try {
+        const res = await fetch('/api/entities', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            credentials: 'include'
+        });
+        const result = await res.json();
+        return normalize(result);
+    } catch (err) {
+        console.error('Failed to create entity:', err);
         throw err;
     }
 };

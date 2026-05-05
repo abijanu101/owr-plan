@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import TimePicker from './TimePicker';
 
 const ClockIcon = () => (
@@ -41,6 +42,7 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
 
     useEffect(() => {
         const handleClickOutside = (event) => {
+            if (event.target.closest('.picker-modal-content')) return;
             if (containerRef.current && !containerRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
@@ -61,33 +63,27 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
             <div className="relative inline-block" ref={containerRef}>
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="text-[#f97766] hover:brightness-110 transition-all border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
+                    className="flex items-center gap-1.5 text-[#f97766] hover:brightness-110 transition-all border-b-2 border-dotted border-[#f97766]/40 hover:border-[#f97766] px-1 font-bold italic focus:outline-none"
                     style={{ fontFamily: 'cursive' }}
                 >
-                    {dateTimeState.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {dateTimeState.time}
+                    <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+                    <span>{dateTimeState.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} at {dateTimeState.time}</span>
                 </button>
 
-                {isOpen && (
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                        <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
-                            if (el) {
-                                const handler = (e) => {
-                                    if (e.target === el.parentElement) setIsOpen(false);
-                                };
-                                el.parentElement.addEventListener('mousedown', handler);
-                                return () => el.parentElement.removeEventListener('mousedown', handler);
-                            }
-                        }}>
-                        <DateTimePickerSinglePanel
-                            dateTimeState={dateTimeState}
-                            setDateTimeState={setDateTimeState}
-                            onClose={() => {
-                                setIsOpen(false);
-                                if (onChange) onChange(dateTimeState);
-                            }}
-                        />
+                {isOpen && createPortal(
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
+                        <div className="picker-modal-content relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200">
+                            <DateTimePickerSinglePanel
+                                dateTimeState={dateTimeState}
+                                setDateTimeState={setDateTimeState}
+                                onClose={() => {
+                                    setIsOpen(false);
+                                    if (onChange) onChange(dateTimeState);
+                                }}
+                            />
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )}
             </div>
         );
@@ -99,8 +95,8 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`flex items-center gap-4 px-6 py-4 w-full sm:w-[26rem] rounded-[1.5rem] sm:rounded-full border transition-all cursor-pointer ${isOpen
-                            ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]'
-                            : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
+                        ? 'bg-[var(--bg-raised)] border-primary text-primary shadow-[0_0_15px_rgba(249,119,102,0.15)]'
+                        : 'bg-transparent border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] hover:border-primary/50 text-primary'
                         }`}
                 >
                     <ClockIcon />
@@ -134,28 +130,20 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
                 </div>
             </div>
 
-            {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200" ref={(el) => {
-                        // Handle click outside on the modal wrapper
-                        if (el) {
-                            const handler = (e) => {
-                                if (e.target === el.parentElement) setIsOpen(false);
-                            };
-                            el.parentElement.addEventListener('mousedown', handler);
-                            return () => el.parentElement.removeEventListener('mousedown', handler);
-                        }
-                    }}>
-                    <DateTimePickerSinglePanel
-                        dateTimeState={dateTimeState}
-                        setDateTimeState={setDateTimeState}
-                        onClose={() => {
-                            setIsOpen(false);
-                            if (onChange) onChange(dateTimeState);
-                        }}
-                    />
+            {isOpen && createPortal(
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200" onMouseDown={(e) => { if (e.target === e.currentTarget) setIsOpen(false); }}>
+                    <div className="picker-modal-content relative z-50 w-full max-w-min mx-auto animate-in zoom-in-95 duration-200">
+                        <DateTimePickerSinglePanel
+                            dateTimeState={dateTimeState}
+                            setDateTimeState={setDateTimeState}
+                            onClose={() => {
+                                setIsOpen(false);
+                                if (onChange) onChange(dateTimeState);
+                            }}
+                        />
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );
@@ -163,6 +151,7 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
 
 function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose }) {
     const [viewDate, setViewDate] = useState(new Date(dateTimeState.date));
+    const [mobileTab, setMobileTab] = useState('date');
 
     const year = viewDate.getFullYear();
     const month = viewDate.getMonth();
@@ -206,10 +195,10 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
                     key={d}
                     onClick={() => handleDateClick(d)}
                     className={`w-9 h-9 flex items-center justify-center rounded-full text-[15px] font-bold transition-all cursor-pointer ${selected
-                            ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] shadow-[0_0_15px_rgba(249,119,102,0.4)] scale-110'
-                            : currentDay
-                                ? 'border border-primary text-primary hover:bg-[var(--color-primary)]/20'
-                                : 'text-primary/90 hover:bg-[var(--bg-raised)] hover:text-primary'
+                        ? 'bg-[#f97766] text-[#1A0B16] shadow-[0_0_15px_rgba(249,119,102,0.4)] scale-110'
+                        : currentDay
+                            ? 'border border-[#f97766] text-[#f97766] hover:bg-[#f97766]/20'
+                            : 'text-[#DC8379] hover:bg-white/5 hover:text-[#f97766]'
                         }`}
                 >
                     {d}
@@ -221,10 +210,22 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
     };
 
     return (
-        <div className="flex flex-col sm:flex-row gap-8 bg-[var(--bg-raised)]/90 p-6 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md relative">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 bg-[var(--bg-raised)]/90 p-5 sm:p-8 rounded-[2rem] border border-[var(--border-subtle)] shadow-2xl backdrop-blur-md relative w-[20rem] sm:w-auto mx-auto">
+
+            {/* Mobile Tabs */}
+            <div className="sm:hidden flex bg-black/20 p-1 rounded-xl mb-1">
+                <button
+                    onClick={() => setMobileTab('date')}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${mobileTab === 'date' ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] shadow-sm' : 'text-muted hover:text-primary'}`}
+                >Date</button>
+                <button
+                    onClick={() => setMobileTab('time')}
+                    className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${mobileTab === 'time' ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] shadow-sm' : 'text-muted hover:text-primary'}`}
+                >Time</button>
+            </div>
 
             {/* Calendar Side */}
-            <div className="flex flex-col gap-6 w-[17rem] pt-2">
+            <div className={`flex-col gap-6 w-full sm:w-[17rem] pt-2 ${mobileTab === 'date' ? 'flex' : 'hidden sm:flex'}`}>
 
                 {/* Calendar Header */}
                 <div className="flex items-center justify-between px-1">
@@ -255,10 +256,10 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
             </div>
 
             {/* Divider */}
-            <div className="w-full h-px sm:w-px sm:h-auto bg-[var(--border-subtle)] opacity-40 my-4 sm:my-2 rounded-full"></div>
+            <div className="hidden sm:block w-px h-auto bg-[var(--border-subtle)] opacity-40 my-2 rounded-full"></div>
 
             {/* TimePicker Side */}
-            <div className="flex flex-col justify-between">
+            <div className={`flex-col justify-between w-full sm:w-auto ${mobileTab === 'time' ? 'flex' : 'hidden sm:flex'}`}>
                 <div className="flex flex-col gap-5">
                     <span className="text-muted font-bold text-xs tracking-widest uppercase pl-2">
                         Time
@@ -272,16 +273,21 @@ function DateTimePickerSinglePanel({ dateTimeState, setDateTimeState, onClose })
                 </div>
 
                 {/* Bottom Bar: Done Button & Date Pill */}
-                <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-between gap-4 w-full pl-2">
-                    <button 
+                <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 w-full sm:pl-2">
+                    <button
                         onClick={onClose}
                         className="px-6 py-3.5 w-full sm:w-auto rounded-xl border border-[var(--border-subtle)] text-white font-bold bg-white/5 hover:bg-white/10 hover:border-white/40 transition-all shadow-md active:scale-95 cursor-pointer"
                     >
                         Done
                     </button>
-                    <div className="bg-[var(--color-primary)] text-[var(--bg-primary)] px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-[0_4px_15px_rgba(249,119,102,0.4)] border-2 border-[var(--bg-raised)] w-full sm:w-auto text-center">
+                    <div className="hidden sm:block bg-[var(--color-primary)] text-[var(--bg-primary)] px-4 py-1.5 rounded-full text-sm font-bold shadow-[0_4px_15px_rgba(249,119,102,0.4)] border-2 border-[var(--bg-raised)] text-center">
                         {dateTimeState.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {dateTimeState.time}
                     </div>
+                </div>
+
+                {/* Mobile Date Pill */}
+                <div className="sm:hidden mt-2 bg-[var(--color-primary)]/10 text-[var(--color-primary)] px-4 py-2 rounded-xl text-sm font-bold text-center border border-[var(--color-primary)]/20">
+                    {dateTimeState.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {dateTimeState.time}
                 </div>
             </div>
         </div>

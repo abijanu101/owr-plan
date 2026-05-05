@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { usePlan } from '../context/PlanContext';
+import { generatePlan as generatePlanApi } from '../api/planApi';
 import EntitySelector from '../components/EntitySelector';
 import SimplifiedConstraintPicker from '../components/Plan/Constraints/SimplifiedConstraintPicker';
 import ActionBar from '../components/Plan/UI/ActionBar';
@@ -20,29 +21,21 @@ export default function Plan() {
         resetPlan();
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!planStatus.consistent) return;
         
         setIsGenerating(true);
         navigate('/plan/results');
         
-        // Mock generation delay and results
-        setTimeout(() => {
-            setResults({
-                bestOption: {
-                    date: "May 2",
-                    time: "02:00 PM",
-                    duration: "1.5hr",
-                    score: 98,
-                    attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara", "Fatima", "Zainab"]
-                },
-                alternatives: [
-                    { date: "May 2", time: "04:30 PM", duration: "1.5hr", score: 85, attendees: ["Zoha", "Areeba", "Ayesha", "Moomal", "Huda", "Sara"] },
-                    { date: "May 3", time: "10:00 AM", duration: "2hr", score: 72, attendees: ["Zoha", "Areeba", "Moomal", "Huda", "Sara", "Fatima"] }
-                ]
-            });
+        try {
+            const data = await generatePlanApi(constraints);
+            setResults(data);
+        } catch (error) {
+            console.error('Generation failed:', error);
+            // Fallback or error state
+        } finally {
             setIsGenerating(false);
-        }, 2000);
+        }
     };
 
     return (
@@ -116,7 +109,11 @@ export default function Plan() {
             </div>
 
             {/* Reusable Action Bar Footer */}
-            <ActionBar onReset={handleReset} onGenerate={handleGenerate} />
+            <ActionBar 
+                onReset={handleReset} 
+                onGenerate={handleGenerate} 
+                generateDisabled={!planStatus.consistent}
+            />
         </div>
     );
 }

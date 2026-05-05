@@ -1,10 +1,10 @@
 import React from 'react';
 import GlobalConstraintRow from './GlobalConstraintRow';
 import ConstraintBlockRow from './ConstraintBlockRow';
-import { getDefaultParameter } from './ConstraintSchema';
+import { getDefaultParameter, getDefaultModifier } from './ConstraintSchema';
 
 const TableHeader = () => (
-    <div className="flex items-center border-b border-[#DC8379]/20 bg-[var(--bg-purple)] text-center">
+    <div className="flex items-center border-b border-[#DC8379]/20 bg-[var(--bg-purple)] text-center rounded-t-xl">
         <div className="w-12 shrink-0"></div>
         <div className="w-28 sm:w-32 shrink-0 border-r border-[#DC8379]/20 py-2 px-3 text-center">
             <span className="text-[#DC8379] font-normal text-xl tracking-wide" style={{ fontFamily: 'cursive' }}>Modifiers</span>
@@ -32,7 +32,8 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
     const customConstraints = constraints.filter(c => !c.isSystem);
 
     const addConstraint = () => {
-        const newConstraint = { id: Date.now(), isBlock: false, modifier: 'must', type: 'be between', parameter: getDefaultParameter('be between') };
+        const defaultType = 'be between';
+        const newConstraint = { id: Date.now(), isBlock: false, modifier: getDefaultModifier(defaultType), type: defaultType, parameter: getDefaultParameter(defaultType) };
         onChange([...constraints, newConstraint]);
     };
 
@@ -49,11 +50,13 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
         onChange(constraints.filter(c => c.id !== id));
     };
 
+    const hasInclude = customConstraints.some(c => c.type === 'include');
+
     const renderRow = (c) => (
         c.isBlock ? (
-            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
         ) : (
-            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} />
+            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
         )
     );
 
@@ -94,10 +97,14 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
             {/* System Table */}
             <div className="flex flex-col gap-3">
                 <SectionLabel>System Constraints</SectionLabel>
-                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl overflow-hidden w-full flex flex-col">
+                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl w-full flex flex-col">
                     <TableHeader />
                     <div className="flex flex-col">
-                        {systemConstraints.map(renderRow)}
+                        {systemConstraints.map((c, i) => (
+                            <div key={c.id} className="relative" style={{ zIndex: 100 - i }}>
+                                {renderRow(c)}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
@@ -105,10 +112,14 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
             {/* Custom Table */}
             <div className="flex flex-col gap-3">
                 <SectionLabel>Custom Constraints</SectionLabel>
-                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl overflow-hidden w-full flex flex-col">
+                <div className="bg-[var(--bg-raised)] border border-[#DC8379]/20 rounded-xl w-full flex flex-col">
                     <TableHeader />
                     <div className="flex flex-col">
-                        {customConstraints.map(renderRow)}
+                        {customConstraints.map((c, i) => (
+                            <div key={c.id} className="relative" style={{ zIndex: 50 - i }}>
+                                {renderRow(c)}
+                            </div>
+                        ))}
                         {customConstraints.length === 0 && (
                             <div className="py-12 text-center text-[#DC8379]/40 italic" style={{ fontFamily: 'cursive' }}>
                                 No custom constraints added yet. Use the buttons below to add rules.
