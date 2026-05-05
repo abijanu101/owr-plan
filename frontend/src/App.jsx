@@ -20,6 +20,8 @@ import EntitiesPage from './pages/EntitiesPage';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
+import AddExpensePage from './pages/AddExpensePage';
+import ViewExpensePage from './pages/ViewExpensePage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PublicRoute from './components/PublicRoute';
 import Footer from './components/Footer';
@@ -39,11 +41,11 @@ export default function App() {
 function AppContent() {
     const { user } = useAuth();
     const location = useLocation();
-    
+
     // Pages that have fixed action bars need bottom padding to avoid covering the footer
-    const isPlanningPage = location.pathname.startsWith('/plan') || 
-                          location.pathname.startsWith('/visualize') ||
-                          location.pathname.startsWith('/entities');
+    const isPlanningPage = location.pathname.startsWith('/plan') ||
+        location.pathname.startsWith('/visualize') ||
+        location.pathname.startsWith('/entities');
 
     return (
         <div className="flex flex-col h-full">
@@ -60,7 +62,9 @@ function AppContent() {
                     <Route element={<PublicRoute />}>
                         <Route path='/login' element={<Login />} />
                         <Route path='/signup' element={<Signup />} />
+
                     </Route>
+
 
                     {/* Protected Routes */}
                     <Route element={<ProtectedRoute />}>
@@ -81,7 +85,10 @@ function AppContent() {
                         </Route>
 
                         <Route path='/ledgers' element={<Ledger />} />
-                        <Route path='/ledgers/:id' element={<>ledgers id something</>} />
+                        <Route path='/ledgers/add' element={<AddExpensePage />} />
+                        <Route path='/ledgers/:id' element={<ViewExpensePage />} />
+
+
 
                         <Route path='/playground' element={<Playground />} />
                     </Route>
