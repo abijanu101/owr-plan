@@ -1,5 +1,6 @@
 // components/EntityCard1.jsx
 import { useNavigate } from 'react-router-dom';
+import Avatar from './avatar/index.jsx';
 
 export default function EntityCard1({ item, onDelete, onDuplicate }) {
   const navigate = useNavigate();
@@ -12,9 +13,20 @@ export default function EntityCard1({ item, onDelete, onDuplicate }) {
       style={{ 
         borderColor: `${color}40`,
         borderRadius: '20px',
-        paddingLeft: '40px',
+        paddingLeft: '10px',
       }}
     >
+
+      <Avatar
+        face={item.faceIcon}     
+        accessories={item.accessories || []}
+        size={28}
+        shape="circle"
+        bgColor={item.color}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}></div>
+
+
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3 style={{
           fontSize: '16px',
