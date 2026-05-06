@@ -8,7 +8,6 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
     const [expanded, setExpanded] = useState(true);
     const [draggedItem, setDraggedItem] = useState(null);
 
-    // Filter by search and type
     const filteredEntities = useMemo(() => {
         return entities.filter(e =>
             e.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -16,7 +15,6 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
         );
     }, [entities, searchQuery, People]);
 
-    // Split into selected and others
     const { selectedEntities, otherEntities } = useMemo(() => {
         const selected = filteredEntities.filter(e => selectedIds.includes(e.id));
         const others = filteredEntities.filter(e => !selectedIds.includes(e.id));
@@ -27,19 +25,20 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
 
     const toggleSection = () => setExpanded(prev => !prev);
 
-    // Toggle all entities in a given list
-    const handleSelectAll = (entityList) => {
-        if (entityList.length === 0) return;
-        const entityIds = entityList.map(e => e.id);
-        const allSelected = entityIds.every(id => selectedIds.includes(id));
-        let newIds;
-        if (allSelected) {
-            newIds = selectedIds.filter(id => !entityIds.includes(id));
+    // Single select‑all / deselect‑all for the whole filtered list
+    const handleSelectAll = () => {
+        if (filteredEntities.length === 0) return;
+        // If there are any entities not selected → select them all
+        if (otherEntities.length > 0) {
+            const allIds = filteredEntities.map(e => e.id);
+            const newIds = [...new Set([...selectedIds, ...allIds])];
+            onToggle?.(newIds);
         } else {
-            const otherIds = selectedIds.filter(id => !entityIds.includes(id));
-            newIds = [...otherIds, ...entityIds];
+            // Otherwise all are already selected → deselect all filtered entities
+            const filteredIds = filteredEntities.map(e => e.id);
+            const newIds = selectedIds.filter(id => !filteredIds.includes(id));
+            onToggle?.(newIds);
         }
-        onToggle?.(newIds);
     };
 
     const handleDragStart = (e) => {
@@ -146,6 +145,21 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
                                     {People ? 'People' : 'Groups'}
                                 </h3>
 
+                                {/* ∀ Select All button - visible only when expanded (dropped down) */}
+                                {expanded && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSelectAll();
+                                        }}
+                                        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg border border-transparent transition-all active:border-white/40 active:scale-95 bg-[var(--color-primary)] hover:shadow-[0_0_15px_rgba(249,119,102,0.4)]"
+                                        title="Select all / Deselect all"
+                                    >
+                                        <span className="text-lg font-bold leading-none">∀</span>
+                                    </button>
+                                )}
+
+                                {/* Expand / Collapse Chevron */}
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -162,94 +176,74 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
                                 </button>
                             </div>
 
-                            {/* Section Content */}
+                            {/* Section Content – only shown when expanded */}
                             {expanded && (
                                 <div className="flex flex-col px-3 md:px-8 overflow-hidden transition-all duration-500 rounded-b-[20px] bg-black/20 pt-4 pb-8">
-                                    {/* Added / Selected Section (above line) */}
+                                    {/* Added / Selected above the line */}
                                     <div className="mb-4">
-                                        <div className="flex items-start gap-2 md:gap-4 w-full">
-                                            {/* Select All button (∀) for selected list */}
-                                            <button
-                                                onClick={() => handleSelectAll(selectedEntities)}
-                                                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg mt-1 border border-transparent transition-all active:border-white/40 active:scale-95 bg-[var(--color-primary)] hover:shadow-[0_0_15px_rgba(249,119,102,0.4)]"
-                                                title="Select all / None"
-                                            >
-                                                <span className="text-lg font-bold leading-none">∀</span>
-                                            </button>
-                                            <div className="flex flex-col flex-1">
-                                                <h4 className="text-lg font-medium text-[#DC8379]/80 mb-2">
-                                                    {People ? 'Added members' : 'Added in groups'}
-                                                </h4>
-                                                <div className="flex flex-wrap gap-2 md:gap-3">
-                                                    {selectedEntities.length === 0 ? (
-                                                        <div className="text-[#DC8379]/40 italic text-sm">None added.</div>
-                                                    ) : (
-                                                        selectedEntities.map(entity => (
-                                                            <EntityChip
-                                                                key={entity.id}
-                                                                name={entity.name}
-                                                                color={entity.color}
-                                                                isSelected={true}
-                                                                isGroup={entity.type === 'group'}
-                                                                onClick={() => {
-                                                                    const newIds = selectedIds.filter(id => id !== entity.id);
-                                                                    onToggle(newIds);
-                                                                }}
-                                                            />
-                                                        ))
-                                                    )}
-                                                </div>
-                                            </div>
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-lg font-medium text-[#DC8379]/80">
+                                                {People ? 'Added members' : 'Added in groups'}
+                                            </h4>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 md:gap-3">
+                                            {selectedEntities.length === 0 ? (
+                                                <div className="text-[#DC8379]/40 italic text-sm">None added.</div>
+                                            ) : (
+                                                selectedEntities.map(entity => (
+                                                    <EntityChip
+                                                        key={entity.id}
+                                                        name={entity.name}
+                                                        color={entity.color}
+                                                        isSelected={true}
+                                                        isGroup={entity.type === 'group'}
+                                                        onClick={() => {
+                                                            const newIds = selectedIds.filter(id => id !== entity.id);
+                                                            onToggle(newIds);
+                                                        }}
+                                                    />
+                                                ))
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Horizontal line */}
                                     <hr className="border-t border-[#DC8379]/30 my-4" />
 
-                                    {/* Others Section (below line) */}
+                                    {/* Others below the line */}
                                     <div>
-                                        <div className="flex items-start gap-2 md:gap-4 w-full">
-                                            {/* Select All button (∀) for others list */}
-                                            <button
-                                                onClick={() => handleSelectAll(otherEntities)}
-                                                className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white shadow-lg mt-1 border border-transparent transition-all active:border-white/40 active:scale-95 bg-[var(--color-primary)] hover:shadow-[0_0_15px_rgba(249,119,102,0.4)]"
-                                                title="Select all / None"
-                                            >
-                                                <span className="text-lg font-bold leading-none">∀</span>
-                                            </button>
-                                            <div className="flex flex-col flex-1">
-                                                <h4 className="text-lg font-medium text-[#DC8379]/80 mb-2">
-                                                    Others
-                                                </h4>
-                                                <div className="flex flex-wrap gap-2 md:gap-3">
-                                                    {otherEntities.length === 0 ? (
-                                                        <div className="flex flex-col items-center text-[#DC8379]/40 italic text-sm gap-2">
-                                                            <span>All {People ? 'people' : 'groups'} are already added.</span>
-                                                            <Link
-                                                                to="/entities"
-                                                                className="inline-block text-primary underline underline-offset-4 hover:text-primary/80 transition-colors not-italic font-bold"
-                                                                onClick={onClose}
-                                                            >
-                                                                Manage {People ? 'People' : 'Groups'} →
-                                                            </Link>
-                                                        </div>
-                                                    ) : (
-                                                        otherEntities.map(entity => (
-                                                            <EntityChip
-                                                                key={entity.id}
-                                                                name={entity.name}
-                                                                color={entity.color}
-                                                                isSelected={false}
-                                                                isGroup={entity.type === 'group'}
-                                                                onClick={() => {
-                                                                    const newIds = [...selectedIds, entity.id];
-                                                                    onToggle(newIds);
-                                                                }}
-                                                            />
-                                                        ))
-                                                    )}
+                                        <div className="flex items-center justify-between mb-3">
+                                            <h4 className="text-lg font-medium text-[#DC8379]/80">
+                                                Others
+                                            </h4>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 md:gap-3">
+                                            {otherEntities.length === 0 ? (
+                                                <div className="flex flex-col items-center text-[#DC8379]/40 italic text-sm gap-2">
+                                                    <span>All {People ? 'people' : 'groups'} are already added.</span>
+                                                    <Link
+                                                        to="/entities"
+                                                        className="inline-block text-primary underline underline-offset-4 hover:text-primary/80 transition-colors not-italic font-bold"
+                                                        onClick={onClose}
+                                                    >
+                                                        Manage {People ? 'People' : 'Groups'} →
+                                                    </Link>
                                                 </div>
-                                            </div>
+                                            ) : (
+                                                otherEntities.map(entity => (
+                                                    <EntityChip
+                                                        key={entity.id}
+                                                        name={entity.name}
+                                                        color={entity.color}
+                                                        isSelected={false}
+                                                        isGroup={entity.type === 'group'}
+                                                        onClick={() => {
+                                                            const newIds = [...selectedIds, entity.id];
+                                                            onToggle(newIds);
+                                                        }}
+                                                    />
+                                                ))
+                                            )}
                                         </div>
                                     </div>
                                 </div>

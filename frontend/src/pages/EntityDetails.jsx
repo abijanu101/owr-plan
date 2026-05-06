@@ -4,48 +4,12 @@ import Avatar from '../components/avatar';
 import EntityModal from '../components/EntityModal';
 import EntityChip from '../components/EntitySelector/EntityChip';
 import SelectionOverlayFiltered from '../components/EntitySelector/SelectionOverlayFiltered';
+import Modal from '../components/Modal';
+import ActivityCard from '../components/ActivityCard';
+import ActivityList from '../components/ActivityList';
 import Button from '../components/UI/Button';
 
-// ─── MOCK DATA ────────────────────────────────────────────────
-const M = {
-  p_ahmed:  { _id: 'p_ahmed',  name: 'Ahmed',  type: 'person', color: '#5E5AB2', face: 'face/happy.svg',   accessories: [] },
-  p_alizeh: { _id: 'p_alizeh', name: 'Alizeh', type: 'person', color: '#B23B3B', face: 'face/sassy.svg',   accessories: [] },
-  p_zoha:   { _id: 'p_zoha',   name: 'Zoha',   type: 'person', color: '#488845', face: 'face/happy.svg',   accessories: [] },
-  p_abi:    { _id: 'p_abi',    name: 'Abi',    type: 'person', color: '#1B7A7A', face: 'face/naughty.svg', accessories: [] },
-  p_ansa:   { _id: 'p_ansa',   name: 'Ansa',   type: 'person', color: '#911B7D', face: 'face/happy.svg',   accessories: [] },
-  g_secg:   { _id: 'g_secg',   name: 'Section G',   type: 'group', color: '#1B5491', face: 'face/happy-g.svg',   accessories: [] },
-  g_aml:    { _id: 'g_aml',    name: 'AML-6A',      type: 'group', color: '#B29B3B', face: 'face/sassy-g.svg',   accessories: [] },
-  g_owrplan:{ _id: 'g_owrplan',name: 'owrplan gng', type: 'group', color: '#5E5AB2', face: 'face/naughty-g.svg', accessories: [] },
-};
-
-function ref(e) { return { _id: e._id, name: e.name, color: e.color }; }
-
-M.g_secg.members    = [ref(M.p_alizeh), ref(M.p_abi), ref(M.p_ansa), ref(M.p_zoha)];
-M.g_aml.members     = [ref(M.p_ahmed),  ref(M.p_alizeh), ref(M.p_zoha)];
-M.g_owrplan.members = [ref(M.p_ahmed),  ref(M.p_alizeh), ref(M.p_zoha), ref(M.p_abi), ref(M.p_ansa)];
-
-M.p_ahmed.groups  = [ref(M.g_aml),  ref(M.g_owrplan)];
-M.p_alizeh.groups = [ref(M.g_secg), ref(M.g_aml), ref(M.g_owrplan)];
-M.p_zoha.groups   = [ref(M.g_aml),  ref(M.g_owrplan)];
-M.p_abi.groups    = [ref(M.g_secg), ref(M.g_owrplan)];
-M.p_ansa.groups   = [ref(M.g_secg), ref(M.g_owrplan)];
-
-M.g_secg.groups = []; M.g_aml.groups = []; M.g_owrplan.groups = [];
-M.p_ahmed.members = []; M.p_alizeh.members = []; M.p_zoha.members = [];
-M.p_abi.members = []; M.p_ansa.members = [];
-
-const MOCK_ENTITIES = M;
-
-const MOCK_ACTIVITIES = [
-  { _id: 'a1', title: 'Ca Class University', participants: ['p_alizeh', 'p_abi', 'p_ansa'],
-    slots: [{ day: 'Monday', startTime: '09:00 AM', endTime: '11:30 AM' }, { day: 'Monday', startTime: '02:00 PM', endTime: '03:30 PM' }] },
-  { _id: 'a2', title: 'Meeting', participants: ['p_ahmed', 'p_abi', 'p_ansa'],
-    slots: [{ day: 'Monday', startTime: '04:00 PM', endTime: '05:00 PM' }] },
-  { _id: 'a3', title: 'Gym Session', participants: ['p_ahmed', 'p_alizeh'],
-    slots: [{ day: 'Monday', startTime: '06:00 AM', endTime: '07:30 AM' }, { day: 'Tuesday', startTime: '06:00 AM', endTime: '07:30 AM' }] },
-];
-
-const PREVIEW_COUNT = 3;
+const PREVIEW_COUNT = 2;
 
 // ─── CollapsibleSection ───────────────────────────────────────
 function CollapsibleSection({ title, children, defaultOpen = true, action }) {
@@ -71,68 +35,117 @@ function CollapsibleSection({ title, children, defaultOpen = true, action }) {
   );
 }
 
-// ─── ActivityRow ─────────────────────────────────────────────
-function ActivityRow({ activity }) {
-  const [expanded, setExpanded] = useState(false);
-  const slots = activity.slots || [];
-  const firstSlot = slots[0];
-  return (
-    <div style={{ borderRadius: 14, border: '1px solid var(--text-muted)', overflow: 'hidden', marginBottom: 10 }}>
-      <button onClick={() => setExpanded(o => !o)} style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <span style={{ color: 'var(--text-neutral)', fontFamily: 'inherit', fontWeight: 700, fontSize: 15, textAlign: 'left' }}>{activity.title}</span>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          {firstSlot && (
-            <div style={{ textAlign: 'right', color: 'var(--text-muted)', fontSize: 12, lineHeight: 1.5, fontFamily: 'inherit' }}>
-              <div>{firstSlot.startTime} – {firstSlot.endTime}</div>
-              <div>{firstSlot.day}</div>
-              {slots.length > 1 && <div style={{ color: 'var(--color-primary)', fontSize: 11 }}>+{slots.length - 1} more slot{slots.length > 2 ? 's' : ''}</div>}
-            </div>
-          )}
-          <svg style={{ width: 18, height: 18, color: 'var(--text-muted)', transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease', flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5z" />
-          </svg>
-        </div>
-      </button>
-      {expanded && slots.length > 1 && (
-        <div style={{ borderTop: '1px solid var(--text-muted)', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {slots.map((slot, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)', fontSize: 13, fontFamily: 'inherit' }}>
-              <span style={{ fontWeight: 700 }}>{slot.day}</span>
-              <span>{slot.startTime} – {slot.endTime}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── ActivitiesSection ────────────────────────────────────────
 function ActivitiesSection({ activities, onSchedule }) {
-  const [showAll, setShowAll] = useState(false);
-  const visible = showAll ? activities : activities.slice(0, PREVIEW_COUNT);
-  const hidden  = activities.length - PREVIEW_COUNT;
+  const [showAllModal, setShowAllModal] = useState(false);
+
+  // Convert activities from EntityDetails format to ActivityCard format
+  const convertedActivities = useMemo(() => {
+    return activities.map(a => ({
+      id: a._id,
+      title: a.title,
+      color: a.color || '#f97766',
+      days: a.slots?.map(s => s.day) || [],
+      date: a.date || null,
+      timeRange: a.slots?.length > 0 
+        ? `${a.slots[0].startTime} – ${a.slots[0].endTime}`
+        : 'No time set',
+      participants: a.participants || [],
+    }));
+  }, [activities]);
+
+  // Sort by date (latest first) - using first slot's day as reference
+  const sortedActivities = useMemo(() => {
+    return [...convertedActivities].sort((a, b) => {
+      const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+      const aIndex = dayOrder.indexOf(a.days?.[0] || '');
+      const bIndex = dayOrder.indexOf(b.days?.[0] || '');
+      return bIndex - aIndex; // Latest first
+    });
+  }, [convertedActivities]);
+
+  // Preview: first 2 activities
+  const previewActivities = sortedActivities.slice(0, 2);
+  const totalActivities = sortedActivities.length;
+
   return (
-    <CollapsibleSection title="Activities" defaultOpen={true}>
-      {activities.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: 13, margin: '0 0 12px' }}>No activities yet.</p>
-      ) : (
-        <>
-          <div style={{ marginBottom: 8 }}>
-            {visible.map(a => <ActivityRow key={a._id} activity={a} />)}
-          </div>
-          {activities.length > PREVIEW_COUNT && (
-            <button onClick={() => setShowAll(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0 12px', color: 'var(--color-primary)', fontFamily: 'inherit', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <svg style={{ width: 16, height: 16, transform: showAll ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease' }} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M7 10l5 5 5-5z" />
-              </svg>
-              {showAll ? 'Show less' : `Show all ${activities.length} activities (+${hidden} more)`}
-            </button>
+    <>
+      <CollapsibleSection title="Activities" defaultOpen={true}>
+        {activities.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: 13, margin: '0 0 12px' }}>No activities yet.</p>
+        ) : (
+          <>
+            <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {previewActivities.map(activity => (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                />
+              ))}
+            </div>
+
+            {totalActivities > 2 && (
+              <button 
+                onClick={() => setShowAllModal(true)}
+                style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  cursor: 'pointer', 
+                  padding: '8px 0 12px', 
+                  color: 'var(--color-primary)', 
+                  fontFamily: 'inherit', 
+                  fontWeight: 700, 
+                  fontSize: 13, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 6,
+                  marginBottom: 12
+                }}
+              >
+                <svg style={{ width: 16, height: 16 }} fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7 10l5 5 5-5z" />
+                </svg>
+                View all {totalActivities} activities
+              </button>
+            )}
+          </>
+        )}
+        <Button onClick={onSchedule} variant="outline">+ Schedule New Activity</Button>
+      </CollapsibleSection>
+
+      {/* Modal for viewing all activities */}
+      <Modal
+        open={showAllModal}
+        title="All Activities"
+        onClose={() => setShowAllModal(false)}
+        footer={
+          <Button 
+            onClick={() => setShowAllModal(false)}
+            variant="primary"
+            style={{ padding: '8px 16px' }}
+          >
+            Close
+          </Button>
+        }
+      >
+        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingBottom: 16 }}>
+          {sortedActivities.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontFamily: 'inherit', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>
+              No activities found.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {sortedActivities.map(activity => (
+                <ActivityCard
+                  key={activity.id}
+                  activity={activity}
+                />
+              ))}
+            </div>
           )}
-        </>
-      )}
-      <Button onClick={onSchedule} variant="outline">+ Schedule New Activity</Button>
-    </CollapsibleSection>
+        </div>
+      </Modal>
+    </>
   );
 }
 
@@ -305,7 +318,7 @@ export default function EntityDetails() {
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   // Keep a local copy of all entities so MembersGroupsSection can build the overlay list
-  const [allEntities, setAllEntities] = useState(MOCK_ENTITIES);
+  const [allEntities, setAllEntities] = useState({});
 
   useEffect(() => {
     setLoading(true);
@@ -325,32 +338,34 @@ export default function EntityDetails() {
 
     Promise.all([
       fetch(`/api/entities/${id}`, { headers: h }).then(r => r.ok ? r.json() : Promise.reject('Entity not found')),
-      fetch(`/api/entities/${id}/activities`, { headers: h }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`/api/activities/entity/${id}`, { headers: h }).then(r => r.ok ? r.json() : []).catch(() => []),
+      fetch(`/api/entities/user`, { headers: h })
+        .then(res => res.ok ? res.json() : [])
+        .then(data => setAllEntities(data))
+        .catch(err => console.error('Failed to fetch all entities:', err)),
+        
     ])
-      .then(([entityData, activityData]) => {
-        let normalized  = normalize(entityData);
-        let acts        = Array.isArray(activityData) ? activityData : [];
-        const mockEntity = MOCK_ENTITIES[id];
-        if (mockEntity && (!normalized.members?.length || !normalized.groups?.length)) {
-          normalized = {
-            ...normalized,
-            members: normalized.members?.length ? normalized.members : (mockEntity.members || []),
-            groups:  normalized.groups?.length  ? normalized.groups  : (mockEntity.groups  || []),
-          };
+      .then(([entityData, activityData, allEntitiesData]) => {
+        let normalized = normalize(entityData);
+        let acts = Array.isArray(activityData) ? activityData : [];
+        let allEntitiesNormalized = {};
+        
+        if (allEntitiesData && typeof allEntitiesData === 'object') {
+          Object.values(allEntitiesData).forEach(e => {
+            if (e && e._id) {
+              allEntitiesNormalized[e._id] = normalize(e);
+            }
+          });
         }
-        if (!acts.length && mockEntity) acts = MOCK_ACTIVITIES.filter(a => a.participants.includes(id));
+        
         setEntity(normalized);
         setActivities(acts);
+        setAllEntities(allEntitiesNormalized);
         setLoading(false);
       })
-      .catch(() => {
-        const found = MOCK_ENTITIES[id];
-        if (found) {
-          setEntity(found);
-          setActivities(MOCK_ACTIVITIES.filter(a => a.participants.includes(id)));
-        } else {
-          setEntity(null);
-        }
+      .catch((error) => {
+        console.error('Failed to load entity data:', error);
+        setEntity(null);
         setLoading(false);
       });
   }, [id]);
@@ -371,7 +386,7 @@ export default function EntityDetails() {
   if (!entity) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 32 }}>
       <div style={{ color: 'var(--color-error)', fontSize: 18, fontFamily: 'inherit' }}>
-        Entity not found. Try: /entities/p_ahmed, /entities/p_alizeh, /entities/g_secg
+        Entity not found.
       </div>
     </div>
   );

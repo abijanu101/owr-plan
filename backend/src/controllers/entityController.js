@@ -80,7 +80,9 @@ const updateEntity = async (req, res) => {
 
 const getEntityById = async (req, res) => {
   try {
-    const entity = await Entity.findOne({ _id: req.params.id, userId: req.user._id });
+    const entity = await Entity.findOne({ _id: req.params.id, userId: req.user._id })
+      .populate('members', 'name color')   // populate members (person entities)
+      .populate('groups', 'name color');   // populate groups (group entities)
     if (!entity) return res.status(404).json({ message: "Entity not found" });
     res.json(entity);
   } catch (err) {
@@ -90,7 +92,10 @@ const getEntityById = async (req, res) => {
 
 const getEntitiesByUser = async (req, res) => {
   try {
-    const entities = await Entity.find({ userId: req.user._id }).sort({ createdAt: -1 });
+    const entities = await Entity.find({ userId: req.user._id })
+      .populate('members', 'name color')   // populate members with name+color
+      .populate('groups', 'name color')    // populate groups with name+color
+      .sort({ createdAt: -1 });
     res.json(entities);
   } catch (err) {
     res.status(500).json({ message: "Error fetching entities" });
