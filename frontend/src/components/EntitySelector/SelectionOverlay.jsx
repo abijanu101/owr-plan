@@ -8,13 +8,12 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
     const [expandedSections, setExpandedSections] = useState(['people', 'groups']);
 
     // Dynamically derive sections from entities
-    const sections = useMemo(() => {
-        const baseSections = [
+    const baseSections = useMemo(() => {
+        const base = [
             { id: 'people', title: 'All People', type: 'person' },
             { id: 'groups', title: 'All Groups', type: 'group' },
         ];
 
-        // Add a section for each group entity
         const groupSections = entities
             .filter(e => e.type === 'group')
             .map(group => ({
@@ -25,10 +24,14 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                 memberIds: group.members || []
             }));
 
-        return [...baseSections, ...groupSections];
+        return [...base, ...groupSections];
     }, [entities]);
 
-    const [draggedItem, setDraggedItem] = useState(null);
+    // Separate ordered section list so drag-and-drop can reorder
+    const [sectionOrder, setSectionOrder] = useState(null);
+    const sections = sectionOrder ?? baseSections;
+
+    const [draggedIndex, setDraggedIndex] = useState(null);
 
     if (!isOpen) return null;
 
@@ -56,19 +59,31 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
     };
 
     const handleDragStart = (e, index) => {
-        setDraggedItem(index);
+        setDraggedIndex(index);
         e.dataTransfer.effectAllowed = 'move';
 
-        // Hide the default browser "ghost" image
+        // Hide the default browser ghost image
         const img = new Image();
         img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
         e.dataTransfer.setDragImage(img, 0, 0);
     };
 
-    const handleDragOver = (e, index) => {
+    const handleDragOver = (e) => {
         e.preventDefault();
-        // Drag reordering disabled for dynamic sections for now to keep implementation simple
+        e.dataTransfer.dropEffect = 'move';
     };
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+        const next = [...sections];
+        const [moved] = next.splice(draggedIndex, 1);
+        next.splice(targetIndex, 0, moved);
+        setSectionOrder(next);
+        setDraggedIndex(null);
+    };
+
+    const handleDragEnd = () => setDraggedIndex(null);
 
     const filteredEntities = entities.filter(e =>
         e.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -158,9 +173,10 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                             return (
                                 <div
                                     key={section.id}
-                                    className={`group/item transition-all duration-300 rounded-[20px] border border-[#DC8379]/10 ${draggedItem === index ? 'opacity-30 scale-[0.98]' : ''}`}
-                                    onDragOver={(e) => handleDragOver(e, index)}
-                                    onDragEnd={() => setDraggedItem(null)}
+                                    className={`group/item transition-all duration-300 rounded-[20px] border border-[#DC8379]/10 ${draggedIndex === index ? 'opacity-30 scale-[0.98]' : ''}`}
+                                    onDragOver={(e) => handleDragOver(e)}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    onDragEnd={handleDragEnd}
                                 >
                                     {/* Section Header */}
                                     <div className="flex items-center gap-4 px-4 py-2 relative cursor-pointer hover:bg-white/5 transition-colors rounded-t-[20px]" onClick={() => toggleSection(section.id)}>

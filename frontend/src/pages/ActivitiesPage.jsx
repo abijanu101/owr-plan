@@ -11,14 +11,13 @@ import {
 
 const SORT = [
   { value: 'recent', label: 'Recently added' },
-  { value: 'title', label: 'Title (A–Z)' },
-  { value: 'date', label: 'Date' },
+  { value: 'title',  label: 'Title (A–Z)' },
 ];
 
 const FILTER = [
-  { value: 'all', label: 'All' },
-  { value: 'weekend', label: 'Weekend (Sa/S)' },
-  { value: 'weekday', label: 'Weekday (M–F)' },
+  { value: 'all',           label: 'All' },
+  { value: 'recurring',     label: 'Recurring' },
+  { value: 'non-recurring', label: 'Non-Recurring' },
 ];
 
 export default function ActivitiesPage() {
@@ -42,7 +41,6 @@ export default function ActivitiesPage() {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -51,21 +49,11 @@ export default function ActivitiesPage() {
       a.title.toLowerCase().includes(search.toLowerCase())
     );
 
-    if (filterKey === 'weekend') {
-      arr = arr.filter((a) =>
-        a.days?.some((d) => d === 'SA' || d === 'S')
-      );
-    }
-
-    if (filterKey === 'weekday') {
-      arr = arr.filter((a) =>
-        a.days?.some((d) => ['M', 'T', 'W', 'TH', 'F'].includes(d))
-      );
-    }
+    if (filterKey === 'recurring')     arr = arr.filter(a => a.activityType === 'recurring');
+    if (filterKey === 'non-recurring') arr = arr.filter(a => a.activityType === 'non-recurring');
 
     return [...arr].sort((a, b) => {
       if (sortKey === 'title') return a.title.localeCompare(b.title);
-      if (sortKey === 'date') return a.date.localeCompare(b.date);
       return (b.createdAt || 0) - (a.createdAt || 0);
     });
   }, [items, search, sortKey, filterKey]);

@@ -7,16 +7,13 @@ import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const FREQ = ['Day', 'Week', 'Month'];
-const defaultSlot = () => ({ day: 'Monday', startTime: '08:00 AM', endTime: '09:00 AM', label: '' });
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const FREQ_UNITS   = ['Day', 'Week'];
 
-// ─── Shared UI primitives ────────────────────────────────────────────────────
-
+// ─── Shared UI primitives ─────────────────────────────────────────────────────
 function Label({ children }) {
     return <span className="text-xs font-bold tracking-widest uppercase text-muted">{children}</span>;
 }
-
 function SectionCard({ children, className = '' }) {
     return (
         <div className={`bg-[var(--bg-raised)]/60 border border-[var(--border-subtle)]/40 rounded-2xl p-4 sm:p-5 ${className}`}>
@@ -24,7 +21,6 @@ function SectionCard({ children, className = '' }) {
         </div>
     );
 }
-
 function PrimaryBtn({ children, onClick, disabled, type = 'button', className = '' }) {
     return (
         <button type={type} onClick={onClick} disabled={disabled}
@@ -33,7 +29,6 @@ function PrimaryBtn({ children, onClick, disabled, type = 'button', className = 
         </button>
     );
 }
-
 function GhostBtn({ children, onClick, className = '' }) {
     return (
         <button type="button" onClick={onClick}
@@ -42,7 +37,6 @@ function GhostBtn({ children, onClick, className = '' }) {
         </button>
     );
 }
-
 function Stepper({ value, onChange, min = 1, max = 99 }) {
     return (
         <div className="flex items-center gap-2">
@@ -55,164 +49,31 @@ function Stepper({ value, onChange, min = 1, max = 99 }) {
     );
 }
 
-// ─── Collapsible Slot Card ───────────────────────────────────────────────────
-
-function SlotCard({ slot, index, onChange, onRemove }) {
-    const [collapsed, setCollapsed] = useState(false);
-    const [editingStart, setEditingStart] = useState(false);
-    const [editingEnd, setEditingEnd] = useState(false);
-
-    const summary = `${slot.day} • ${slot.startTime} – ${slot.endTime}${slot.label ? ` • ${slot.label}` : ''}`;
-
+function TypeToggle({ value, onChange }) {
     return (
-        <SectionCard className="transition-all duration-200">
-            {/* Header row – always visible, tapping collapses/expands */}
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setCollapsed(c => !c)}>
-                <div className={`w-6 h-6 rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/40 flex items-center justify-center text-xs font-bold text-primary transition-transform duration-200 ${collapsed ? '' : 'rotate-90'}`}>
-                    ›
-                </div>
-                <div className="flex-1 min-w-0">
-                    {collapsed
-                        ? <p className="text-sm text-neutral font-bold truncate">{summary}</p>
-                        : <Label>Slot {index + 1}</Label>
-                    }
-                </div>
-                {onRemove && (
-                    <button type="button" onClick={e => { e.stopPropagation(); onRemove(); }}
-                        className="text-muted hover:text-primary transition-colors text-xs border border-[var(--border-subtle)] rounded-full px-3 py-1 hover:border-primary/50 cursor-pointer shrink-0">
-                        ✕
-                    </button>
-                )}
-            </div>
-
-            {/* Expandable body */}
-            {!collapsed && (
-                <div className="flex flex-col gap-1 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* Day */}
-                    <div className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all">
-                        <span className="text-muted text-sm font-bold">Day</span>
-                        <Dropdown 
-                            value={slot.day} 
-                            onChange={v => onChange({ ...slot, day: v })} 
-                            options={DAYS} 
-                            align="right"
-                            className="w-36"
-                        />
-                    </div>
-
-                    {/* Start Time */}
-                    <div onClick={() => !editingStart && setEditingStart(true)}
-                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all cursor-pointer group">
-                        <span className="text-muted text-sm font-bold">Start</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-primary font-bold text-sm">{slot.startTime}</span>
-                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        </div>
-                    </div>
-                    {editingStart && (
-                        <div className="px-2 py-2 animate-in fade-in duration-150">
-                            <TimePicker initialTime={slot.startTime} inline={true} hideHelperText={true}
-                                onChange={t => onChange({ ...slot, startTime: t })} />
-                            <GhostBtn onClick={() => setEditingStart(false)} className="mt-3 w-full text-sm py-2">Done</GhostBtn>
-                        </div>
-                    )}
-
-                    {/* End Time */}
-                    <div onClick={() => !editingEnd && setEditingEnd(true)}
-                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all cursor-pointer group">
-                        <span className="text-muted text-sm font-bold">End</span>
-                        <div className="flex items-center gap-2">
-                            <span className="text-primary font-bold text-sm">{slot.endTime}</span>
-                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                        </div>
-                    </div>
-                    {editingEnd && (
-                        <div className="px-2 py-2 animate-in fade-in duration-150">
-                            <TimePicker initialTime={slot.endTime} inline={true} hideHelperText={true}
-                                onChange={t => onChange({ ...slot, endTime: t })} />
-                            <GhostBtn onClick={() => setEditingEnd(false)} className="mt-3 w-full text-sm py-2">Done</GhostBtn>
-                        </div>
-                    )}
-
-                    {/* Label */}
-                    <div className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all">
-                        <span className="text-muted text-sm font-bold">Label</span>
-                        <input value={slot.label} onChange={e => onChange({ ...slot, label: e.target.value })}
-                            placeholder="e.g. AHCI"
-                            className="bg-transparent text-right text-neutral font-bold placeholder-[var(--text-muted)]/40 outline-none w-28 text-sm" />
-                    </div>
-
-                    {/* Collapse shortcut */}
-                    <button type="button" onClick={() => setCollapsed(true)}
-                        className="mt-1 text-xs text-muted hover:text-primary transition-colors text-center w-full py-1 cursor-pointer">
-                        ▲ Collapse
-                    </button>
-                </div>
-            )}
-        </SectionCard>
-    );
-}
-
-// ─── Recurrence section ──────────────────────────────────────────────────────
-
-function RecurrenceSection({ rec, onChange }) {
-    const set = updates => onChange({ ...rec, ...updates });
-
-    return (
-        <div className="flex flex-col gap-4 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            {/* Repeat every */}
-            <div className="flex items-center gap-3 flex-wrap">
-                <Label>Every</Label>
-                <Stepper value={rec.interval} onChange={v => set({ interval: v })} />
-                <Dropdown 
-                    value={rec.frequency} 
-                    onChange={v => set({ frequency: v })} 
-                    options={FREQ.map(f => ({ value: f, label: `${f}${rec.interval > 1 ? 's' : ''}` }))}
-                    className="w-36 z-50"
-                />
-            </div>
-
-            {/* Ends */}
-            <div className="flex flex-col gap-2.5">
-                <Label>Ends</Label>
-                {[
-                    { val: 'never', label: 'Never' },
-                    { val: 'on_date', label: 'On Date' },
-                    { val: 'after', label: 'After N Occurrences' },
-                ].map(({ val, label }) => (
-                    <div key={val}>
-                        <label className="flex items-center gap-3 cursor-pointer group">
-                            <div onClick={() => set({ endType: val })}
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${rec.endType === val ? 'border-[var(--color-primary)] bg-[var(--color-primary)]' : 'border-[var(--border-subtle)] group-hover:border-primary/50'}`}>
-                                {rec.endType === val && <div className="w-2 h-2 rounded-full bg-[var(--bg-primary)]" />}
-                            </div>
-                            <span className="text-neutral text-sm font-bold flex-1">{label}</span>
-                            {val === 'after' && rec.endType === 'after' && (
-                                <Stepper value={rec.occurrences} onChange={v => set({ occurrences: v })} />
-                            )}
-                        </label>
-
-                        {/* DateTimePicker for On Date – opens as a popup modal */}
-                        {val === 'on_date' && rec.endType === 'on_date' && (
-                            <div className="mt-3 ml-8 animate-in fade-in duration-150">
-                                <DateTimePicker
-                                    onChange={state => set({ endDate: state.date, endTime: state.time })}
-                                />
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
+        <div className="flex gap-3 flex-wrap">
+            {[
+                { id: 'non-recurring', label: 'Non-Recurring', sub: 'One-time date range' },
+                { id: 'recurring',     label: 'Recurring',      sub: 'Repeating schedule' },
+            ].map(({ id, label, sub }) => (
+                <button key={id} type="button" onClick={() => onChange(id)}
+                    className={`flex-1 min-w-[140px] flex flex-col items-start gap-1 px-4 py-3 rounded-xl border font-bold text-sm transition-all cursor-pointer active:scale-95 ${
+                        value === id
+                            ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/60 text-primary shadow-[0_0_16px_rgba(249,119,102,0.15)]'
+                            : 'border-[var(--border-subtle)] text-neutral hover:border-primary/40 hover:bg-white/5'
+                    }`}>
+                    <span className="text-sm font-bold">{label}</span>
+                    <span className="text-[11px] font-normal text-muted">{sub}</span>
+                </button>
+            ))}
         </div>
     );
 }
 
-// ─── Step indicator ──────────────────────────────────────────────────────────
-
+// ─── Step indicator ───────────────────────────────────────────────────────────
 function StepDot({ n, active, done, onClick }) {
     return (
-        <button type="button" onClick={onClick}
-            className={`flex flex-col items-center gap-1 cursor-pointer group transition-all`}>
+        <button type="button" onClick={onClick} className="flex flex-col items-center gap-1 cursor-pointer group">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${done ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-[var(--bg-primary)]' : active ? 'border-[var(--color-primary)] text-primary' : 'border-[var(--border-subtle)] text-muted'}`}>
                 {done ? '✓' : n}
             </div>
@@ -220,8 +81,7 @@ function StepDot({ n, active, done, onClick }) {
     );
 }
 
-// ─── Page ────────────────────────────────────────────────────────────────────
-
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CreateActivity() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -231,45 +91,45 @@ export default function CreateActivity() {
     const [title, setTitle] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
     const [selectedEntityIds, setSelectedEntityIds] = useState(location.state?.entityId ? [location.state.entityId] : []);
-    const [scheduleMode, setScheduleMode] = useState('structured');
-    const [slots, setSlots] = useState([defaultSlot()]);
+    const [activityType, setActivityType] = useState('non-recurring');
+
+    // Non-recurring
     const [range, setRange] = useState(null);
-    const [pasteText, setPasteText] = useState('');
-    const [parsedSlots, setParsedSlots] = useState([]);
-    const [isParsing, setIsParsing] = useState(false);
-    const [parseError, setParseError] = useState('');
-    const [recurrence, setRecurrence] = useState({ enabled: false, interval: 1, frequency: 'Week', endType: 'never', endDate: '', endTime: '', occurrences: 1 });
+
+    // Recurring
+    const [recurringStartTime, setRecurringStartTime] = useState('08:00 AM');
+    const [recurringEndTime, setRecurringEndTime]     = useState('09:00 AM');
+    const [editingStart, setEditingStart] = useState(false);
+    const [editingEnd, setEditingEnd]     = useState(false);
+    const [everyInterval, setEveryInterval] = useState(1);
+    const [everyUnit, setEveryUnit]         = useState('Week');
+    const [recurringDay, setRecurringDay]   = useState('Monday');
+    const [expiryType, setExpiryType]       = useState('never');
+    const [expiryDate, setExpiryDate]       = useState(null);
+    const [expiryOccurrences, setExpiryOccurrences] = useState(5);
+
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [submitError, setSubmitError] = useState('');
+    const [submitError, setSubmitError]   = useState('');
 
     const titleDone = title.trim().length > 0;
-    const scheduleReady = scheduleMode === 'structured' ? slots.length > 0 
-                        : scheduleMode === 'range' ? !!range 
-                        : parsedSlots.length > 0 || pasteText.trim().length > 0;
+    const scheduleReady = activityType === 'non-recurring' ? !!range : true;
 
-    const updateSlot = (i, updated) => setSlots(prev => prev.map((s, idx) => idx === i ? updated : s));
-    const removeSlot = (i) => setSlots(prev => prev.filter((_, idx) => idx !== i));
-
-    const handleParse = async () => {
-        setIsParsing(true); setParseError('');
-        try {
-            const res = await fetch('/api/activities/parse', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ rawText: pasteText }),
-            });
-            const data = await res.json();
-            if (data.success) { setParsedSlots(data.parsed || []); if (data.warning) setParseError(data.warning); }
-            else setParseError(data.message || 'Parsing failed.');
-        } catch { setParseError('Could not reach the server.'); }
-        finally { setIsParsing(false); }
-    };
+    const STEPS = ['Type & Title', 'Participants', 'Schedule'];
 
     const handleSubmit = async () => {
         setIsSubmitting(true); setSubmitError('');
         try {
-            const payload = { userId: user?._id, title, participants: selectedEntityIds, scheduleMode, slots: scheduleMode === 'structured' ? slots : [], range: scheduleMode === 'range' ? range : null, pastedScheduleRaw: scheduleMode === 'paste' ? pasteText : '', parsedSlots: scheduleMode === 'paste' ? parsedSlots : [], recurrence };
-            const res = await fetch('/api/activities', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const common = { userId: user?._id, title, participants: selectedEntityIds, activityType };
+            const extra = activityType === 'non-recurring'
+                ? { rangeStart: range?.start?.date ?? range?.start, rangeEnd: range?.end?.date ?? range?.end }
+                : { recurringStartTime, recurringEndTime, everyInterval, everyUnit,
+                    recurringDay: everyUnit === 'Week' ? recurringDay : null,
+                    expiryType, expiryDate: expiryDate?.date ?? expiryDate, expiryOccurrences };
+            const res = await fetch('/api/activities', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...common, ...extra }),
+            });
             const data = await res.json();
             if (data.success) navigate('/activities');
             else setSubmitError(data.message || 'Failed to create activity.');
@@ -277,39 +137,31 @@ export default function CreateActivity() {
         finally { setIsSubmitting(false); }
     };
 
-    const STEPS = ['Title', 'Participants', 'Schedule'];
-
     return (
         <div className="min-h-full w-full px-4 pt-6 pb-28 sm:px-8 max-w-2xl mx-auto">
 
-            {/* Header + stepper — fixed context at top */}
+            {/* Header */}
             <div className="mb-6">
                 <h1 className="text-2xl sm:text-3xl font-bold text-primary text-center mb-3">Create Activity</h1>
 
-                {/* Inline-editable title display */}
+                {/* Inline title display */}
                 <div className="flex justify-center mb-4">
                     {editingTitle || !title ? (
-                        <input
-                            autoFocus={editingTitle}
-                            value={title}
-                            onChange={e => setTitle(e.target.value)}
+                        <input autoFocus={editingTitle} value={title} onChange={e => setTitle(e.target.value)}
                             onBlur={() => setEditingTitle(false)}
                             onKeyDown={e => { if (e.key === 'Enter') setEditingTitle(false); }}
                             placeholder="Activity name…"
-                            className="text-center text-base sm:text-lg font-bold text-neutral bg-transparent border-b-2 border-[var(--color-primary)]/60 outline-none placeholder-[var(--text-muted)]/40 pb-1 w-full max-w-xs transition-all"
-                        />
+                            className="text-center text-base sm:text-lg font-bold text-neutral bg-transparent border-b-2 border-[var(--color-primary)]/60 outline-none placeholder-[var(--text-muted)]/40 pb-1 w-full max-w-xs transition-all" />
                     ) : (
-                        <button
-                            type="button"
-                            onClick={() => setEditingTitle(true)}
-                            className="group flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--border-subtle)]/40 hover:border-[var(--color-primary)]/50 hover:bg-white/5 transition-all cursor-pointer"
-                        >
+                        <button type="button" onClick={() => setEditingTitle(true)}
+                            className="group flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--border-subtle)]/40 hover:border-[var(--color-primary)]/50 hover:bg-white/5 transition-all cursor-pointer">
                             <span className="text-base sm:text-lg font-bold text-neutral">{title}</span>
                             <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-colors shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
                     )}
                 </div>
 
+                {/* Step dots */}
                 <div className="flex items-center justify-center gap-2">
                     {STEPS.map((label, i) => {
                         const n = i + 1;
@@ -317,7 +169,7 @@ export default function CreateActivity() {
                             <div key={label} className="flex items-center gap-2">
                                 <div className="flex flex-col items-center gap-1">
                                     <StepDot n={n} active={step === n} done={step > n} onClick={() => step > n && setStep(n)} />
-                                    <span className={`text-[10px] font-bold transition-colors hidden sm:block ${step === n ? 'text-primary' : step > n ? 'text-neutral' : 'text-muted'}`}>{label}</span>
+                                    <span className={`text-[10px] font-bold hidden sm:block ${step === n ? 'text-primary' : step > n ? 'text-neutral' : 'text-muted'}`}>{label}</span>
                                 </div>
                                 {i < STEPS.length - 1 && (
                                     <div className={`h-px w-10 sm:w-16 rounded-full mb-3 transition-all ${step > n ? 'bg-[var(--color-primary)]' : 'bg-[var(--border-subtle)]/40'}`} />
@@ -328,17 +180,21 @@ export default function CreateActivity() {
                 </div>
             </div>
 
-            {/* ── Step 1: Title ── */}
+            {/* ── Step 1: Type & Title ── */}
             {step === 1 && (
                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-3 duration-250">
                     <SectionCard>
+                        <Label>Activity Type</Label>
+                        <div className="mt-3">
+                            <TypeToggle value={activityType} onChange={setActivityType} />
+                        </div>
+                    </SectionCard>
+                    <SectionCard>
                         <Label>Activity Title</Label>
-                        <input id="activity-title" autoFocus value={title}
-                            onChange={e => setTitle(e.target.value)}
+                        <input id="activity-title" autoFocus value={title} onChange={e => setTitle(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && titleDone) setStep(2); }}
-                            placeholder="e.g. AHCI Weekly Lab"
-                            className="mt-3 w-full bg-transparent text-xl font-bold text-neutral placeholder-[var(--text-muted)]/40 outline-none border-b-2 border-[var(--border-subtle)]/40 focus:border-[var(--color-primary)]/60 pb-2 transition-all"
-                        />
+                            placeholder="e.g. Weekly Team Standup"
+                            className="mt-3 w-full bg-transparent text-xl font-bold text-neutral placeholder-[var(--text-muted)]/40 outline-none border-b-2 border-[var(--border-subtle)]/40 focus:border-[var(--color-primary)]/60 pb-2 transition-all" />
                     </SectionCard>
                     <div className="flex justify-end">
                         <PrimaryBtn onClick={() => setStep(2)} disabled={!titleDone}>Next → Participants</PrimaryBtn>
@@ -352,11 +208,7 @@ export default function CreateActivity() {
                     <SectionCard>
                         <Label>Participants</Label>
                         <p className="text-xs text-muted mt-1 mb-3">Click the area below to open the entity selector</p>
-                        <EntitySelector
-                            selectedIds={selectedEntityIds}
-                            onChange={setSelectedEntityIds}
-                            variant="standalone"
-                        />
+                        <EntitySelector selectedIds={selectedEntityIds} onChange={setSelectedEntityIds} variant="standalone" />
                     </SectionCard>
                     <div className="flex gap-3">
                         <GhostBtn onClick={() => setStep(1)} className="flex-1 justify-center">← Back</GhostBtn>
@@ -369,104 +221,115 @@ export default function CreateActivity() {
             {step === 3 && (
                 <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-3 duration-250">
 
-                    {/* Mode toggle */}
-                    <SectionCard>
-                        <Label>Schedule Input Method</Label>
-                        <div className="flex gap-3 mt-3 flex-wrap">
-                            {[
-                                { id: 'structured', label: 'Recurring Slots' }, 
-                                { id: 'range', label: 'Specific Range' }, 
-                                { id: 'paste', label: 'Paste Text' }
-                            ].map(({ id, label }) => (
-                                <button key={id} type="button" onClick={() => setScheduleMode(id)}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-sm transition-all cursor-pointer active:scale-95 ${scheduleMode === id ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] border-[var(--color-primary)] shadow-[0_0_12px_rgba(249,119,102,0.3)]' : 'border-[var(--border-subtle)] text-neutral hover:border-primary/50 hover:bg-white/5'}`}>
-                                    <div className={`w-3 h-3 rounded-full border-2 flex items-center justify-center shrink-0 ${scheduleMode === id ? 'border-[var(--bg-primary)]' : 'border-current'}`}>
-                                        {scheduleMode === id && <div className="w-1.5 h-1.5 rounded-full bg-[var(--bg-primary)]" />}
-                                    </div>
-                                    {label}
-                                </button>
-                            ))}
-                        </div>
-                    </SectionCard>
-
-                    {/* Structured builder */}
-                    {scheduleMode === 'structured' && (
-                        <div className="flex flex-col gap-3">
-                            {slots.map((slot, i) => (
-                                <SlotCard key={i} slot={slot} index={i}
-                                    onChange={updated => updateSlot(i, updated)}
-                                    onRemove={slots.length > 1 ? () => removeSlot(i) : null}
-                                />
-                            ))}
-                            <GhostBtn onClick={() => setSlots(prev => [...prev, defaultSlot()])} className="w-full justify-center">
-                                <span className="text-lg leading-none">+</span> Add Slot
-                            </GhostBtn>
-                        </div>
-                    )}
-
-                    {/* Specific Range Mode */}
-                    {scheduleMode === 'range' && (
-                        <SectionCard className="flex flex-col items-center py-10 z-0">
-                            <Label>Select Event Duration</Label>
+                    {/* ── Non-Recurring ── */}
+                    {activityType === 'non-recurring' && (
+                        <SectionCard className="flex flex-col items-center py-10">
+                            <Label>Select Date & Time Range</Label>
                             <div className="mt-6 w-full flex justify-center">
-                                <DateTimeRangePicker 
-                                    onChange={r => setRange(r)} 
-                                />
+                                <DateTimeRangePicker onChange={r => setRange(r)} />
                             </div>
                         </SectionCard>
                     )}
 
-                    {/* Paste mode */}
-                    {scheduleMode === 'paste' && (
-                        <SectionCard>
-                            <Label>Paste Your Schedule</Label>
-                            <p className="text-xs text-muted mt-1 mb-3">Any format — AI will extract the slots for you.</p>
-                            <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} rows={5}
-                                placeholder={`Mon 08:30–10:00 AHCI\nTue 14:00–15:30 Lab\nWed 09:00–11:00 AHCI\n\nOr any other format — just paste it!`}
-                                className="w-full bg-[var(--bg-primary)] border border-[var(--border-subtle)]/40 rounded-xl p-4 text-neutral text-sm resize-none outline-none placeholder-[var(--text-muted)]/40 focus:border-[var(--color-primary)]/50 transition-all font-mono leading-relaxed"
-                            />
-                            <div className="flex items-start justify-between mt-3 gap-3 flex-wrap">
-                                {parseError && <p className="text-xs text-muted flex-1">{parseError}</p>}
-                                <PrimaryBtn onClick={handleParse} disabled={isParsing || !pasteText.trim()} className="ml-auto text-sm">
-                                    {isParsing ? '⏳ Parsing…' : '✦ Parse with AI'}
-                                </PrimaryBtn>
-                            </div>
+                    {/* ── Recurring ── */}
+                    {activityType === 'recurring' && (
+                        <div className="flex flex-col gap-4">
 
-                            {parsedSlots.length > 0 && (
-                                <div className="mt-4 flex flex-col gap-2">
-                                    <Label>Parsed Slots ({parsedSlots.length})</Label>
-                                    {parsedSlots.map((s, i) => (
-                                        <div key={i} className="flex flex-wrap items-center gap-2 bg-[var(--bg-primary)] rounded-xl px-4 py-2.5 border border-[var(--color-primary)]/20">
-                                            <span className="font-bold text-primary text-sm">{s.day}</span>
-                                            <span className="text-muted text-xs">•</span>
-                                            <span className="text-neutral text-sm">{s.startTime} – {s.endTime}</span>
-                                            {s.label && <span className="ml-auto text-xs bg-[var(--color-primary)]/20 text-primary rounded-full px-2 py-0.5">{s.label}</span>}
+                            {/* Time window */}
+                            <SectionCard>
+                                <Label>Time Window</Label>
+                                <div className="flex flex-col gap-1 mt-3">
+                                    {/* Start time */}
+                                    <div onClick={() => !editingStart && setEditingStart(true)}
+                                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all cursor-pointer group">
+                                        <span className="text-muted text-sm font-bold">Start</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-primary font-bold text-sm">{recurringStartTime}</span>
+                                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </div>
+                                    </div>
+                                    {editingStart && (
+                                        <div className="px-2 py-2 animate-in fade-in duration-150">
+                                            <TimePicker initialTime={recurringStartTime} inline hideHelperText onChange={t => setRecurringStartTime(t)} />
+                                            <GhostBtn onClick={() => setEditingStart(false)} className="mt-3 w-full text-sm py-2">Done</GhostBtn>
+                                        </div>
+                                    )}
+                                    {/* End time */}
+                                    <div onClick={() => !editingEnd && setEditingEnd(true)}
+                                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all cursor-pointer group">
+                                        <span className="text-muted text-sm font-bold">End</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-primary font-bold text-sm">{recurringEndTime}</span>
+                                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                        </div>
+                                    </div>
+                                    {editingEnd && (
+                                        <div className="px-2 py-2 animate-in fade-in duration-150">
+                                            <TimePicker initialTime={recurringEndTime} inline hideHelperText onChange={t => setRecurringEndTime(t)} />
+                                            <GhostBtn onClick={() => setEditingEnd(false)} className="mt-3 w-full text-sm py-2">Done</GhostBtn>
+                                        </div>
+                                    )}
+                                </div>
+                            </SectionCard>
+
+                            {/* Period */}
+                            <SectionCard>
+                                <Label>Repeats</Label>
+                                <div className="flex items-center gap-3 flex-wrap mt-3">
+                                    <span className="text-muted text-sm font-bold">Every</span>
+                                    <Stepper value={everyInterval} onChange={setEveryInterval} />
+                                    <Dropdown
+                                        value={everyUnit}
+                                        onChange={setEveryUnit}
+                                        options={FREQ_UNITS.map(u => ({ value: u, label: `${u}${everyInterval > 1 ? 's' : ''}` }))}
+                                        className="w-32"
+                                    />
+                                </div>
+                                {everyUnit === 'Week' && (
+                                    <div className="flex items-center justify-between mt-4 hover:bg-white/5 rounded-xl px-2 py-2 transition-all">
+                                        <span className="text-muted text-sm font-bold">On</span>
+                                        <Dropdown
+                                            value={recurringDay}
+                                            onChange={setRecurringDay}
+                                            options={DAYS_OF_WEEK}
+                                            align="right"
+                                            className="w-36"
+                                        />
+                                    </div>
+                                )}
+                            </SectionCard>
+
+                            {/* Expiry */}
+                            <SectionCard className="border-[var(--color-primary)]/15 bg-[var(--bg-accent)]/15">
+                                <Label>Ends</Label>
+                                <div className="flex flex-col gap-3 mt-3">
+                                    {[
+                                        { val: 'never',   label: 'Never' },
+                                        { val: 'on_date', label: 'On a specific date' },
+                                        { val: 'after',   label: 'After N occurrences' },
+                                    ].map(({ val, label }) => (
+                                        <div key={val}>
+                                            <label className="flex items-center gap-3 cursor-pointer group min-h-[36px]">
+                                                <div onClick={() => setExpiryType(val)}
+                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${expiryType === val ? 'border-[var(--color-primary)] bg-[var(--color-primary)]' : 'border-[var(--border-subtle)] group-hover:border-primary/50'}`}>
+                                                    {expiryType === val && <div className="w-2 h-2 rounded-full bg-[var(--bg-primary)]" />}
+                                                </div>
+                                                <span className="text-neutral text-sm font-bold flex-1">{label}</span>
+                                                {val === 'after' && expiryType === 'after' && (
+                                                    <Stepper value={expiryOccurrences} onChange={setExpiryOccurrences} />
+                                                )}
+                                            </label>
+                                            {val === 'on_date' && expiryType === 'on_date' && (
+                                                <div className="mt-3 ml-8 animate-in fade-in duration-150">
+                                                    <DateTimePicker onChange={s => setExpiryDate(s)} />
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>
-                            )}
-                        </SectionCard>
-                    )}
-
-                    {/* Recurrence card — separate visual group */}
-                    <SectionCard className="border-[var(--color-primary)]/15 bg-[var(--bg-accent)]/15">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <Label>Recurrence</Label>
-                                {recurrence.enabled && (
-                                    <p className="text-xs text-muted mt-0.5">Every {recurrence.interval} {recurrence.frequency}{recurrence.interval > 1 ? 's' : ''}</p>
-                                )}
-                            </div>
-                            <button type="button" onClick={() => setRecurrence(r => ({ ...r, enabled: !r.enabled }))}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-sm transition-all cursor-pointer active:scale-95 shrink-0 ${recurrence.enabled ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] border-[var(--color-primary)]' : 'border-[var(--border-subtle)] text-neutral hover:border-primary/50 hover:bg-white/5'}`}>
-                                {recurrence.enabled ? '↺ Recurring' : '+ Recurring'}
-                            </button>
+                            </SectionCard>
                         </div>
-
-                        {recurrence.enabled && (
-                            <RecurrenceSection rec={recurrence} onChange={setRecurrence} />
-                        )}
-                    </SectionCard>
+                    )}
 
                     {submitError && (
                         <div className="bg-red-900/30 border border-red-500/40 rounded-xl px-4 py-3 text-sm text-red-300">{submitError}</div>
