@@ -1,4 +1,5 @@
 const Activity = require('../models/Activities');
+const Entity = require('../models/Entities');
 
 // Helper – turn a slot's "08:30 AM" strings into a real Date on a given ISO day offset
 const timeStringToDate = (timeStr, baseDate = new Date()) => {
@@ -281,9 +282,36 @@ const getActivitiesByEntityID = async (req, res) => {
   try {
     const { entityId } = req.params;
     
-    // Find activities where participants array contains the entityId
+    // Check if the entity exists and what type it is
+    const entity = await Entity.findById(entityId);
+    if (!entity) {
+      return res.status(404).json({ success: false, message: 'Entity not found' });
+    }
+
+    let participantIds = [entityId];
+
+    // If it's a person, get activities for the person AND any groups they belong to
+    if (entity.type === 'person') {
+      // Find groups that list this person as a member
+      const associatedGroups = await Entity.find({
+        type: 'group',
+        members: entityId
+      }).select('_id');
+
+      let groupIds = associatedGroups.map(g => g._id.toString());
+      
+      // Also include groups explicitly listed in the person's 'groups' array just in case
+      if (entity.groups && entity.groups.length > 0) {
+        groupIds = groupIds.concat(entity.groups.map(g => g.toString()));
+      }
+
+      // Merge and remove duplicates
+      participantIds = [...new Set([...participantIds, ...groupIds])];
+    }
+
+    // Find activities where participants array contains any of the participantIds
     const activities = await Activity.find({ 
-      participants: entityId 
+      participants: { $in: participantIds } 
     })
     .populate('participants', 'name type color faceIcon')
     .sort({ createdAt: -1 })

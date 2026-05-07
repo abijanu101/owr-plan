@@ -65,7 +65,25 @@ export const PlanProvider = ({ children }) => {
     const [constraints, setConstraintsInternal] = useState([...hiddenDefaults, ...exampleConstraints]);
     const [toast, setToast] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [results, setResults] = useState(null);
+    const [results, setResultsInternal] = useState(() => {
+        try {
+            const cached = localStorage.getItem('plan_results');
+            return cached ? JSON.parse(cached) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    const setResults = (newResults) => {
+        setResultsInternal(newResults);
+        try {
+            if (newResults) {
+                localStorage.setItem('plan_results', JSON.stringify(newResults));
+            } else {
+                localStorage.removeItem('plan_results');
+            }
+        } catch {}
+    };
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type, id: Date.now() });

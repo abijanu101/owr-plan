@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 import { listEntities } from '../api/entitiesApi';
@@ -188,11 +189,43 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift }) => {
 
 
 export default function BlockVisualization() {
+    const location = useLocation();
     const { user } = useAuth();
     const [entities, setEntities] = useState([]);
-    const [selectedEntities, setSelectedEntities] = useState([]);
-    const [durationIdx, setDurationIdx] = useState(0); // 0 -> '12 hr'
-    const [offsetSlots, setOffsetSlots] = useState(0); // For timeline left/right shift
+    
+    // Parse initial state from PlanResults if available
+    const initialState = location.state || {};
+    
+    const [selectedEntities, setSelectedEntities] = useState(initialState.entities || []);
+    
+    // Calculate initial duration index based on passed duration
+    // DURATIONS = ['12 hr', '24 hr', '1 week', '1 month']
+    const initDurationIdx = () => {
+        if (!initialState.durationStr) return 0;
+        const baseHours = parseFloat(initialState.durationStr) || 1;
+        const targetHours = baseHours + 2; // +- 1hr duration -> total +2 hours
+        if (targetHours <= 12) return 0; // '12 hr'
+        if (targetHours <= 24) return 1; // '24 hr'
+        if (targetHours <= 168) return 2; // '1 week'
+        return 3; // '1 month'
+    };
+
+    const [durationIdx, setDurationIdx] = useState(initDurationIdx());
+    
+    const initOffsetSlots = () => {
+        if (!initialState.baseTime) return 0;
+        let startMins = parseTimeToMinutes(initialState.baseTime);
+        const config = getSlotConfig(DURATIONS[initDurationIdx()]);
+        let baseStart = DURATIONS[initDurationIdx()] === '12 hr' ? 480 : 0;
+        
+        const diffMins = startMins - baseStart;
+        const exactOffset = diffMins / config.slotMins;
+        
+        // Center the time in the view
+        return Math.max(0, Math.floor(exactOffset - config.count / 2.5));
+    };
+
+    const [offsetSlots, setOffsetSlots] = useState(initOffsetSlots());
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch all entities to have metadata available

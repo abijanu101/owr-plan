@@ -51,12 +51,18 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
     };
 
     const hasInclude = customConstraints.some(c => c.type === 'include');
+    
+    // Find all used types in custom constraints to enforce singletons
+    const usedCustomTypes = customConstraints.flatMap(c => {
+        if (c.isBlock) return c.children ? c.children.map(child => child.type) : [];
+        return [c.type];
+    });
 
     const renderRow = (c) => (
         c.isBlock ? (
-            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
+            <ConstraintBlockRow key={c.id} block={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} usedCustomTypes={usedCustomTypes} />
         ) : (
-            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} />
+            <GlobalConstraintRow key={c.id} constraint={c} onChange={(u) => updateConstraint(c.id, u)} onRemove={() => removeConstraint(c.id)} isMobile={isMobile} hasInclude={hasInclude} usedCustomTypes={usedCustomTypes} />
         )
     );
 
@@ -101,7 +107,7 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
                     <TableHeader />
                     <div className="flex flex-col">
                         {systemConstraints.map((c, i) => (
-                            <div key={c.id} className="relative" style={{ zIndex: 100 - i }}>
+                            <div key={c.id} className="relative hover:z-[200]" style={{ zIndex: 100 - i }}>
                                 {renderRow(c)}
                             </div>
                         ))}
@@ -116,7 +122,7 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
                     <TableHeader />
                     <div className="flex flex-col">
                         {customConstraints.map((c, i) => (
-                            <div key={c.id} className="relative" style={{ zIndex: 50 - i }}>
+                            <div key={c.id} className="relative hover:z-[200]" style={{ zIndex: 50 - i }}>
                                 {renderRow(c)}
                             </div>
                         ))}
