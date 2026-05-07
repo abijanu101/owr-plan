@@ -41,6 +41,7 @@ async function seed() {
       { name: 'Zoha', type: 'person', color: '#488845', faceIcon: 'face/happy.svg' },
       { name: 'Abi', type: 'person', color: '#1B7A7A', faceIcon: 'face/naughty.svg' },
       { name: 'Ansa', type: 'person', color: '#911B7D', faceIcon: 'face/happy.svg' },
+      { name: 'Haleema', type: 'person', color: '#F39C12', faceIcon: 'face/happy.svg' }, // NEW
       { name: 'Section G', type: 'group', color: '#1B5491' },
       { name: 'AML-6A', type: 'group', color: '#B29B3B' },
       { name: 'owrplan gng', type: 'group', color: '#5E5AB2' },
@@ -53,9 +54,53 @@ async function seed() {
         userId: user._id
       });
     }
-    console.log('Created Entities');
 
-    // 3. Create Activities
+    // 3. Add members to "Section G" (Abi and Ansa)
+    const sectionG = entities['Section G'];
+    const abi = entities['Abi'];
+    const ansa = entities['Ansa'];
+    if (sectionG && abi && ansa) {
+      sectionG.members = [abi._id, ansa._id];
+      await sectionG.save();
+      // Also update Abi's groups array
+      abi.groups = [sectionG._id];
+      await abi.save();
+      ansa.groups = [sectionG._id];
+      await ansa.save();
+      console.log(`Added ${abi.name} and ${ansa.name} to ${sectionG.name} and updated their groups`);
+    } else {
+      console.log('Could not add members to Section G');
+    }
+
+    // 4. Add members to "owrplan gng" and update each person's groups
+    const owrplanGng = entities['owrplan gng'];
+    const membersForOwplan = [
+      entities['Alizeh'],
+      entities['Abi'],
+      entities['Ahmed'],
+      entities['Zoha'],
+      entities['Haleema']
+    ].filter(m => m); // ensure all exist
+
+    if (owrplanGng && membersForOwplan.length === 5) {
+      owrplanGng.members = membersForOwplan.map(m => m._id);
+      await owrplanGng.save();
+      console.log(`Added ${membersForOwplan.map(m => m.name).join(', ')} to ${owrplanGng.name}`);
+
+      // Update each person's groups array
+      for (const person of membersForOwplan) {
+        if (!person.groups) person.groups = [];
+        person.groups.push(owrplanGng._id);
+        await person.save();
+      }
+      console.log('Updated groups array for each person');
+    } else {
+      console.log('Could not add members to owrplan gng – missing persons or group');
+    }
+
+    console.log('Created Entities and established relationships');
+
+    // 5. Create Activities (unchanged, but participants now include Haleema optionally? Not required)
     const activitiesData = [
       {
         title: 'Ca Class University',
