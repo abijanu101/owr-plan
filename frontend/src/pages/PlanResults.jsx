@@ -255,7 +255,9 @@ export default function PlanResults() {
         );
     }
 
-    if (!results && !isGenerating && !isExploding) {
+    const hasOptions = results?.bestOption || (results?.alternatives?.length > 0);
+
+    if (!isGenerating && !isExploding && (!results || !hasOptions)) {
         return (
             <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-[#f97766] animate-in fade-in zoom-in-95 duration-500">
                 <div className="w-24 h-24 mb-6 rounded-full bg-[#1A0B16] border-2 border-[#DC8379]/30 flex items-center justify-center shadow-[0_0_30px_rgba(249,119,102,0.1)]">
@@ -272,7 +274,7 @@ export default function PlanResults() {
         );
     }
 
-    const allOptions = [results.bestOption, ...(results.alternatives || [])];
+    const allOptions = [results.bestOption, ...(results.alternatives || [])].filter(Boolean);
     const currentSelection = allOptions[selectedIdx];
 
     // Calculate End Time based on start time and duration
@@ -367,7 +369,7 @@ export default function PlanResults() {
                 </div>
             )}
 
-            {showContent && (
+            {showContent && currentSelection && (
                 <div className="relative results-entrance">
                     {/* Full Viewport Blur Overlay */}
                     <div

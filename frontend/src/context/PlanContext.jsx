@@ -34,8 +34,14 @@ export const PlanProvider = ({ children }) => {
             modifier: 'can',
             type: 'be between',
             parameter: {
-                start: { date: new Date(), time: '07:00 AM' },
-                end: { date: new Date(), time: '11:59 PM' },
+                start: { 
+                    date: new Date(), 
+                    time: '08:00 AM' 
+                },
+                end: { 
+                    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 
+                    time: '11:59 PM' 
+                },
             },
             isSystem: true,
         },
