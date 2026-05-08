@@ -31,7 +31,7 @@ export const PlanProvider = ({ children }) => {
         {
             id: 3,
             isBlock: false,
-            modifier: 'must',
+            modifier: 'can',
             type: 'be between',
             parameter: {
                 start: { date: new Date(), time: '07:00 AM' },

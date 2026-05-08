@@ -1,104 +1,80 @@
-const Entity = require('../models/Entities');
-const Activity = require('../models/Activities');
+const  {extract_time_constraints} = require('../utils/planner/time_constraint_extraction');
+const  {generate_busy_blocks} = require('../utils/planner/busy_block_generation');
 
 /**
- * Extracts entity names/IDs from a list of constraints.
- */
-const extractRequiredEntities = (constraints) => {
-    const attendeeNames = new Set();
-    if (!constraints || !Array.isArray(constraints)) return [];
-
-    constraints.forEach(c => {
-        // Handle various constraint structures (entity array or parameter array)
-        if (c.entity && Array.isArray(c.entity)) {
-            c.entity.forEach(name => attendeeNames.add(name));
-        } else if (c.entity && typeof c.entity === 'string') {
-            attendeeNames.add(c.entity);
-        }
-        
-        if (c.type === 'include' && Array.isArray(c.parameter)) {
-            c.parameter.forEach(name => attendeeNames.add(name));
-        } else if (c.type === 'include' && typeof c.parameter === 'string') {
-            attendeeNames.add(c.parameter);
-        }
-    });
-
-    return Array.from(attendeeNames);
-};
-
-/**
- * Resolves name strings/IDs to full Entity objects from the DB.
- */
-const resolveEntities = async (namesOrIds) => {
-    const allEntities = await Entity.find({});
-    
-    return namesOrIds.map(nameOrId => {
-        const match = allEntities.find(e => 
-            e.name.toLowerCase() === nameOrId.toLowerCase() || 
-            e._id.toString() === nameOrId.toString()
-        );
-        return match || { name: nameOrId, type: 'person', color: '#f97766' };
-    });
-};
-
-/**
- * Helper: Fetch all activities an entity is involved in, including via group memberships.
- */
-const fetchEntityActivities = async (entityId) => {
-    const entity = await Entity.findById(entityId);
-    if (!entity) return [];
-
-    let participantIds = [entityId.toString()];
-
-    if (entity.type === 'person') {
-        const associatedGroups = await Entity.find({
-            type: 'group',
-            members: entityId
-        }).select('_id');
-
-        let groupIds = associatedGroups.map(g => g._id.toString());
-        
-        if (entity.groups && entity.groups.length > 0) {
-            groupIds = groupIds.concat(entity.groups.map(g => g.toString()));
-        }
-
-        participantIds = [...new Set([...participantIds, ...groupIds])];
-    }
-
-    const activities = await Activity.find({ 
-        participants: { $in: participantIds } 
-    })
-    .populate('participants', 'name type color faceIcon')
-    .sort({ createdAt: -1 })
-    .lean();
-
-    return activities;
-};
-
-/**
- * Main algorithm entry point (placeholder for real implementation).
+ * Main algorithm entry point
+ * @param {Array} constraints - The raw constraints from the frontend
+ * @param {Date} rangeStart - Start of the planning window
+ * @param {Date} rangeEnd - End of the planning window
  */
 const solvePlan = async (constraints) => {
-    // 1. Extract what we need
-    const requiredNames = extractRequiredEntities(constraints);
-    
-    // 2. Resolve to real DB objects
-    let attendees = await resolveEntities(requiredNames);
+    console.log(constraints)
+    const time_constraints = extract_time_constraints(constraints)
+    /*{
+        'global': {
+            include: [], 
+            exclude: [], 
+            curfews: [],
+            padding: 0,
 
-    // 3. Fallback if empty (for demo purposes)
-    if (attendees.length === 0) {
-        attendees = await Entity.find({}).limit(5);
-    }
+            must_last: Time,
+            should_last: Time
+        }
+        'local': {
+            'eid_1': {
+                include: [], 
+                exclude: [], 
+                curfews: [],
+                padding: 0,
 
-    // 4. Return results structure
-    // NOTE: This is where a human would implement the actual solver.
-    return {
+                must_last: Time,
+                should_last: Time
+            },
+            'eid_2': ...
+        }
+    }*/
+
+    // 2. Get Busy Blocks
+    const activities = await generate_busy_blocks(constraints, time_constraints)
+    /* [
+        {
+            id: 'aid_1"
+            start: datetime
+            end: datetime
+            participants: set() # for quick lookup
+        },
+        ...
+    ]*/
+
+    console.log(activities)
+
+    // 3. Birth and Death Points Calculation
+    const split_points = calculate_split_points(time_constraints, activities)
+    /*{
+        birth: [[datetime, [entities free this point onwards], ...]],
+        death: [[datetime, [entities busy this point onwards], ...]]
+    }*/
+
+    // 4. Candidate Generation
+    let candidates = prune_candidates(generate_candidates(time_constraints, split_points))
+    /*
+        [
+            {start: DateTime, end: DateTime, available: [entities free during duration]}
+        ]
+    */
+
+    // 5. Candidate Filtering & Scoring...
+    const result = score_candidates(constraints, candidates)
+
+
+    // Placeholder
+    return {    
         bestOption: {
             date: "May 2",
             time: "02:00 PM",
             duration: "1.5hr",
             score: 98,
-            attendees: attendees
+            attendees: involved_entities
         },
         alternatives: [
             { 
@@ -106,22 +82,19 @@ const solvePlan = async (constraints) => {
                 time: "04:30 PM", 
                 duration: "1.5hr", 
                 score: 92, 
-                attendees: attendees.slice(0, Math.ceil(attendees.length * 0.8))
+                attendees: involved_entities.slice(0, Math.ceil(involved_entities.length * 0.8))
             },
             { 
                 date: "May 3", 
                 time: "10:00 AM", 
                 duration: "2hr", 
                 score: 85, 
-                attendees: attendees.slice(0, Math.ceil(attendees.length * 0.5))
+                attendees: involved_entities.slice(0, Math.ceil(involved_entities.length * 0.5))
             }
         ]
     };
 };
 
 module.exports = {
-    extractRequiredEntities,
-    resolveEntities,
-    fetchEntityActivities,
     solvePlan
 };

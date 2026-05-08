@@ -1,6 +1,6 @@
 export const MODIFIERS = {
     STANDARD: ['must', 'should'],
-    PLACEMENT: ['must', 'can', 'can not'], // legal / illegal time ranges
+    PLACEMENT: ['can', 'can not'], // legal / illegal time ranges
     SHOULD_ONLY: ['should'],
 };
 
