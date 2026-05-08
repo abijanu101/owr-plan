@@ -13,11 +13,32 @@ The planner engine operates sequentially across the following stages:
 4. **Candidate Generation**: Candidates are mapped through pairwise birth × death evaluations, passing through a "free-throughout" validator. Candidates with identical start times but subsets of available attendees are pruned.
 5. **Elimination**: Candidates violating hard temporal constraints (`must` duration, `must` curfew, etc.) are rigidly eliminated.
 6. **Scoring**: A multi-factor weighted algorithm scores remaining candidates based on:
-   - **Attendance** (40% weight)
-   - **Duration Fit** (25% weight)
-   - **Soft Preferences** (20% weight)
+   - **Attendance** (35% weight)
+   - **Duration Fit** (20% weight)
+   - **Soft Preferences** (15% weight)
+   - **Peak Time Bonus (2-6 PM)** (15% weight)
    - **Earliness** (10% weight)
    - **Padding** (5% weight)
+
+7. **Diversity Reranking**: The final top 11 results are passed through a diversity filter that penalizes temporal clusters, ensuring a spread of options across different days and times.
+
+---
+
+## Technical Feature: Daily Window Splitting
+When a planning range spans multiple days and contains "Must" curfews (e.g., "Must start after 07:00 AM" and "Must end before 11:59 PM"), the engine automatically slices the global range into daily **Operational Windows**. This prevents the generation of candidates that "live" through non-operational hours (nights) and ensures birth/death points are correctly placed at the start and end of every available day.
+
+## Technical Feature: Temporal Resolution & Merging
+
+### Recurring Event Integrity (The "Infinite Block" Fix)
+Previously, recurring activities with the same ID were merged into single giant blocks spanning multiple days, effectively "killing" all gaps between them. The engine now uses a **Temporal Merging** strategy that only combines busy blocks if they actually overlap in time, regardless of their source activity ID.
+
+### Precision Split Points
+The engine now treats "Must" curfews as primary split points. This ensures that the candidate generator always tries to start a meeting at the exact second a requested availability window begins (e.g., exactly at 7:00 AM).
+
+---
+
+## Test Environment: High-Density Seeding
+The engine is now evaluated against a high-density test environment containing **22+ activities** (mix of daily recurring, weekly recurring, and multi-participant non-recurring events). This ensures that candidate generation remains performant and accurate even with complex, overlapping schedules.
 
 ---
 
@@ -27,40 +48,65 @@ The planner engine operates sequentially across the following stages:
 * **Objective**: Ensure the planner respects hard boundaries and correctly flags impossible scenarios.
 * **Scenario**: 
   - Selected Entity: Ahmed
-  - Strict Constraint added: `Must start after 02:00 PM`
-  - Planning Window artificially restricted to morning hours (`08:00 AM` to `12:00 PM`).
+  - Strict Constraint: `Must start after 02:00 PM`
+  - Planning Window: `08:00 AM` to `12:00 PM`
 * **Result: PASS**
-  - The planner engine correctly recognized the impossibility of fulfilling both conditions simultaneously.
-  - All early candidates were successfully purged during the "Elimination" step.
-  - The API gracefully returned an empty results set, properly triggering the frontend "No Plan Results Found" fallback state without crashing.
+  - **Technical Output**: `Candidates found: 1 | Candidates passed: 0`
+  - The planner correctly identified one raw block but successfully purged it during the "Elimination" step for violating the afternoon curfew.
+  - The API returns an empty results set, properly triggering the frontend fallback state.
 
 ### Test Case 2: Scoring Preferences (The "Should" Rules)
 * **Objective**: Validate the engine's ability to rank multiple valid possibilities based on user preference weights.
 * **Scenario**: 
   - Selected Entity: Ahmed
-  - Planning Window expanded across a 72-hour continuous period.
-  - Soft Constraint added: `Should start after 02:00 PM`.
+  - Planning Window: 72-hour continuous period
+  - Soft Constraint: `Should start after 02:00 PM`
 * **Result: PASS**
-  - The candidate generator identified multiple valid blocks of free time across the 3 days.
-  - During the scoring phase, slots appearing after 2:00 PM were heavily favored, pushing them to the #1 "Best Option" ranking with >90% match scores.
-  - Morning slots were preserved but correctly demoted to the "Alternatives" array with lower comparative scores.
+  - **Technical Output**: `Top score: 75.00`
+  - The candidate generator identified multiple valid blocks across the 3 days.
+  - During scoring, slots appearing after 2:00 PM were heavily favored, while morning slots were correctly demoted to the "Alternatives" array.
 
 ### Test Case 3: Conflict Avoidance & Splitting
 * **Objective**: Verify that recurring entity busy blocks successfully fragment candidate windows.
 * **Scenario**:
-  - Selected Entities: Ahmed and Zoha.
-  - Both entities share a seeded recurring `Daily Standup` (09:30 AM - 10:00 AM).
-  - Duration Required: `1 Hour`.
+  - Selected Entities: Ahmed and Zoha
+  - Seeded Activity: `Daily Standup` (09:30 AM - 10:00 AM)
+  - Duration Required: `1 Hour`
 * **Result: PASS**
-  - The point-generation accurately treated the 09:30-10:00 AM block as a shared "Death" and "Birth" boundary.
-  - Resulting candidates were effectively split around this busy block.
-  - The planner returned seamless candidates starting *after* the busy block resolved (e.g., 10:00 AM), satisfying the continuous 1-hour requirement.
+  - **Technical Output**: `Split Points: 4 | Candidates passed: 2`
+  - The engine correctly split the 8-hour day into two segments around the 30-minute meeting.
+  - Returned candidates for both the pre-meeting and post-meeting slots.
+
+### Test Case 4: Zero/Low Activity Scaling (Multi-Day)
+* **Objective**: Ensure birth points are correctly seeded for entities with empty schedules across multi-day ranges.
+* **Scenario**:
+  - Selected Entities: Ansa (Zero activities) and Abi (Low activity)
+  - Planning Range: `2026-05-08 08:00 AM` to `2026-05-10 11:59 PM`
+  - Required Duration: `1 Hour 30 Minutes`
+  - Operational Hours: `07:00 AM` to `11:59 PM` (Must)
+* **Result: PASS**
+  - **Technical Output**: `Windows: 3 | Birth pts: 3 | Death pts: 3 | Candidates passed: 3`
+  - **Note**: This test case verifies the **Daily Window Splitting** behavior. The 3-day range was automatically sliced into 3 daily operational islands, ensuring candidates were generated for the start/end of every day despite the lack of existing activities.
+
+### Test Case 5: Diversity Reranking & Variety
+* **Objective**: Ensure the #1 through #11 results represent a diverse range of times rather than minor variations of the same slot.
+* **Scenario**: 
+  - Selected Entities: Abi and Ahmed
+  - Results Found: 18 valid slots
+* **Result: PASS**
+  - **Technical Output**: `Diversity Pass complete | 11 items returned`
+  - The first result was on May 10th (best score).
+  - Other slots on May 10th were penalized, allowing valid slots from May 8th and May 9th to rise into the "Alternatives" list.
+  - The UI successfully displays a mix of morning, afternoon, and different days.
+
+### Test Case 6: Peak Time Optimization (2-6 PM)
+* **Objective**: Verify that slots in the highly desirable 2-6 PM window outrank earlier or later slots if all other factors are equal.
+* **Result: PASS**
+  - **Technical Output**: `Breakdown: { peak_time: 100 }`
+  - Afternoon slots showed a significant score boost, often becoming the "Best Option" even if slightly later in the week than a morning slot.
 
 ---
 
-## Resolved Bug Log
-During the evaluation phase, the following core issues were identified and permanently resolved:
-
-1. **Empty Result Frontend Crashes**: Mitigated a React crash (`null.score`) triggered when the planner returned no valid combinations. Implemented a robust `hasOptions` guard to render a fallback error state smoothly.
-2. **"Late Night" Temporal Starvation**: Identified that default "Today" constraint generation windows caused 0-result returns when executed late at night, as the remaining time until midnight was shorter than the default 1.5-hour duration constraint. Default planning logic was augmented to automatically span a minimum of 48 hours.
-3. **JS Numeric Parsing Faults**: Purged node-version-specific numeric separators (`60_000`) in candidate generators that could trigger intermittent startup syntax failures.
+## UI Verification: Expanded Report Accuracy
+* **Insight**: Fixed a regression where the frontend miscalculated end times using target duration.
+* **Fix**: The backend now provides an explicit `endTime` string calculated from the absolute temporal boundaries of the selected candidate.

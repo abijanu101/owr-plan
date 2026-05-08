@@ -365,6 +365,21 @@ export default function BlockVisualization() {
         setOffsetSlots(prev => prev + dir);
     };
 
+    const handleArrangePlan = async () => {
+        if (selectedEntities.length === 0) return;
+        
+        const constraints = [
+            {
+                type: 'be between',
+                modifier: 'can',
+                parameter: customRange,
+                isGlobal: true
+            }
+        ];
+
+        navigate('/results', { state: { constraints, entities: selectedEntities } });
+    };
+
     return (
         <div className="bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 md:pt-0 relative min-h-screen overflow-x-hidden">
             <div className="max-w-5xl mx-auto pt-8 sm:pt-12 flex flex-col gap-8">
@@ -464,7 +479,10 @@ export default function BlockVisualization() {
 
                         {/* Arrange Plan Button */}
                         <div className="flex justify-end mt-12">
-                            <button className="bg-[#f97766] hover:bg-[#e86655] text-[#200412] px-8 py-3 rounded-full text-sm font-bold tracking-wide transition-colors shadow-lg">
+                            <button 
+                                onClick={handleArrangePlan}
+                                className="bg-[#f97766] hover:bg-[#e86655] text-[#200412] px-8 py-3 rounded-full text-sm font-bold tracking-wide transition-colors shadow-lg cursor-pointer"
+                            >
                                 Arrange plan
                             </button>
                         </div>

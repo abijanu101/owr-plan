@@ -324,9 +324,11 @@ const getActivitiesByEntityID = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
+    const transformed = activities.map(transformActivity);
+
     res.status(200).json({
       success: true,
-      data: activities
+      data: transformed
     });
   } catch (err) {
     console.error('getActivitiesByEntityID error:', err);

@@ -1,3 +1,5 @@
+import { normalizeDates } from '../utils/dateUtils';
+
 const normalize = (data) => {
     if (Array.isArray(data)) {
         return data.map(e => ({ ...e, id: e._id || e.id }));
@@ -6,6 +8,18 @@ const normalize = (data) => {
         return { ...data, id: data._id || data.id };
     }
     return data;
+};
+
+export const getEntity = async (id) => {
+    try {
+        const res = await fetch(`/api/entities/${id}`, { credentials: 'include' });
+        if (!res.ok) throw new Error('Entity not found');
+        const data = await res.json();
+        return normalize(data);
+    } catch (err) {
+        console.error('Failed to get entity:', err);
+        throw err;
+    }
 };
 
 export const listEntities = async (kind) => {
@@ -22,10 +36,11 @@ export const listEntities = async (kind) => {
 
 export const updateEntity = async (id, data) => {
     try {
+        const normalized = normalizeDates(data);
         const res = await fetch(`/api/entities/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: JSON.stringify(normalized),
             credentials: 'include'
         });
         const result = await res.json();
@@ -52,10 +67,11 @@ export const deleteEntities = async (ids) => {
 
 export const createEntity = async (data) => {
     try {
+        const normalized = normalizeDates(data);
         const res = await fetch('/api/entities', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
+            body: JSON.stringify(normalized),
             credentials: 'include'
         });
         const result = await res.json();

@@ -35,20 +35,20 @@ async function seed(skipConnection = false) {
 
     // ---------------- ENTITIES ----------------
     const personsData = [
-      { name: 'Ahmed', type: 'person', color: '#5E5AB2', faceIcon: 'face/happy.svg' },
-      { name: 'Alizeh', type: 'person', color: '#B23B3B', faceIcon: 'face/sassy.svg' },
-      { name: 'Zoha', type: 'person', color: '#488845', faceIcon: 'face/happy.svg' },
-      { name: 'Abi', type: 'person', color: '#1B7A7A', faceIcon: 'face/naughty.svg' },
-      { name: 'Ansa', type: 'person', color: '#911B7D', faceIcon: 'face/happy.svg' },
-      { name: 'Haleema', type: 'person', color: '#F39C12', faceIcon: 'face/happy.svg' }
+      { name: 'Ahmed', type: 'person', color: '#4F46E5', faceIcon: 'face/happy.svg' },   // Indigo/Blue
+      { name: 'Alizeh', type: 'person', color: '#E11D48', faceIcon: 'face/sassy.svg' },   // Rose
+      { name: 'Zoha', type: 'person', color: '#10B981', faceIcon: 'face/happy.svg' },   // Emerald
+      { name: 'Abi', type: 'person', color: '#F59E0B', faceIcon: 'face/naughty.svg' }, // Amber
+      { name: 'Ansa', type: 'person', color: '#A855F7', faceIcon: 'face/happy.svg' },   // Purple
+      { name: 'Haleema', type: 'person', color: '#06B6D4', faceIcon: 'face/happy.svg' }    // Cyan
     ];
 
     const groupsData = [
-      { name: 'Section G', type: 'group', color: '#1B5491' },
-      { name: 'AML-6A', type: 'group', color: '#B29B3B' },
-      { name: 'owrplan gng', type: 'group', color: '#5E5AB2' },
-      { name: 'Design Team', type: 'group', color: '#16A085' },
-      { name: 'Social Committee', type: 'group', color: '#E67E22' }
+      { name: 'Section G', type: 'group', color: '#3B82F6' }, // Blue
+      { name: 'AML-6A', type: 'group', color: '#F97316' }, // Orange
+      { name: 'owrplan gng', type: 'group', color: '#EC4899' }, // Pink
+      { name: 'Design Team', type: 'group', color: '#84CC16' }, // Lime
+      { name: 'Social Committee', type: 'group', color: '#64748B' }  // Slate
     ];
 
     const entities = {};
@@ -120,53 +120,207 @@ async function seed(skipConnection = false) {
     const day = 24 * 60 * 60 * 1000;
 
     const activitiesData = [
-      // NON-RECURRING
-      {
-        title: 'Project Kickoff Meeting',
-        activityType: 'non-recurring',
-        participants: [
-          entities['Ahmed']._id,
-          entities['Alizeh']._id,
-          entities['Zoha']._id
-        ],
-        rangeStart: new Date(now + 2 * day),
-        rangeEnd: new Date(now + 2 * day + 90 * 60 * 1000),
-      },
-
-      {
-        title: 'Doctor Appointment',
-        activityType: 'non-recurring',
-        participants: [entities['Abi']._id],
-        rangeStart: new Date(now + 3 * day),
-        rangeEnd: new Date(now + 3 * day + 60 * 60 * 1000),
-      },
-
-      // RECURRING
+      // --- RECURRING ACTIVITIES ---
       {
         title: 'Daily Standup',
         activityType: 'recurring',
-        participants: [
-          entities['Ahmed']._id,
-          entities['Zoha']._id,
-          entities['Abi']._id
-        ],
+        participants: [entities['Ahmed']._id, entities['Zoha']._id, entities['Abi']._id],
         recurringStartTime: '09:30 AM',
         recurringEndTime: '10:00 AM',
         everyUnit: 'Day',
       },
-
       {
-        title: 'Late Night Dev Session',
+        title: 'Morning Gym',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id],
+        recurringStartTime: '06:30 AM',
+        recurringEndTime: '08:00 AM',
+        everyUnit: 'Day',
+      },
+      {
+        title: 'Work (9-5) Monday',
+        activityType: 'recurring',
+        participants: [entities['Ansa']._id, entities['Alizeh']._id],
+        recurringStartTime: '09:00 AM',
+        recurringEndTime: '05:00 PM',
+        recurringDay: 'Monday',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Work (9-5) Tuesday',
+        activityType: 'recurring',
+        participants: [entities['Ansa']._id, entities['Alizeh']._id],
+        recurringStartTime: '09:00 AM',
+        recurringEndTime: '05:00 PM',
+        recurringDay: 'Tuesday',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Work (9-5) Wednesday',
+        activityType: 'recurring',
+        participants: [entities['Ansa']._id, entities['Alizeh']._id],
+        recurringStartTime: '09:00 AM',
+        recurringEndTime: '05:00 PM',
+        recurringDay: 'Wednesday',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Work (9-5) Thursday',
+        activityType: 'recurring',
+        participants: [entities['Ansa']._id, entities['Alizeh']._id],
+        recurringStartTime: '09:00 AM',
+        recurringEndTime: '05:00 PM',
+        recurringDay: 'Thursday',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Work (9-5) Friday',
+        activityType: 'recurring',
+        participants: [entities['Ansa']._id, entities['Alizeh']._id],
+        recurringStartTime: '09:00 AM',
+        recurringEndTime: '05:00 PM',
+        recurringDay: 'Friday',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Yoga Class (Wed)',
+        activityType: 'recurring',
+        participants: [entities['Haleema']._id, entities['Alizeh']._id],
+        recurringDay: 'Wednesday',
+        recurringStartTime: '05:30 PM',
+        recurringEndTime: '06:30 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Yoga Class (Fri)',
+        activityType: 'recurring',
+        participants: [entities['Haleema']._id, entities['Alizeh']._id],
+        recurringDay: 'Friday',
+        recurringStartTime: '05:30 PM',
+        recurringEndTime: '06:30 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Design Team Sync',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id, entities['Alizeh']._id, entities['Zoha']._id],
+        recurringDay: 'Monday',
+        recurringStartTime: '02:00 PM',
+        recurringEndTime: '03:30 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Game Night',
         activityType: 'recurring',
         participants: [
           entities['Ahmed']._id,
-          entities['Zoha']._id
+          entities['Alizeh']._id,
+          entities['Zoha']._id,
+          entities['Abi']._id,
+          entities['Haleema']._id
         ],
+        recurringDay: 'Saturday',
+        recurringStartTime: '08:00 PM',
+        recurringEndTime: '11:59 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Late Night Dev Session',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id, entities['Zoha']._id],
         recurringDay: 'Friday',
         recurringStartTime: '10:00 PM',
         recurringEndTime: '01:00 AM',
-        everyInterval: 1,
         everyUnit: 'Week',
+      },
+      {
+        title: 'Guitar Practice',
+        activityType: 'recurring',
+        participants: [entities['Abi']._id],
+        recurringStartTime: '07:00 PM',
+        recurringEndTime: '08:00 PM',
+        everyUnit: 'Day',
+      },
+      {
+        title: 'Meditation',
+        activityType: 'recurring',
+        participants: [entities['Haleema']._id],
+        recurringStartTime: '05:00 AM',
+        recurringEndTime: '05:30 AM',
+        everyUnit: 'Day',
+      },
+      {
+        title: 'University Classes (Mon)',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id],
+        recurringDay: 'Monday',
+        recurringStartTime: '11:00 AM',
+        recurringEndTime: '01:00 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'University Classes (Wed)',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id],
+        recurringDay: 'Wednesday',
+        recurringStartTime: '11:00 AM',
+        recurringEndTime: '01:00 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'University Classes (Fri)',
+        activityType: 'recurring',
+        participants: [entities['Ahmed']._id],
+        recurringDay: 'Friday',
+        recurringStartTime: '11:00 AM',
+        recurringEndTime: '01:00 PM',
+        everyUnit: 'Week',
+      },
+      {
+        title: 'Weekly Groceries',
+        activityType: 'recurring',
+        participants: [entities['Abi']._id, entities['Ansa']._id],
+        recurringDay: 'Sunday',
+        recurringStartTime: '10:00 AM',
+        recurringEndTime: '12:00 PM',
+        everyUnit: 'Week',
+      },
+
+      // --- NON-RECURRING ACTIVITIES ---
+      {
+        title: 'Project Kickoff Meeting',
+        activityType: 'non-recurring',
+        participants: [entities['Ahmed']._id, entities['Alizeh']._id, entities['Zoha']._id],
+        rangeStart: new Date(now + 1 * day),
+        rangeEnd: new Date(now + 1 * day + 90 * 60 * 1000),
+      },
+      {
+        title: 'Doctor Appointment',
+        activityType: 'non-recurring',
+        participants: [entities['Abi']._id],
+        rangeStart: new Date(now + 2 * day + 14 * 60 * 60 * 1000),
+        rangeEnd: new Date(now + 2 * day + 15 * 60 * 60 * 1000),
+      },
+      {
+        title: 'Client Review',
+        activityType: 'non-recurring',
+        participants: [entities['Zoha']._id],
+        rangeStart: new Date(now + 5 * day + 10 * 60 * 60 * 1000),
+        rangeEnd: new Date(now + 5 * day + 11 * 60 * 60 * 1000),
+      },
+      {
+        title: 'Car Service',
+        activityType: 'non-recurring',
+        participants: [entities['Ahmed']._id],
+        rangeStart: new Date(now + 4 * day + 8 * 60 * 60 * 1000),
+        rangeEnd: new Date(now + 4 * day + 12 * 60 * 60 * 1000),
+      },
+      {
+        title: 'Dinner with Parents',
+        activityType: 'non-recurring',
+        participants: [entities['Ansa']._id],
+        rangeStart: new Date(now + 1 * day + 19 * 60 * 60 * 1000),
+        rangeEnd: new Date(now + 1 * day + 21 * 60 * 60 * 1000),
       }
     ];
 

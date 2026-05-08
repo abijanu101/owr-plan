@@ -27,12 +27,15 @@ function ParticipantChips({ participants, color }) {
   const rest  = participants.length - 3;
   return (
     <div className="flex flex-wrap gap-1.5 mt-3">
-      {shown.map((p, i) => (
-        <span key={i} className="text-[11px] font-semibold px-3 py-0.5 rounded-full border"
-          style={{ color, borderColor: `${color}50`, background: `${color}15` }}>
-          {p}
-        </span>
-      ))}
+      {shown.map((p, i) => {
+        const name = typeof p === 'object' ? (p.name || 'Unknown') : String(p);
+        return (
+          <span key={i} className="text-[11px] font-semibold px-3 py-0.5 rounded-full border"
+            style={{ color, borderColor: `${color}50`, background: `${color}15` }}>
+            {name}
+          </span>
+        );
+      })}
       {rest > 0 && (
         <span className="text-[11px] font-semibold px-3 py-0.5 rounded-full border"
           style={{ color, borderColor: `${color}50`, background: `${color}15` }}>
@@ -45,6 +48,15 @@ function ParticipantChips({ participants, color }) {
 
 // ─── Non-Recurring Card ───────────────────────────────────────────────────────
 function NonRecurringCard({ activity, color, onClick }) {
+  const start = activity.rangeStart ? new Date(activity.rangeStart) : null;
+  const end = activity.rangeEnd ? new Date(activity.rangeEnd) : null;
+
+  const fmtDate = (d) => d ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const fmtTime = (d) => d ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
+
+  const timeRange = start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : (activity.timeRange || '');
+  const dateLabel = start ? fmtDate(start) : (activity.dateLabel || '');
+
   return (
     <div onClick={onClick} className="entity-card cursor-pointer hover:scale-[1.01] transition-transform"
       style={{ borderColor: `${color}35`, borderRadius: 20, paddingLeft: 40 }}>
@@ -56,26 +68,26 @@ function NonRecurringCard({ activity, color, onClick }) {
         <div style={{ height: 2, background: `${color}25`, marginBottom: 10, borderRadius: 1 }} />
 
         {/* Time range */}
-        {activity.timeRange && (
+        {timeRange && (
           <div className="flex items-center gap-1.5 mb-2" style={{ color }}>
             <ClockIcon />
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-neutral)' }}>
-              {activity.timeRange}
+              {timeRange}
             </span>
           </div>
         )}
 
         {/* Date */}
-        {activity.dateLabel && (
+        {dateLabel && (
           <div className="flex items-center gap-1.5 mb-1" style={{ color }}>
             <CalendarIcon />
             <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {activity.dateLabel}
+              {dateLabel}
             </span>
           </div>
         )}
 
-        {!activity.timeRange && !activity.dateLabel && (
+        {!timeRange && !dateLabel && (
           <span style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>No date set</span>
         )}
 
@@ -89,6 +101,30 @@ function NonRecurringCard({ activity, color, onClick }) {
 
 // ─── Recurring Card ───────────────────────────────────────────────────────────
 function RecurringCard({ activity, color, onClick }) {
+  // Fallbacks for missing transformed fields
+  const timeRange = activity.timeRange || (
+    (activity.recurringStartTime || activity.recurringEndTime) 
+      ? `${activity.recurringStartTime || ''} – ${activity.recurringEndTime || ''}` 
+      : ''
+  );
+
+  const scheduleStr = activity.scheduleStr || (() => {
+    const interval = activity.everyInterval || 1;
+    const unit = activity.everyUnit || 'Week';
+    const plural = interval > 1 ? `${interval} ${unit}s` : unit;
+    const everyStr = `Every ${plural}`;
+    return activity.recurringDay ? `${everyStr} on ${activity.recurringDay}` : everyStr;
+  })();
+
+  const expiryStr = activity.expiryStr || (() => {
+    if (activity.expiryType === 'on_date' && activity.expiryDate) {
+      return `Until ${new Date(activity.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    } else if (activity.expiryType === 'after') {
+      return `After ${activity.expiryOccurrences} occurrence${activity.expiryOccurrences !== 1 ? 's' : ''}`;
+    }
+    return 'No expiry';
+  })();
+
   return (
     <div onClick={onClick} className="entity-card cursor-pointer hover:scale-[1.01] transition-transform"
       style={{ borderColor: `${color}35`, borderRadius: 20, paddingLeft: 40 }}>
@@ -106,28 +142,30 @@ function RecurringCard({ activity, color, onClick }) {
         <div style={{ height: 2, background: `${color}25`, marginBottom: 10, borderRadius: 1 }} />
 
         {/* Time window */}
-        {activity.timeRange && (
+        {timeRange && (
           <div className="flex items-center gap-1.5 mb-2" style={{ color }}>
             <ClockIcon />
             <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-neutral)' }}>
-              {activity.timeRange}
+              {timeRange}
             </span>
           </div>
         )}
 
         {/* Schedule */}
-        <div className="flex items-center gap-1.5 mb-1.5" style={{ color }}>
-          <RepeatIcon />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>
-            {activity.scheduleStr}
-          </span>
-        </div>
+        {scheduleStr && (
+          <div className="flex items-center gap-1.5 mb-1.5" style={{ color }}>
+            <RepeatIcon />
+            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)' }}>
+              {scheduleStr}
+            </span>
+          </div>
+        )}
 
         {/* Expiry */}
-        <div className="flex items-center gap-1.5" style={{ color: activity.expiryStr === 'No expiry' ? `${color}70` : '#f97766' }}>
+        <div className="flex items-center gap-1.5" style={{ color: expiryStr === 'No expiry' ? `${color}70` : '#f97766' }}>
           <ExpiryIcon />
-          <span style={{ fontSize: 11, fontWeight: 500, color: activity.expiryStr === 'No expiry' ? 'var(--text-muted)' : '#f97766' }}>
-            {activity.expiryStr}
+          <span style={{ fontSize: 11, fontWeight: 500, color: expiryStr === 'No expiry' ? 'var(--text-muted)' : '#f97766' }}>
+            {expiryStr}
           </span>
         </div>
 

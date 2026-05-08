@@ -392,7 +392,7 @@ export default function PlanResults() {
                                         <span className="text-[#f97766]/40 text-sm font-bold uppercase tracking-[0.2em]">{currentSelection.date}</span>
                                     </div>
                                     <h1 className="text-5xl sm:text-7xl text-[#f97766] font-normal leading-none" style={{ fontFamily: 'cursive' }}>
-                                        {currentSelection.time} - {calculateEndTime(currentSelection.time, currentSelection.duration)}
+                                        {currentSelection.time} - {currentSelection.endTime || calculateEndTime(currentSelection.time, currentSelection.duration)}
                                     </h1>
                                 </div>
 

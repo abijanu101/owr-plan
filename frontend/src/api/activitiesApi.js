@@ -1,3 +1,5 @@
+import { normalizeDates } from '../utils/dateUtils';
+
 const OPTS = { credentials: 'include' };
 
 export async function listActivities() {
@@ -22,11 +24,12 @@ export async function getActivity(id) {
 }
 
 export async function createActivity(data) {
+  const normalized = normalizeDates(data);
   const response = await fetch('/api/activities', {
     ...OPTS,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(normalized),
   });
   if (!response.ok) {
     const error = await response.json();
@@ -37,11 +40,12 @@ export async function createActivity(data) {
 }
 
 export async function updateActivity(id, data) {
+  const normalized = normalizeDates(data);
   const response = await fetch(`/api/activities/${id}`, {
     ...OPTS,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(normalized),
   });
   if (!response.ok) throw new Error('Failed to update activity');
   const result = await response.json();

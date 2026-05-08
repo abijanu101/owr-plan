@@ -8,6 +8,8 @@ import Modal from '../components/Modal';
 import ActivityCard from '../components/ActivityCard';
 import Button from '../components/UI/Button';
 import AllActivitiesModal from '../components/AllActivitiesModal';
+import { getActivitiesByEntity } from '../api/activitiesApi';
+import { listEntities, getEntity } from '../api/entitiesApi';
 const PREVIEW_COUNT = 2;
 
 // ─── CollapsibleSection ───────────────────────────────────────
@@ -34,61 +36,6 @@ function CollapsibleSection({ title, children, defaultOpen = true, action }) {
   );
 }
 
-// ─── transformActivity ────────────────────────────────────────
-// Mirror of the backend transformActivity — runs client-side on the raw
-// mongo docs returned by GET /api/activities/entity/:id  (that endpoint
-// does NOT call transformActivity before responding).
-function transformActivity(a) {
-  const type = a.activityType || 'non-recurring';
-
-  if (type === 'non-recurring') {
-    const start = a.rangeStart ? new Date(a.rangeStart) : null;
-    const end   = a.rangeEnd   ? new Date(a.rangeEnd)   : null;
-    const fmt     = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-    const fmtTime = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    return {
-      id:           String(a._id),
-      title:        a.title,
-      activityType: 'non-recurring',
-      rangeStart:   a.rangeStart,
-      rangeEnd:     a.rangeEnd,
-      timeRange:    start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : '',
-      dateLabel:    start ? fmt(start) : '',
-      participants: (a.participants || []).map(p => p.name || String(p)),
-      createdAt:    a.createdAt ? new Date(a.createdAt).getTime() : Date.now(),
-    };
-  }
-
-  // recurring
-  const interval    = a.everyInterval || 1;
-  const unit        = a.everyUnit || 'Week';
-  const plural      = interval > 1 ? `${interval} ${unit}s` : unit;
-  const everyStr    = `Every ${plural}`;
-  const scheduleStr = a.recurringDay ? `${everyStr} on ${a.recurringDay}` : everyStr;
-
-  let expiryStr = 'No expiry';
-  if (a.expiryType === 'on_date' && a.expiryDate) {
-    expiryStr = `Until ${new Date(a.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
-  } else if (a.expiryType === 'after') {
-    expiryStr = `After ${a.expiryOccurrences} occurrence${a.expiryOccurrences !== 1 ? 's' : ''}`;
-  }
-
-  return {
-    id:                 String(a._id),
-    title:              a.title,
-    activityType:       'recurring',
-    recurringStartTime: a.recurringStartTime,
-    recurringEndTime:   a.recurringEndTime,
-    everyInterval:      interval,
-    everyUnit:          unit,
-    recurringDay:       a.recurringDay,
-    scheduleStr,
-    expiryStr,
-    timeRange:          `${a.recurringStartTime || ''} – ${a.recurringEndTime || ''}`,
-    participants:       (a.participants || []).map(p => p.name || String(p)),
-    createdAt:          a.createdAt ? new Date(a.createdAt).getTime() : Date.now(),
-  };
-}
 
 // ─── sortByProximity ─────────────────────────────────────────
 // Returns a score (ms timestamp) representing how close this activity
@@ -107,10 +54,10 @@ function proximityScore(a) {
     const dayMap = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
     const target = dayMap[a.recurringDay];
     if (target !== undefined) {
-      const today   = new Date();
+      const today = new Date();
       const current = today.getDay();
-      const diff    = (target - current + 7) % 7;
-      const next    = new Date(today);
+      const diff = (target - current + 7) % 7;
+      const next = new Date(today);
       next.setDate(today.getDate() + diff);
       return Math.abs(next.getTime() - now);
     }
@@ -136,11 +83,8 @@ function ActivitiesSection({ activities, onSchedule }) {
   const isMobile = useIsMobile();
   const previewCount = 2;//isMobile ? 2 : 3;
 
-  // Step 1 — transform raw mongo docs into the shape ActivityCard expects
-  const transformed = useMemo(
-    () => activities.map(transformActivity),
-    [activities]
-  );
+  // Step 1 — No transformation needed, backend returns transformed data
+  const transformed = activities;
 
   // Step 2 — sort by proximity to now (closest first)
   const sorted = useMemo(
@@ -159,8 +103,8 @@ function ActivitiesSection({ activities, onSchedule }) {
         ) : (
           <>
             <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {preview.map(a => (
-                <ActivityCard key={a.id} activity={a} />
+              {preview.map((a, idx) => (
+                <ActivityCard key={a.id || idx} activity={a} />
               ))}
             </div>
 
@@ -204,8 +148,8 @@ function ActivitiesSection({ activities, onSchedule }) {
 
 // ─── MembersGroupsSection ─────────────────────────────────────
 function MembersGroupsSection({ entity, onRelationsChange }) {
-  const isGroup    = entity.type === 'group';
-  const listTitle  = isGroup ? 'Members' : 'Groups';
+  const isGroup = entity.type === 'group';
+  const listTitle = isGroup ? 'Members' : 'Groups';
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
 
   const selectedIds = useMemo(() => currentItems.map(i => String(i._id)), [currentItems]);
@@ -218,14 +162,14 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
 
   const handleChipClick = (itemId) => {
     const strId = String(itemId);
-    const next  = selectedIds.includes(strId)
+    const next = selectedIds.includes(strId)
       ? selectedIds.filter(id => id !== strId)
       : [...selectedIds, strId];
     handleOverlayToggle(next);
   };
 
   const previewItems = currentItems.slice(0, PREVIEW_COUNT);
-  const extraCount   = currentItems.length - PREVIEW_COUNT;
+  const extraCount = currentItems.length - PREVIEW_COUNT;
 
   return (
     <>
@@ -284,50 +228,33 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
 
 // ─── Main Component ───────────────────────────────────────────
 export default function EntityDetails() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [entity,      setEntity]      = useState(null);
-  const [activities,  setActivities]  = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [isEditOpen,  setIsEditOpen]  = useState(false);
+  const [entity, setEntity] = useState(null);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [allEntities, setAllEntities] = useState({});
 
   const fetchData = async () => {
     setLoading(true);
-    const token   = localStorage.getItem('token');
-    const headers = { Authorization: `Bearer ${token}` };
-
     try {
-      const [entityRes, activitiesRes, allEntitiesRes] = await Promise.all([
-        fetch(`/api/entities/${id}`,          { headers }),
-        fetch(`/api/activities/entity/${id}`, { headers }),
-        fetch(`/api/entities`,                { headers }),
+      const [entityData, rawActivities, allEntitiesArray] = await Promise.all([
+        getEntity(id),
+        getActivitiesByEntity(id),
+        listEntities('all'),
       ]);
-
-      if (!entityRes.ok) throw new Error('Entity not found');
-
-      const entityData       = await entityRes.json();
-      const activityPayload  = activitiesRes.ok  ? await activitiesRes.json()  : {};
-      const allEntitiesArray = allEntitiesRes.ok  ? await allEntitiesRes.json() : [];
-
-      // getActivitiesByEntityID returns { success, data: [...] }
-      // Guard against both shapes just in case
-      const rawActivities = Array.isArray(activityPayload)
-        ? activityPayload
-        : Array.isArray(activityPayload?.data)
-          ? activityPayload.data
-          : [];
 
       const normalizeEntity = (e) => ({
         ...e,
-        _id:         String(e._id),
-        type:        e.type || 'person',
-        face:        (e.faceIcon || e.face || 'face/happy.svg').replace(/^\/avatar\//, ''),
+        _id: String(e.id || e._id),
+        type: e.type || 'person',
+        face: (e.faceIcon || e.face || 'face/happy.svg').replace(/^\/avatar\//, ''),
         accessories: (e.accessories || []).map(a => typeof a === 'string' ? a.replace(/^\/avatar\//, '') : a),
-        color:       e.color || '#f97766',
+        color: e.color || '#f97766',
         members: (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
-        groups:  (e.groups  || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group'  })),
+        groups: (e.groups || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group' })),
       });
 
       const allEntitiesObj = {};
@@ -337,7 +264,7 @@ export default function EntityDetails() {
       });
 
       setEntity(normalizeEntity(entityData));
-      setActivities(rawActivities);          // raw mongo docs — transformed inside ActivitiesSection
+      setActivities(rawActivities);
       setAllEntities(allEntitiesObj);
     } catch (err) {
       console.error('Failed to load entity data:', err);
@@ -363,14 +290,14 @@ export default function EntityDetails() {
 
     setEntity(prev => ({ ...prev, [field]: updatedItems }));
 
-    const token   = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
       const res = await fetch(`/api/entities/${entity._id}`, {
-        method:  'PATCH',
+        method: 'PATCH',
         headers,
-        body:    JSON.stringify({ [field]: newIds }),
+        body: JSON.stringify({ [field]: newIds }),
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
     } catch (err) {
@@ -444,13 +371,13 @@ export default function EntityDetails() {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         editingEntity={{
-          _id:         entity._id,
-          name:        entity.name,
-          type:        entity.type,
-          face:        entity.face,
-          faceIcon:    entity.face,
+          _id: entity._id,
+          name: entity.name,
+          type: entity.type,
+          face: entity.face,
+          faceIcon: entity.face,
           accessories: entity.accessories || [],
-          color:       entity.color,
+          color: entity.color,
         }}
         onSuccess={handleSave}
       />

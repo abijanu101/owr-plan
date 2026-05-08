@@ -6,6 +6,7 @@ import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
+import { createActivity } from '../api/activitiesApi';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const FREQ_UNITS   = ['Day', 'Week'];
@@ -125,16 +126,14 @@ export default function CreateActivity() {
                 : { recurringStartTime, recurringEndTime, everyInterval, everyUnit,
                     recurringDay: everyUnit === 'Week' ? recurringDay : null,
                     expiryType, expiryDate: expiryDate?.date ?? expiryDate, expiryOccurrences };
-            const res = await fetch('/api/activities', {
-                method: 'POST', credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...common, ...extra }),
-            });
-            const data = await res.json();
-            if (data.success) navigate('/activities');
-            else setSubmitError(data.message || 'Failed to create activity.');
-        } catch { setSubmitError('Could not reach the server.'); }
-        finally { setIsSubmitting(false); }
+            
+            await createActivity({ ...common, ...extra });
+            navigate('/activities');
+        } catch (err) { 
+            setSubmitError(err.message || 'Could not reach the server.'); 
+        } finally { 
+            setIsSubmitting(false); 
+        }
     };
 
     return (

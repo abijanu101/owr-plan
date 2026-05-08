@@ -5,6 +5,7 @@ import DateTimePicker from '../components/Pickers/DateTimePicker';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
+import { getActivity, updateActivity } from '../api/activitiesApi';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const FREQ_UNITS   = ['Day', 'Week'];
@@ -107,28 +108,24 @@ export default function EditActivity() {
         const load = async () => {
             setLoading(true);
             try {
-                const res = await fetch(`/api/activities/${id}`, { credentials: 'include' });
-                const data = await res.json();
-                if (data.success) {
-                    const a = data.data.activity;
-                    setTitle(a.title);
-                    setSelectedEntityIds((a.participants || []).map(p => p._id || p));
-                    setActivityType(a.activityType || 'non-recurring');
+                const a = await getActivity(id);
+                setTitle(a.title);
+                setSelectedEntityIds((a.participants || []).map(p => p._id || p));
+                setActivityType(a.activityType || 'non-recurring');
 
-                    if (a.activityType === 'non-recurring') {
-                        if (a.rangeStart || a.rangeEnd) {
-                            setRange({ start: isoToPickerDT(a.rangeStart), end: isoToPickerDT(a.rangeEnd) });
-                        }
-                    } else {
-                        setRecurringStartTime(a.recurringStartTime || '08:00 AM');
-                        setRecurringEndTime(a.recurringEndTime   || '09:00 AM');
-                        setEveryInterval(a.everyInterval || 1);
-                        setEveryUnit(a.everyUnit || 'Week');
-                        setRecurringDay(a.recurringDay || 'Monday');
-                        setExpiryType(a.expiryType || 'never');
-                        setExpiryOccurrences(a.expiryOccurrences || 5);
-                        if (a.expiryDate) setExpiryDate(isoToPickerDT(a.expiryDate));
+                if (a.activityType === 'non-recurring') {
+                    if (a.rangeStart || a.rangeEnd) {
+                        setRange({ start: isoToPickerDT(a.rangeStart), end: isoToPickerDT(a.rangeEnd) });
                     }
+                } else {
+                    setRecurringStartTime(a.recurringStartTime || '08:00 AM');
+                    setRecurringEndTime(a.recurringEndTime   || '09:00 AM');
+                    setEveryInterval(a.everyInterval || 1);
+                    setEveryUnit(a.everyUnit || 'Week');
+                    setRecurringDay(a.recurringDay || 'Monday');
+                    setExpiryType(a.expiryType || 'never');
+                    setExpiryOccurrences(a.expiryOccurrences || 5);
+                    if (a.expiryDate) setExpiryDate(isoToPickerDT(a.expiryDate));
                 }
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
@@ -149,14 +146,14 @@ export default function EditActivity() {
                 : { recurringStartTime, recurringEndTime, everyInterval, everyUnit,
                     recurringDay: everyUnit === 'Week' ? recurringDay : null,
                     expiryType, expiryDate: expiryDate?.date ?? expiryDate, expiryOccurrences };
-            const res = await fetch(`/api/activities/${id}`, {
-                method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                credentials: 'include', body: JSON.stringify({ ...common, ...extra }),
-            });
-            const data = await res.json();
-            if (data.success) { setSaveState('saved'); setTimeout(() => navigate('/activities'), 1500); }
-            else { setSaveState('error'); setSaveError(data.message || 'Failed to save.'); }
-        } catch { setSaveState('error'); setSaveError('Could not reach the server.'); }
+            
+            await updateActivity(id, { ...common, ...extra });
+            setSaveState('saved'); 
+            setTimeout(() => navigate('/activities'), 1500);
+        } catch (err) { 
+            setSaveState('error'); 
+            setSaveError(err.message || 'Could not reach the server.'); 
+        }
     };
 
     if (loading) return (
