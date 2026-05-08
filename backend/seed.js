@@ -148,11 +148,9 @@ async function seed() {
           entities['Zoha']._id,
           entities['Abi']._id
         ],
-        recurringDay: 'Monday',
         recurringStartTime: '09:30 AM',
         recurringEndTime: '10:00 AM',
-        everyInterval: 1,
-        everyUnit: 'Week',
+        everyUnit: 'Day',
       },
 
       {
