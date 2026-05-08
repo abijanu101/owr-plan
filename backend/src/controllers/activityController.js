@@ -22,7 +22,7 @@ const transformActivity = (activity) => {
   // ── Non-recurring ───────────────────────────────────────────────────────
   if (type === 'non-recurring') {
     const start = activity.rangeStart ? new Date(activity.rangeStart) : null;
-    const end   = activity.rangeEnd   ? new Date(activity.rangeEnd)   : null;
+    const end = activity.rangeEnd ? new Date(activity.rangeEnd) : null;
     const fmt = (d) => d ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) : '?';
     const fmtTime = (d) => d ? d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
     return {
@@ -30,7 +30,7 @@ const transformActivity = (activity) => {
       title: activity.title,
       activityType: 'non-recurring',
       rangeStart: activity.rangeStart,
-      rangeEnd:   activity.rangeEnd,
+      rangeEnd: activity.rangeEnd,
       timeRange: start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : '',
       dateLabel: start ? fmt(start) : '',
       participants: activity.participants?.map(p => p.name || p.toString()) || [],
@@ -39,10 +39,10 @@ const transformActivity = (activity) => {
   }
 
   // ── Recurring ────────────────────────────────────────────────────────────
-  const interval  = activity.everyInterval || 1;
-  const unit      = activity.everyUnit || 'Week';
-  const plural    = interval > 1 ? `${interval} ${unit}s` : unit;
-  const everyStr  = `Every ${plural}`;
+  const interval = activity.everyInterval || 1;
+  const unit = activity.everyUnit || 'Week';
+  const plural = interval > 1 ? `${interval} ${unit}s` : unit;
+  const everyStr = `Every ${plural}`;
 
   const day = activity.recurringDay;
   const scheduleStr = day ? `${everyStr} on ${day}` : everyStr;
@@ -59,10 +59,10 @@ const transformActivity = (activity) => {
     title: activity.title,
     activityType: 'recurring',
     recurringStartTime: activity.recurringStartTime,
-    recurringEndTime:   activity.recurringEndTime,
-    everyInterval:  interval,
-    everyUnit:      unit,
-    recurringDay:   day,
+    recurringEndTime: activity.recurringEndTime,
+    everyInterval: interval,
+    everyUnit: unit,
+    recurringDay: day,
     scheduleStr,
     expiryStr,
     timeRange: `${activity.recurringStartTime || ''} – ${activity.recurringEndTime || ''}`,
@@ -98,17 +98,17 @@ const createActivity = async (req, res) => {
       activityType: type,
       // non-recurring
       rangeStart: type === 'non-recurring' ? rangeStart : undefined,
-      rangeEnd:   type === 'non-recurring' ? rangeEnd   : undefined,
+      rangeEnd: type === 'non-recurring' ? rangeEnd : undefined,
       // recurring
       recurringStartTime: type === 'recurring' ? (recurringStartTime || '08:00 AM') : undefined,
-      recurringEndTime:   type === 'recurring' ? (recurringEndTime   || '09:00 AM') : undefined,
-      everyInterval:      type === 'recurring' ? (everyInterval || 1)   : undefined,
-      everyUnit:          type === 'recurring' ? (everyUnit || 'Week')   : undefined,
-      recurringDay:       type === 'recurring' ? (recurringDay || null)  : undefined,
-      recurringStartDate: type === 'recurring' ? recurringStartDate      : undefined,
-      expiryType:         type === 'recurring' ? (expiryType || 'never') : undefined,
-      expiryDate:         type === 'recurring' ? expiryDate              : undefined,
-      expiryOccurrences:  type === 'recurring' ? (expiryOccurrences || 1): undefined,
+      recurringEndTime: type === 'recurring' ? (recurringEndTime || '09:00 AM') : undefined,
+      everyInterval: type === 'recurring' ? (everyInterval || 1) : undefined,
+      everyUnit: type === 'recurring' ? (everyUnit || 'Week') : undefined,
+      recurringDay: type === 'recurring' ? (recurringDay || null) : undefined,
+      recurringStartDate: type === 'recurring' ? recurringStartDate : undefined,
+      expiryType: type === 'recurring' ? (expiryType || 'never') : undefined,
+      expiryDate: type === 'recurring' ? expiryDate : undefined,
+      expiryOccurrences: type === 'recurring' ? (expiryOccurrences || 1) : undefined,
     });
 
     await activity.save();
@@ -175,7 +175,7 @@ Rules:
       model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user',   content: rawText.trim() }
+        { role: 'user', content: rawText.trim() }
       ],
       temperature: 0,
       max_tokens: 1024,
@@ -199,16 +199,16 @@ Rules:
     }
 
     // Validate/sanitise each slot
-    const VALID_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const TIME_RE = /^\d{1,2}:\d{2} (AM|PM)$/;
 
     const sanitised = parsed
       .filter(s => s && typeof s === 'object')
       .map(s => ({
-        day:       VALID_DAYS.includes(s.day) ? s.day : null,
+        day: VALID_DAYS.includes(s.day) ? s.day : null,
         startTime: TIME_RE.test(s.startTime) ? s.startTime : null,
-        endTime:   TIME_RE.test(s.endTime)   ? s.endTime   : null,
-        label:     typeof s.label === 'string' ? s.label.trim() : '',
+        endTime: TIME_RE.test(s.endTime) ? s.endTime : null,
+        label: typeof s.label === 'string' ? s.label.trim() : '',
       }))
       .filter(s => s.day && s.startTime && s.endTime);
 
@@ -281,7 +281,10 @@ const getBestTimeSlots = async (req, res) => {
 const getActivitiesByEntityID = async (req, res) => {
   try {
     const { entityId } = req.params;
-    
+    // // Find activities where participants array contains the entityId
+    // const activities = await Activity.find({
+    //   participants: entityId
+
     // Check if the entity exists and what type it is
     const entity = await Entity.findById(entityId);
     if (!entity) {
@@ -299,7 +302,7 @@ const getActivitiesByEntityID = async (req, res) => {
       }).select('_id');
 
       let groupIds = associatedGroups.map(g => g._id.toString());
-      
+
       // Also include groups explicitly listed in the person's 'groups' array just in case
       if (entity.groups && entity.groups.length > 0) {
         groupIds = groupIds.concat(entity.groups.map(g => g.toString()));
@@ -310,12 +313,12 @@ const getActivitiesByEntityID = async (req, res) => {
     }
 
     // Find activities where participants array contains any of the participantIds
-    const activities = await Activity.find({ 
-      participants: { $in: participantIds } 
+    const activities = await Activity.find({
+      participants: { $in: participantIds }
     })
-    .populate('participants', 'name type color faceIcon')
-    .sort({ createdAt: -1 })
-    .lean();
+      .populate('participants', 'name type color faceIcon')
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -323,9 +326,9 @@ const getActivitiesByEntityID = async (req, res) => {
     });
   } catch (err) {
     console.error('getActivitiesByEntityID error:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch activities for this entity' 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch activities for this entity'
     });
   }
 };
@@ -340,8 +343,8 @@ const listActivities = async (req, res) => {
 
     const transformed = activities.map(transformActivity);
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       data: transformed
     });
   } catch (err) {
@@ -393,10 +396,10 @@ const duplicateActivities = async (req, res) => {
     });
 
     const created = await Activity.insertMany(duplicates);
-    
+
     // Populate participants so transformActivity gets names
     const populated = await Activity.find({ _id: { $in: created.map(c => c._id) } }).populate('participants', 'name icon color').lean();
-    
+
     const transformed = populated.map(transformActivity);
 
     res.status(201).json({ success: true, data: transformed });
@@ -421,3 +424,4 @@ module.exports = {
   bulkDeleteActivities,
   duplicateActivities,
 };
+
