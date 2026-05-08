@@ -34,13 +34,13 @@ export const PlanProvider = ({ children }) => {
             modifier: 'can',
             type: 'be between',
             parameter: {
-                start: { 
-                    date: new Date(), 
-                    time: '08:00 AM' 
+                start: {
+                    date: new Date(),
+                    time: '08:00 AM'
                 },
-                end: { 
-                    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), 
-                    time: '11:59 PM' 
+                end: {
+                    date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+                    time: '11:59 PM'
                 },
             },
             isSystem: true,
@@ -88,7 +88,7 @@ export const PlanProvider = ({ children }) => {
             } else {
                 localStorage.removeItem('plan_results');
             }
-        } catch {}
+        } catch { }
     };
 
     const showToast = (message, type = 'info') => {
@@ -97,7 +97,7 @@ export const PlanProvider = ({ children }) => {
 
     const setConstraints = (update) => {
         let needsToast = false;
-        
+
         setConstraintsInternal(prev => {
             let next = typeof update === 'function' ? update(prev) : update;
 

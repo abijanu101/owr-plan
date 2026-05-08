@@ -10,7 +10,7 @@ export const CONSTRAINT_SCHEMA = {
         category: 'Placement',
         allowedModifiers: MODIFIERS.PLACEMENT,   // can / can not only
         parameterType: 'DateTimeRangePicker',
-        label: 'Date Range',
+        label: 'Date-Time Range',
     },
     'be on': {
         category: 'Placement',

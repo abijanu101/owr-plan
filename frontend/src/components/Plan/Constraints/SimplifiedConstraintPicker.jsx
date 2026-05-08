@@ -5,7 +5,7 @@ import { usePlan } from '../../../context/PlanContext';
 
 export default function SimplifiedConstraintPicker() {
     const { getSimplifiedConstraintParameter, updateSimplifiedConstraint } = usePlan();
-    
+
     const duration = getSimplifiedConstraintParameter('last for') || { hours: 1, minutes: 30 };
     const range = getSimplifiedConstraintParameter('be between') || {
         start: { date: new Date(2026, 3, 29), time: "08:00 AM" },

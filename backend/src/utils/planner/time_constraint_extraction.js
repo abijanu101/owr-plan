@@ -33,9 +33,9 @@ const extract_time_constraints = (constraints = []) => {
     };
 
     if (!Array.isArray(constraints)) return time_constraints;
-    
+
     const flat_constraints = flatten_constraints(constraints);
-    
+
     for (const constraint of flat_constraints) {
         const type = constraint.key || constraint.type;
         const modifier = constraint.modifier;
@@ -121,14 +121,8 @@ const derive_global_range = (bucket) => {
 };
 
 const combine_date_time = (date, time_str) => {
-    // We must be careful: 'new Date(isoString)' can roll back the day if the 
-    // user is in a positive timezone (e.g. May 11 04:00 AM is May 10 23:00 UTC).
-    const source = new Date(date);
-    
-    // Create a fresh date using the components that represent the user's intended day
-    const d = new Date(source.getFullYear(), source.getMonth(), source.getDate());
-    
-    if (!time_str) { d.setHours(0,0,0,0); return d; }
+    const d = new Date(date);
+    if (!time_str) { d.setHours(0, 0, 0, 0); return d; }
     const [time, mod] = time_str.split(' ');
     let [h, m] = time.split(':').map(Number);
     if (mod === 'PM' && h < 12) h += 12;

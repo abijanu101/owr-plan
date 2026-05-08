@@ -79,12 +79,11 @@ function AppContent() {
                         <Route path='/activities/create' element={<CreateActivity />} />
                         <Route path='/activities/:id' element={<EditActivity />} />
 
-                        <Route path='/visualize' element={<BlockVisualization />} />
-
                         <Route element={<PlanProvider />}>
                             <Route path='/plan' element={<Plan />} />
                             <Route path='/plan/constraints' element={<StructuredPlan />} />
                             <Route path='/plan/results' element={<PlanResults />} />
+                            <Route path='/visualize' element={<BlockVisualization />} />
                         </Route>
 
                         <Route path='/ledgers' element={<Ledger />} />

@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 import { listEntities } from '../api/entitiesApi';
+import { generatePlan } from '../api/planApi';
 import { getActivitiesByEntity } from '../api/activitiesApi';
+import { usePlan } from '../context/PlanContext';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 
 // --- REMOVED DUMMY DATA ---
@@ -330,10 +332,46 @@ export default function BlockVisualization() {
     const [offsetSlots, setOffsetSlots] = useState(initOffsetSlots());
     const [isLoading, setIsLoading] = useState(true);
 
-    const [isCustomRange, setIsCustomRange] = useState(false);
-    const [customRange, setCustomRange] = useState({
-        start: { date: new Date(), time: "08:00 AM" },
-        end: { date: new Date(), time: "08:00 PM" }
+    const [isCustomRange, setIsCustomRange] = useState(!!initialState.baseDate);
+    const [customRange, setCustomRange] = useState(() => {
+        if (!initialState.baseDate) {
+            return {
+                start: { date: new Date(), time: "08:00 AM" },
+                end: { date: new Date(), time: "11:59 PM" }
+            };
+        }
+
+        const baseDate = new Date(initialState.baseDate);
+        const durationHours = parseFloat(initialState.durationStr) || 1.5;
+        const paddingHours = durationHours * 3; // 300% padding
+
+        // Helper to adjust time with padding
+        const adjustTime = (timeStr, offsetHours) => {
+            let t = timeStr.trim();
+            if (!t.includes('AM') && !t.includes('PM')) t += ' AM';
+            let [timePart, period] = t.split(' ');
+            let [h, m] = timePart.split(':').map(Number);
+            if (period === 'PM' && h < 12) h += 12;
+            if (period === 'AM' && h === 12) h = 0;
+            
+            const d = new Date(baseDate);
+            d.setHours(h, m + (offsetHours * 60));
+            
+            let nh = d.getHours();
+            const nm = d.getMinutes();
+            const np = nh >= 12 ? 'PM' : 'AM';
+            const displayH = nh % 12 || 12;
+            
+            return {
+                date: new Date(d.getFullYear(), d.getMonth(), d.getDate()),
+                time: `${displayH.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')} ${np}`
+            };
+        };
+
+        return {
+            start: adjustTime(initialState.baseTime || "08:00 AM", -paddingHours),
+            end: adjustTime(initialState.baseTime || "08:00 AM", durationHours + paddingHours)
+        };
     });
 
     // Fetch all entities to have metadata available
@@ -365,20 +403,65 @@ export default function BlockVisualization() {
         setOffsetSlots(prev => prev + dir);
     };
 
+    const { setResults, setIsGenerating, setConstraints } = usePlan();
+
     const handleArrangePlan = async () => {
         if (selectedEntities.length === 0) return;
         
-        const constraints = [
+        const newConstraints = [
             {
+                id: Date.now(),
                 type: 'be between',
                 modifier: 'can',
                 parameter: customRange,
                 isGlobal: true
+            },
+            {
+                id: Date.now() + 1,
+                type: 'include',
+                modifier: 'must',
+                parameter: selectedEntities,
+                isGlobal: true
             }
         ];
 
-        navigate('/results', { state: { constraints, entities: selectedEntities } });
+        setConstraints(prev => {
+            const system = prev.filter(c => c.isSystem);
+            return [...system, ...newConstraints];
+        });
+
+        setIsGenerating(true);
+        navigate('/plan/results');
+
+        try {
+            const results = await generatePlan(newConstraints);
+            setResults(results);
+        } catch (error) {
+            console.error('Arrange plan failed:', error);
+        } finally {
+            setIsGenerating(false);
+        }
     };
+
+    function calculateEndTime(startTime, durationStr) {
+        if (!startTime || !durationStr) return "11:59 PM";
+        const durationHours = parseFloat(durationStr) || 1.5;
+        let t = startTime.trim();
+        if (!t.includes('AM') && !t.includes('PM')) t += ' AM';
+        let [time, period] = t.split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (period === 'PM' && h < 12) h += 12;
+        if (period === 'AM' && h === 12) h = 0;
+        
+        const d = new Date();
+        d.setHours(h, m + (durationHours * 60));
+        
+        let nh = d.getHours();
+        const nm = d.getMinutes();
+        const np = nh >= 12 ? 'PM' : 'AM';
+        nh = nh % 12 || 12;
+        return `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')} ${np}`;
+    }
 
     return (
         <div className="bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 md:pt-0 relative min-h-screen overflow-x-hidden">
