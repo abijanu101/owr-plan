@@ -101,6 +101,17 @@ const getEntitiesByUser = async (req, res) => {
     res.status(500).json({ message: "Error fetching entities" });
   }
 };
+// const getEntitiesByUser = async (req, res) => {
+//   try {
+//     const entities = await Entity.find({ userId: req.user._id })
+//       .populate('members', 'name color')   // populate members with name+color
+//       .populate('groups', 'name color')    // populate groups with name+color
+//       .sort({ createdAt: -1 });
+//     res.json(entities);
+//   } catch (err) {
+//     res.status(500).json({ message: "Error fetching entities" });
+//   }
+// };
 
 const deleteEntity = async (req, res) => {
   res.status(200).json({

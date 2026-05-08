@@ -109,7 +109,7 @@ function MembersGroupsSection({ entity, allEntitiesObj, onRelationsChange }) {
   const isGroup = entity.type === 'group';
   const listTitle = isGroup ? 'Members' : 'Groups';
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
-  const selectedIds = currentItems.map(i => i._id);
+  const selectedIds = currentItems.map(i => String(i._id));
   const [overlayOpen, setOverlayOpen] = useState(false);
 
   
@@ -118,11 +118,11 @@ function MembersGroupsSection({ entity, allEntitiesObj, onRelationsChange }) {
     return Object.values(allEntitiesObj)
       .filter(e => e.type === targetType)
       .map(e => ({
-        id: e._id,
+        id: String(e._id),
         name: e.name,
-        color: e.color,
+        color: e.color || '#f97766',
         type: e.type,
-        members: (e.members || []).map(m => m._id),
+        members: (e.members || []).map(m => String(m._id || m)),
       }));
 
   }, [allEntitiesObj, isGroup]);
@@ -134,8 +134,9 @@ function MembersGroupsSection({ entity, allEntitiesObj, onRelationsChange }) {
     if (!onRelationsChange) return;
     const updatedItems = newIds
       .map(id => {
-        const found = allEntitiesObj[id];
-        return found ? { _id: found._id, name: found.name, color: found.color } : null;
+        // allEntitiesObj is keyed by string _id
+        const found = allEntitiesObj[String(id)];
+        return found ? { _id: String(found._id), name: found.name, color: found.color } : null;
       })
       .filter(Boolean);
     onRelationsChange(isGroup ? 'members' : 'groups', updatedItems);
@@ -236,12 +237,29 @@ export default function EntityDetails() {
         color: entityData.color,
         face: (entityData.faceIcon || 'face/happy.svg').replace(/^\/avatar\//, ''),
         accessories: (entityData.accessories || []).map(a => typeof a === 'string' ? a.replace(/^\/avatar\//, '') : a),
-        members: (entityData.members || []).map(m => ({ _id: m._id, name: m.name, color: m.color })),
-        groups: (entityData.groups || []).map(g => ({ _id: g._id, name: g.name, color: g.color })),
+        members: (entityData.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766' })),
+        groups:  (entityData.groups  || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766' })),
       };
 
       const allEntitiesObjTemp = {};
-      allEntitiesArray.forEach(e => { allEntitiesObjTemp[e._id] = e; });
+      allEntitiesArray.forEach(e => {
+        const normalized = {
+          ...e,
+          _id: String(e._id),
+          id:  String(e._id),   // overlay uses e.id
+          color: e.color || '#f97766',
+          type: e.type || 'person',
+          members: (e.members || []).map(m => ({
+            _id: String(m._id || m), id: String(m._id || m),
+            name: m.name || '', color: m.color || '#f97766',
+          })),
+          groups: (e.groups || []).map(g => ({
+            _id: String(g._id || g), id: String(g._id || g),
+            name: g.name || '', color: g.color || '#f97766',
+          })),
+        };
+        allEntitiesObjTemp[normalized._id] = normalized;
+      });
 
       setEntity(normalized);
       setActivities(Array.isArray(activityData) ? activityData : []);
