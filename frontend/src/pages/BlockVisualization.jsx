@@ -4,6 +4,7 @@ import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 import { listEntities } from '../api/entitiesApi';
 import { getActivitiesByEntity } from '../api/activitiesApi';
+import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 
 // --- REMOVED DUMMY DATA ---
 
@@ -31,7 +32,16 @@ function getSlotConfig(durationStr) {
 }
 
 // Map duration state & offset to a minute range
-function getTimelineBounds(durationStr, offsetSlots) {
+function getTimelineBounds(durationStr, offsetSlots, isCustom, customRange) {
+    if (isCustom && customRange) {
+        const start = getAbsMinutes(customRange.start.date, customRange.start.time);
+        const end = getAbsMinutes(customRange.end.date, customRange.end.time);
+        const diff = end - start;
+        // Ensure at least some width, default to 8 slots if diff is 0
+        const slotMins = diff > 0 ? diff / 8 : 60; 
+        return { start, end, slotMins, count: 8 };
+    }
+
     const { slotMins, count } = getSlotConfig(durationStr);
 
     let baseStart = 480; // Default 8 AM for 12hr view
@@ -45,8 +55,30 @@ function getTimelineBounds(durationStr, offsetSlots) {
     return { start, end, slotMins, count };
 }
 
+// Helper to get absolute minutes from date and time string
+function getAbsMinutes(date, timeStr) {
+    if (!date) return 0;
+    const d = new Date(date);
+    const mins = parseTimeToMinutes(timeStr);
+    d.setHours(0, 0, 0, 0);
+    return Math.floor(d.getTime() / 60000) + mins;
+}
+
 // Format minutes into displayable time / day labels
-function formatMinutesToLabel(minutes, durationStr) {
+function formatMinutesToLabel(minutes, durationStr, isCustom) {
+    if (isCustom) {
+        const d = new Date(minutes * 60000);
+        const h = d.getHours();
+        const m = d.getMinutes();
+        const period = h >= 12 ? 'PM' : 'AM';
+        let displayH = h % 12;
+        if (displayH === 0) displayH = 12;
+        const displayM = m.toString().padStart(2, '0');
+        const timeStr = m === 0 ? `${displayH} ${period}` : `${displayH}:${displayM}`;
+        const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return `${dateStr} ${timeStr}`;
+    }
+
     if (durationStr === '12 hr' || durationStr === '24 hr') {
         let normalized = ((minutes % 1440) + 1440) % 1440;
         let h = Math.floor(normalized / 60);
@@ -67,19 +99,26 @@ function formatMinutesToLabel(minutes, durationStr) {
 }
 
 // Calculate css left and width percentages for a block
-function calculateBlockStyle(slot, durationStr, offsetSlots) {
-    const { start, end } = getTimelineBounds(durationStr, offsetSlots);
+function calculateBlockStyle(block, durationStr, offsetSlots, isCustom, customRange) {
+    const { start, end } = getTimelineBounds(durationStr, offsetSlots, isCustom, customRange);
     const durationMins = end - start;
 
-    let slotStart = parseTimeToMinutes(slot.startTime);
-    let slotEnd = parseTimeToMinutes(slot.endTime);
+    let slotStart, slotEnd;
 
-    // Simplistic handling for multi-day views to scatter them slightly for visual effect
-    if (durationStr === '1 week' || durationStr === '1 month') {
-        const dayOffsets = { 'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6 };
-        const offset = (dayOffsets[slot.day] || 0) * 1440;
-        slotStart += offset;
-        slotEnd += offset;
+    if (isCustom) {
+        slotStart = block.absStart;
+        slotEnd = block.absEnd;
+    } else {
+        slotStart = parseTimeToMinutes(block.startTime);
+        slotEnd = parseTimeToMinutes(block.endTime);
+
+        // Simplistic handling for multi-day views to scatter them slightly for visual effect
+        if (durationStr === '1 week' || durationStr === '1 month') {
+            const dayOffsets = { 'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3, 'Friday': 4, 'Saturday': 5, 'Sunday': 6 };
+            const offset = (dayOffsets[block.day] || 0) * 1440;
+            slotStart += offset;
+            slotEnd += offset;
+        }
     }
 
     const leftPct = Math.max(0, Math.min(100, ((slotStart - start) / durationMins) * 100));
@@ -90,7 +129,7 @@ function calculateBlockStyle(slot, durationStr, offsetSlots) {
 }
 
 // Individual Timeline Row Component
-const TimelineRow = ({ entity, durationStr, offsetSlots, onShift }) => {
+const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, customRange }) => {
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -109,21 +148,43 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift }) => {
         if (entity?.id) fetchActivities();
     }, [entity?.id]);
 
-    // Flatten slots into individual blocks
+    // Flatten slots into individual blocks, handling custom range if needed
     const blocks = [];
+    const { start: startAbs, end: endAbs } = getTimelineBounds(durationStr, offsetSlots, isCustom, customRange);
+
     activities.forEach(act => {
         const slots = act.slots || act.parsedSlots || [];
         slots.forEach(slot => {
-            blocks.push({ ...slot, title: act.title });
+            if (isCustom) {
+                // Find all occurrences of this day within the custom range
+                let current = new Date(startAbs * 60000);
+                current.setHours(0, 0, 0, 0);
+                const endLimit = new Date(endAbs * 60000);
+                
+                while (current <= endLimit) {
+                    const dayName = current.toLocaleDateString('en-US', { weekday: 'long' });
+                    if (slot.day === dayName) {
+                        const s = Math.floor(current.getTime() / 60000) + parseTimeToMinutes(slot.startTime);
+                        const e = Math.floor(current.getTime() / 60000) + parseTimeToMinutes(slot.endTime);
+                        // Check for overlap with the timeline view range
+                        if (e > startAbs && s < endAbs) {
+                            blocks.push({ ...slot, absStart: s, absEnd: e, title: act.title });
+                        }
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+            } else {
+                blocks.push({ ...slot, title: act.title });
+            }
         });
     });
 
-    const { start, slotMins, count } = getTimelineBounds(durationStr, offsetSlots);
+    const { start, slotMins, count } = getTimelineBounds(durationStr, offsetSlots, isCustom, customRange);
 
     // Generate tick mark labels
     const tickMarks = [...Array(count + 1)].map((_, i) => {
         const mins = start + i * slotMins;
-        return formatMinutesToLabel(mins, durationStr);
+        return formatMinutesToLabel(mins, durationStr, isCustom);
     });
 
     return (
@@ -165,7 +226,7 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift }) => {
                             <div
                                 key={i}
                                 className="absolute top-1/2 -translate-y-1/2 h-3.5 rounded-none group/block cursor-pointer shadow-[0_0_12px_rgba(249,119,102,0.5)] z-10"
-                                style={{ ...style, backgroundColor: '#f97766' }}
+                                style={{ ...calculateBlockStyle(block, durationStr, offsetSlots, isCustom, customRange), backgroundColor: '#f97766' }}
                             >
                                 {/* Tooltip */}
                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-[#200412] border border-[#f97766]/10 rounded-lg text-[#f97766]/90 text-[11px] opacity-0 group-hover/block:opacity-100 transition-opacity whitespace-nowrap shadow-xl pointer-events-none z-10 text-center leading-tight">
@@ -228,6 +289,12 @@ export default function BlockVisualization() {
     const [offsetSlots, setOffsetSlots] = useState(initOffsetSlots());
     const [isLoading, setIsLoading] = useState(true);
 
+    const [isCustomRange, setIsCustomRange] = useState(false);
+    const [customRange, setCustomRange] = useState({
+        start: { date: new Date(), time: "08:00 AM" },
+        end: { date: new Date(), time: "08:00 PM" }
+    });
+
     // Fetch all entities to have metadata available
     React.useEffect(() => {
         const fetchEntities = async () => {
@@ -288,30 +355,51 @@ export default function BlockVisualization() {
                     <div className="flex flex-col gap-6 mt-4">
 
                         {/* Adjust Duration Header */}
-                        <div className="flex items-center justify-end gap-2 text-[#f97766]/80 group/duration cursor-default">
-                            <span className="text-base sm:text-lg tracking-wide">Adjust Duration:</span>
-                            {/* <img
-                                src="/sparkle1.png"
-                                className="w-7 h-7 object-contain transition-transform duration-300 group-hover/duration:rotate-[30deg]"
-                                style={{ mixBlendMode: 'screen' }}
-                                alt="sparkle"
-                            /> */}
-                            <div className="flex items-center gap-4 ml-2">
-                                <span className="w-24 text-center text-lg sm:text-xl font-bold tracking-tight">{DURATIONS[durationIdx]}</span>
-                                <div className="flex items-center gap-4">
-                                    <button onClick={handlePrevDuration} disabled={durationIdx === 0} className="hover:text-[#f97766] disabled:opacity-30 transition-all hover:scale-125">
-                                        <svg width="24" height="16" viewBox="0 0 12 8" fill="none" stroke="currentColor">
-                                            <path d="M2 2L6 6L10 2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
-                                    <button onClick={handleNextDuration} disabled={durationIdx === DURATIONS.length - 1} className="hover:text-[#f97766] disabled:opacity-30 transition-all hover:scale-125">
-                                        <svg width="24" height="16" viewBox="0 0 12 8" fill="none" className="rotate-180" stroke="currentColor">
-                                            <path d="M2 2L6 6L10 2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                    </button>
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-4 text-[#f97766]/80 group/duration cursor-default">
+                            {/* Custom Range Toggle */}
+                            <button 
+                                onClick={() => setIsCustomRange(!isCustomRange)}
+                                className={`px-5 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${
+                                    isCustomRange 
+                                        ? 'bg-[#f97766] text-[#200412] border-[#f97766] shadow-[0_0_15px_rgba(249,119,102,0.4)]' 
+                                        : 'border-[#f97766]/30 hover:border-[#f97766]/60 hover:bg-[#f97766]/5'
+                                }`}
+                            >
+                                {isCustomRange ? 'Custom Range: ON' : 'Set Custom Range'}
+                            </button>
+
+                            {!isCustomRange && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-base sm:text-lg tracking-wide">Adjust Duration:</span>
+                                    <div className="flex items-center gap-4 ml-2">
+                                        <span className="w-24 text-center text-lg sm:text-xl font-bold tracking-tight">{DURATIONS[durationIdx]}</span>
+                                        <div className="flex items-center gap-4">
+                                            <button onClick={handlePrevDuration} disabled={durationIdx === 0} className="hover:text-[#f97766] disabled:opacity-30 transition-all hover:scale-125">
+                                                <svg width="24" height="16" viewBox="0 0 12 8" fill="none" stroke="currentColor">
+                                                    <path d="M2 2L6 6L10 2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </button>
+                                            <button onClick={handleNextDuration} disabled={durationIdx === DURATIONS.length - 1} className="hover:text-[#f97766] disabled:opacity-30 transition-all hover:scale-125">
+                                                <svg width="24" height="16" viewBox="0 0 12 8" fill="none" className="rotate-180" stroke="currentColor">
+                                                    <path d="M2 2L6 6L10 2" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
+
+                        {isCustomRange && (
+                            <div className="flex justify-end mt-[-8px]">
+                                <DateTimeRangePicker 
+                                    variant="inline-text" 
+                                    initialStart={customRange.start}
+                                    initialEnd={customRange.end}
+                                    onChange={(range) => setCustomRange(range)}
+                                />
+                            </div>
+                        )}
 
                         {/* Timelines */}
                         <div className="flex flex-col gap-2">
@@ -325,6 +413,8 @@ export default function BlockVisualization() {
                                         durationStr={DURATIONS[durationIdx]}
                                         offsetSlots={offsetSlots}
                                         onShift={handleShift}
+                                        isCustom={isCustomRange}
+                                        customRange={customRange}
                                     />
                                 );
                             })}
