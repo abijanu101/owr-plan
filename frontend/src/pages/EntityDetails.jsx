@@ -7,7 +7,7 @@ import SelectionOverlayFiltered from '../components/EntitySelector/SelectionOver
 import Modal from '../components/Modal';
 import ActivityCard from '../components/ActivityCard';
 import Button from '../components/UI/Button';
-
+import AllActivitiesModal from '../components/AllActivitiesModal';
 const PREVIEW_COUNT = 2;
 
 // ─── CollapsibleSection ───────────────────────────────────────
@@ -34,58 +34,170 @@ function CollapsibleSection({ title, children, defaultOpen = true, action }) {
   );
 }
 
+// ─── transformActivity ────────────────────────────────────────
+// Mirror of the backend transformActivity — runs client-side on the raw
+// mongo docs returned by GET /api/activities/entity/:id  (that endpoint
+// does NOT call transformActivity before responding).
+function transformActivity(a) {
+  const type = a.activityType || 'non-recurring';
+
+  if (type === 'non-recurring') {
+    const start = a.rangeStart ? new Date(a.rangeStart) : null;
+    const end   = a.rangeEnd   ? new Date(a.rangeEnd)   : null;
+    const fmt     = d => d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    const fmtTime = d => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return {
+      id:           String(a._id),
+      title:        a.title,
+      activityType: 'non-recurring',
+      rangeStart:   a.rangeStart,
+      rangeEnd:     a.rangeEnd,
+      timeRange:    start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : '',
+      dateLabel:    start ? fmt(start) : '',
+      participants: (a.participants || []).map(p => p.name || String(p)),
+      createdAt:    a.createdAt ? new Date(a.createdAt).getTime() : Date.now(),
+    };
+  }
+
+  // recurring
+  const interval    = a.everyInterval || 1;
+  const unit        = a.everyUnit || 'Week';
+  const plural      = interval > 1 ? `${interval} ${unit}s` : unit;
+  const everyStr    = `Every ${plural}`;
+  const scheduleStr = a.recurringDay ? `${everyStr} on ${a.recurringDay}` : everyStr;
+
+  let expiryStr = 'No expiry';
+  if (a.expiryType === 'on_date' && a.expiryDate) {
+    expiryStr = `Until ${new Date(a.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  } else if (a.expiryType === 'after') {
+    expiryStr = `After ${a.expiryOccurrences} occurrence${a.expiryOccurrences !== 1 ? 's' : ''}`;
+  }
+
+  return {
+    id:                 String(a._id),
+    title:              a.title,
+    activityType:       'recurring',
+    recurringStartTime: a.recurringStartTime,
+    recurringEndTime:   a.recurringEndTime,
+    everyInterval:      interval,
+    everyUnit:          unit,
+    recurringDay:       a.recurringDay,
+    scheduleStr,
+    expiryStr,
+    timeRange:          `${a.recurringStartTime || ''} – ${a.recurringEndTime || ''}`,
+    participants:       (a.participants || []).map(p => p.name || String(p)),
+    createdAt:          a.createdAt ? new Date(a.createdAt).getTime() : Date.now(),
+  };
+}
+
+// ─── sortByProximity ─────────────────────────────────────────
+// Returns a score (ms timestamp) representing how close this activity
+// is to "now". Lower distance = shown first.
+// Non-recurring: use rangeStart. Recurring: use next occurrence from recurringDay.
+function proximityScore(a) {
+  const now = Date.now();
+
+  if (a.activityType === 'non-recurring') {
+    if (a.rangeStart) return Math.abs(new Date(a.rangeStart).getTime() - now);
+    return Infinity; // no date — push to end
+  }
+
+  // recurring: find next weekday occurrence
+  if (a.recurringDay) {
+    const dayMap = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
+    const target = dayMap[a.recurringDay];
+    if (target !== undefined) {
+      const today   = new Date();
+      const current = today.getDay();
+      const diff    = (target - current + 7) % 7;
+      const next    = new Date(today);
+      next.setDate(today.getDate() + diff);
+      return Math.abs(next.getTime() - now);
+    }
+  }
+  // recurring but no day pinned — sort by createdAt proximity
+  return Math.abs((a.createdAt || 0) - now);
+}
+
+// ─── useIsMobile ─────────────────────────────────────────────
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
+  return mobile;
+}
+
 // ─── ActivitiesSection ────────────────────────────────────────
 function ActivitiesSection({ activities, onSchedule }) {
   const [showAllModal, setShowAllModal] = useState(false);
+  const isMobile = useIsMobile();
+  const previewCount = 2;//isMobile ? 2 : 3;
 
-  const convertedActivities = useMemo(() => activities.map(a => ({
-    id:          a._id,
-    title:       a.title,
-    color:       a.color || '#f97766',
-    days:        a.slots?.map(s => s.day) || [],
-    date:        a.date || null,
-    timeRange:   a.slots?.length > 0 ? `${a.slots[0].startTime} – ${a.slots[0].endTime}` : 'No time set',
-    participants: a.participants || [],
-  })), [activities]);
+  // Step 1 — transform raw mongo docs into the shape ActivityCard expects
+  const transformed = useMemo(
+    () => activities.map(transformActivity),
+    [activities]
+  );
 
-  const sortedActivities = useMemo(() => {
-    const dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-    return [...convertedActivities].sort((a, b) =>
-      dayOrder.indexOf(a.days?.[0] || '') - dayOrder.indexOf(b.days?.[0] || '')
-    );
-  }, [convertedActivities]);
+  // Step 2 — sort by proximity to now (closest first)
+  const sorted = useMemo(
+    () => [...transformed].sort((a, b) => proximityScore(a) - proximityScore(b)),
+    [transformed]
+  );
 
-  const previewActivities = sortedActivities.slice(0, 2);
+  const preview = sorted.slice(0, previewCount);
+  const hasMore = sorted.length > previewCount;
 
   return (
     <>
       <CollapsibleSection title="Activities" defaultOpen={true}>
-        {activities.length === 0 ? (
+        {sorted.length === 0 ? (
           <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 12px' }}>No activities yet.</p>
         ) : (
           <>
             <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {previewActivities.map(a => <ActivityCard key={a.id} activity={a} />)}
+              {preview.map(a => (
+                <ActivityCard key={a.id} activity={a} />
+              ))}
             </div>
-            {sortedActivities.length > 2 && (
-              <button
-                onClick={() => setShowAllModal(true)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0 12px', color: 'var(--color-primary)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}
-              >
-                <svg style={{ width: 16, height: 16 }} fill="currentColor" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z" /></svg>
-                View all {sortedActivities.length} activities
-              </button>
-            )}
+
+            {/* "View all" always shown when there are any activities, not just overflow */}
+            <button
+              onClick={() => setShowAllModal(true)}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px 0 12px',
+                color: 'var(--color-primary)',
+                fontWeight: 700,
+                fontSize: 13,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                marginBottom: 12,
+              }}
+            >
+              <svg style={{ width: 16, height: 16 }} fill="currentColor" viewBox="0 0 24 24">
+                <path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
+              </svg>
+              View all {sorted.length} {sorted.length === 1 ? 'activity' : 'activities'}
+            </button>
           </>
         )}
+
         <Button onClick={onSchedule} variant="outline">+ Schedule New Activity</Button>
       </CollapsibleSection>
 
-      <Modal open={showAllModal} title="All Activities" onClose={() => setShowAllModal(false)} footer={<Button onClick={() => setShowAllModal(false)} variant="primary">Close</Button>}>
-        <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingBottom: 16 }}>
-          {sortedActivities.map(a => <ActivityCard key={a.id} activity={a} />)}
-        </div>
-      </Modal>
+      {/* ── All Activities Modal ─────────────────────────────── */}
+      <AllActivitiesModal
+        isOpen={showAllModal}
+        onClose={() => setShowAllModal(false)}
+        activities={sorted}
+      />
     </>
   );
 }
@@ -96,19 +208,14 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
   const listTitle  = isGroup ? 'Members' : 'Groups';
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
 
-  // FIX 2: selectedIds for overlay derived directly from entity — stays in sync
-  // because EntityDetails updates entity state optimistically before backend returns
   const selectedIds = useMemo(() => currentItems.map(i => String(i._id)), [currentItems]);
 
   const [overlayOpen, setOverlayOpen] = useState(false);
 
-  // FIX 3: handleOverlayToggle now just calls onRelationsChange with newIds array
-  // EntityDetails is responsible for optimistic update + backend call
   const handleOverlayToggle = (newIds) => {
     onRelationsChange(isGroup ? 'members' : 'groups', newIds);
   };
 
-  // Page-level chip click: toggle that item directly (remove from list)
   const handleChipClick = (itemId) => {
     const strId = String(itemId);
     const next  = selectedIds.includes(strId)
@@ -180,13 +287,12 @@ export default function EntityDetails() {
   const { id }   = useParams();
   const navigate = useNavigate();
 
-  const [entity,     setEntity]     = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [loading,    setLoading]    = useState(true);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [entity,      setEntity]      = useState(null);
+  const [activities,  setActivities]  = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [isEditOpen,  setIsEditOpen]  = useState(false);
   const [allEntities, setAllEntities] = useState({});
 
-  // Full data fetch — only on mount / id change, NOT after every toggle
   const fetchData = async () => {
     setLoading(true);
     const token   = localStorage.getItem('token');
@@ -194,16 +300,24 @@ export default function EntityDetails() {
 
     try {
       const [entityRes, activitiesRes, allEntitiesRes] = await Promise.all([
-        fetch(`/api/entities/${id}`,           { headers }),
-        fetch(`/api/activities/entity/${id}`,  { headers }),
-        fetch(`/api/entities`,            { headers }),
+        fetch(`/api/entities/${id}`,          { headers }),
+        fetch(`/api/activities/entity/${id}`, { headers }),
+        fetch(`/api/entities`,                { headers }),
       ]);
 
       if (!entityRes.ok) throw new Error('Entity not found');
 
-      const entityData      = await entityRes.json();
-      const activityData    = activitiesRes.ok  ? await activitiesRes.json()  : [];
-      const allEntitiesArray = allEntitiesRes.ok ? await allEntitiesRes.json() : [];
+      const entityData       = await entityRes.json();
+      const activityPayload  = activitiesRes.ok  ? await activitiesRes.json()  : {};
+      const allEntitiesArray = allEntitiesRes.ok  ? await allEntitiesRes.json() : [];
+
+      // getActivitiesByEntityID returns { success, data: [...] }
+      // Guard against both shapes just in case
+      const rawActivities = Array.isArray(activityPayload)
+        ? activityPayload
+        : Array.isArray(activityPayload?.data)
+          ? activityPayload.data
+          : [];
 
       const normalizeEntity = (e) => ({
         ...e,
@@ -223,7 +337,7 @@ export default function EntityDetails() {
       });
 
       setEntity(normalizeEntity(entityData));
-      setActivities(Array.isArray(activityData) ? activityData : []);
+      setActivities(rawActivities);          // raw mongo docs — transformed inside ActivitiesSection
       setAllEntities(allEntitiesObj);
     } catch (err) {
       console.error('Failed to load entity data:', err);
@@ -235,46 +349,32 @@ export default function EntityDetails() {
 
   useEffect(() => { fetchData(); }, [id]);
 
-  // ── FIX 4: updateRelations ────────────────────────────────────────────────
-  // Receives field ('members'|'groups') and newIds (string[]).
-  // Step 1 — optimistic update: rebuild item objects from allEntities and set
-  //          state immediately so page chips and overlay both update instantly.
-  // Step 2 — backend PATCH: sends only the changed field, no full entity needed.
-  // Step 3 — NO full refetch after success (avoids flicker + overlay close).
-  //          Only refetch if backend returns an error.
   const updateRelations = async (field, newIds) => {
     if (!entity) return;
 
-    // Build full item objects for optimistic state
     const updatedItems = newIds
       .map(id => {
         const found = allEntities[String(id)];
         return found
-          ? { _id: String(found._id), name: found.name, color: found.color }
+          ? { _id: String(found._id), name: found.name, color: found.color, type: found.type }
           : null;
       })
       .filter(Boolean);
 
-    // Optimistic update — instant, no waiting
     setEntity(prev => ({ ...prev, [field]: updatedItems }));
 
-    // Backend PATCH — only send what changed
     const token   = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
       const res = await fetch(`/api/entities/${entity._id}`, {
-        method:  'PATCH',   // PATCH not PUT — only updates specified fields
+        method:  'PATCH',
         headers,
         body:    JSON.stringify({ [field]: newIds }),
       });
-
       if (!res.ok) throw new Error(`Server error ${res.status}`);
-      // Success — optimistic state is already correct, no refetch needed
-
     } catch (err) {
       console.error('Error updating entity:', err);
-      // Rollback optimistic update by re-fetching
       alert('Failed to save. Refreshing…');
       fetchData();
     }
