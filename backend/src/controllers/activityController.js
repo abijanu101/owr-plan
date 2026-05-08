@@ -17,7 +17,7 @@ const timeStringToDate = (timeStr, baseDate = new Date()) => {
 
 const transformActivity = (activity) => {
   const slots = activity.slots || [];
-  
+
   // compute timeRange (e.g. from first slot)
   let timeRange = '';
   if (slots.length > 0) {
@@ -80,7 +80,7 @@ const createActivity = async (req, res) => {
       recurrence: recurrence || {},
       // Legacy: set startTime/endTime from first slot if available
       startTime: activeSlots[0] ? timeStringToDate(activeSlots[0].startTime) : undefined,
-      endTime:   activeSlots[0] ? timeStringToDate(activeSlots[0].endTime)   : undefined,
+      endTime: activeSlots[0] ? timeStringToDate(activeSlots[0].endTime) : undefined,
     });
 
     await activity.save();
@@ -148,7 +148,7 @@ Rules:
       model: 'llama-3.1-8b-instant',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user',   content: rawText.trim() }
+        { role: 'user', content: rawText.trim() }
       ],
       temperature: 0,
       max_tokens: 1024,
@@ -172,16 +172,16 @@ Rules:
     }
 
     // Validate/sanitise each slot
-    const VALID_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const TIME_RE = /^\d{1,2}:\d{2} (AM|PM)$/;
 
     const sanitised = parsed
       .filter(s => s && typeof s === 'object')
       .map(s => ({
-        day:       VALID_DAYS.includes(s.day) ? s.day : null,
+        day: VALID_DAYS.includes(s.day) ? s.day : null,
         startTime: TIME_RE.test(s.startTime) ? s.startTime : null,
-        endTime:   TIME_RE.test(s.endTime)   ? s.endTime   : null,
-        label:     typeof s.label === 'string' ? s.label.trim() : '',
+        endTime: TIME_RE.test(s.endTime) ? s.endTime : null,
+        label: typeof s.label === 'string' ? s.label.trim() : '',
       }))
       .filter(s => s.day && s.startTime && s.endTime);
 
@@ -254,14 +254,14 @@ const getBestTimeSlots = async (req, res) => {
 const getActivitiesByEntityID = async (req, res) => {
   try {
     const { entityId } = req.params;
-    
+
     // Find activities where participants array contains the entityId
-    const activities = await Activity.find({ 
-      participants: entityId 
+    const activities = await Activity.find({
+      participants: entityId
     })
-    .populate('participants', 'name type color faceIcon')
-    .sort({ createdAt: -1 })
-    .lean();
+      .populate('participants', 'name type color faceIcon')
+      .sort({ createdAt: -1 })
+      .lean();
 
     res.status(200).json({
       success: true,
@@ -269,9 +269,9 @@ const getActivitiesByEntityID = async (req, res) => {
     });
   } catch (err) {
     console.error('getActivitiesByEntityID error:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to fetch activities for this entity' 
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch activities for this entity'
     });
   }
 };
@@ -286,8 +286,8 @@ const listActivities = async (req, res) => {
 
     const transformed = activities.map(transformActivity);
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       data: transformed
     });
   } catch (err) {
@@ -339,10 +339,10 @@ const duplicateActivities = async (req, res) => {
     });
 
     const created = await Activity.insertMany(duplicates);
-    
+
     // Populate participants so transformActivity gets names
     const populated = await Activity.find({ _id: { $in: created.map(c => c._id) } }).populate('participants', 'name icon color').lean();
-    
+
     const transformed = populated.map(transformActivity);
 
     res.status(201).json({ success: true, data: transformed });
@@ -367,3 +367,4 @@ module.exports = {
   bulkDeleteActivities,
   duplicateActivities,
 };
+
