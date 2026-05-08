@@ -23,6 +23,7 @@ router.get('/', getEntitiesByUser);
 router.get('/user/:userId', getEntitiesByUser);
 router.get('/:id', getEntityById);
 router.put('/:id', updateEntity);
+router.patch('/:id', protect, updateEntity);
 router.delete('/:id', deleteEntity);
 router.get('/:id/activities', getActivitiesForEntity);
 
