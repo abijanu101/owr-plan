@@ -66,7 +66,7 @@ const DARK_COLORS =
   "#1f2a1e",
 ];
 function ColorGrid({ colors, current, onChange }) {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
   const palette = dark ? DARK_COLORS : colors;
 
   return (
@@ -492,9 +492,14 @@ export default function EntityModal({
             {tab === "face"   && faceCarousel}
             {tab === "addons" && addonCarousel}
             {tab === "color"  && (
-              // On desktop give the color grid a fixed width so it
-              // centres cleanly in its column
-              <div style={{ width: "100%", maxWidth: 220 }}>
+              <div style={{
+                width: "100%", maxWidth: 220,
+                border: "2px solid var(--text-muted)",
+                borderRadius: 16,
+                padding: "14px 12px",
+                background: "var(--bg-primary)",
+                boxSizing: "border-box",
+              }}>
                 {colorGrid}
               </div>
             )}
@@ -523,10 +528,21 @@ export default function EntityModal({
 
       {tabBar}
 
-      <div className="entity-modal-tab-content">
+      <div className="entity-modal-tab-content" style={{ padding: "20px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
         {tab === "face"   && faceCarousel}
         {tab === "addons" && addonCarousel}
-        {tab === "color"  && colorGrid}
+        {tab === "color"  && (
+          <div style={{
+            border: "2px solid var(--text-muted)",
+            borderRadius: 14,
+            padding: "12px 10px",
+            background: "var(--bg-primary)",
+            width: "100%",
+            boxSizing: "border-box",
+          }}>
+            {colorGrid}
+          </div>
+        )}
       </div>
 
       {actionButtons}

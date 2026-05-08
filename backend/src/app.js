@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const routes = require('./routes');
-const activityRoutes = require('./routes/activityRoutes');
 
 const app = express();
 
@@ -19,9 +18,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes - Order matters!
-app.use('/api/activities', activityRoutes);  // 👈 Activities FIRST
-app.use('/api', routes);                      // 👈 Then general routes
+// Routes
+app.use('/api', routes);
 
 app.get('/health', (req, res) => {
   res.status(200).json({ message: 'Server is running' });

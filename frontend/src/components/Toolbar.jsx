@@ -1,3 +1,5 @@
+import Dropdown from './UI/Dropdown';
+
 export default function Toolbar({
   sortOptions, sortValue, onSortChange,
   filterValue, onFilterChange, filterOptions,
@@ -59,15 +61,12 @@ export default function Toolbar({
 
       {/* Right side - Sort */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <select
-          style={btnStyle}
+        <Dropdown
           value={sortValue}
-          onChange={(e) => onSortChange(e.target.value)}
-        >
-          {sortOptions.map((o) => (
-            <option key={o.value} value={o.value}>Sort by: {o.label}</option>
-          ))}
-        </select>
+          onChange={onSortChange}
+          options={sortOptions.map(o => ({ value: o.value, label: `Sort by: ${o.label}` }))}
+          className="min-w-[180px]"
+        />
       </div>
     </div>
   );

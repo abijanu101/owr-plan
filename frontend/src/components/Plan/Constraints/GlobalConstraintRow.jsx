@@ -7,8 +7,9 @@ import TimePicker from '../../Pickers/TimePicker';
 import EntitySelector from '../../EntitySelector';
 import MultiDatePicker from '../../Pickers/MultiDatePicker';
 import Dropdown from '../../UI/Dropdown';
+import { CONSTRAINT_EXPLANATIONS } from './ConstraintExplanations';
 
-export default function GlobalConstraintRow({ constraint, onChange, onRemove, isMobile, hasInclude }) {
+export default function GlobalConstraintRow({ constraint, onChange, onRemove, isMobile, hasInclude, usedCustomTypes }) {
     const [isMobileExpanded, setIsMobileExpanded] = useState(false);
 
     const schema = CONSTRAINT_SCHEMA[constraint.type];
@@ -141,10 +142,13 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
     const getTypeOptions = () => {
         const options = [];
         const groups = {};
+        const singletons = ['include', 'start after', 'start before', 'end before', 'end after'];
         
         Object.keys(CONSTRAINT_SCHEMA).forEach(k => {
             if (CONSTRAINT_SCHEMA[k].localOnly) return;
             if (k === 'include' && hasInclude && constraint.type !== 'include') return;
+            if (k === 'last for' && !constraint.isSystem && constraint.type !== 'last for') return;
+            if (singletons.includes(k) && usedCustomTypes.includes(k) && constraint.type !== k) return;
             
             const cat = CONSTRAINT_SCHEMA[k].category;
             if (!groups[cat]) groups[cat] = [];
@@ -212,18 +216,26 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
                                     style={{ fontFamily: 'cursive' }}
                                 />
                             </div>
-                            <div className="flex flex-col gap-1 w-1/2 relative">
-                                <Dropdown 
-                                    value={constraint.type} 
-                                    onChange={handleTypeChange} 
-                                    options={typeOptions} 
-                                    disabled={constraint.isSystem} 
-                                    className="w-full" 
-                                    style={{ fontFamily: 'cursive' }}
-                                />
+                            <div className="flex flex-col gap-1 w-1/2 relative z-20">
+                                <div className="flex items-center gap-1 w-full">
+                                    <Dropdown 
+                                        value={constraint.type} 
+                                        onChange={handleTypeChange} 
+                                        options={typeOptions} 
+                                        disabled={constraint.isSystem} 
+                                        className="flex-1 min-w-0" 
+                                        style={{ fontFamily: 'cursive' }}
+                                    />
+                                    <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                        <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center" style={{fontFamily: 'sans-serif'}}>
+                                            {CONSTRAINT_EXPLANATIONS[constraint.type] || 'Select a constraint'}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 relative z-10">
                             <div className="pt-1">
                                 {renderParameterInput()}
                             </div>
@@ -274,19 +286,25 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
             </div>
 
             {/* Constraint Cell */}
-            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+            <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 flex items-center gap-1 hover:bg-white/5 transition-colors relative z-20">
                 <Dropdown 
                     value={constraint.type} 
                     onChange={handleTypeChange} 
                     options={typeOptions} 
                     disabled={constraint.isSystem} 
-                    className="w-full" 
+                    className="flex-1 min-w-0" 
                     style={{ fontFamily: 'cursive' }}
                 />
+                <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                    <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center pointer-events-none" style={{fontFamily: 'sans-serif'}}>
+                        {CONSTRAINT_EXPLANATIONS[constraint.type] || 'Select a constraint'}
+                    </div>
+                </div>
             </div>
 
             {/* Parameter Cell */}
-            <div className="flex-1 py-1.5 px-3 min-w-[200px] flex items-center hover:bg-white/5 transition-colors">
+            <div className="flex-1 py-1.5 px-3 min-w-[200px] flex items-center hover:bg-white/5 transition-colors relative z-10">
                 {renderParameterInput()}
             </div>
         </div>

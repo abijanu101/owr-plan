@@ -1,14 +1,13 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import TimePicker from '../components/Pickers/TimePicker';
 import DateTimePicker from '../components/Pickers/DateTimePicker';
+import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
+import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const FREQ = ['Day', 'Week', 'Month'];
-const defaultSlot = () => ({ id: Date.now(), day: 'Monday', startTime: '08:00 AM', endTime: '09:00 AM', label: '' });
-
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const FREQ_UNITS   = ['Day', 'Week'];
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 function SectionCard({ children, className = '' }) {
@@ -45,21 +44,7 @@ function Stepper({ value, onChange }) {
     );
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
-function Toast({ message, action, onAction, onDismiss }) {
-    useEffect(() => {
-        const t = setTimeout(onDismiss, 4000);
-        return () => clearTimeout(t);
-    }, [onDismiss]);
-    return (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl px-5 py-3 shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
-            <span className="text-sm text-neutral font-bold">{message}</span>
-            {action && <button onClick={onAction} className="text-sm font-bold text-primary hover:underline cursor-pointer min-h-[44px] px-2">{action}</button>}
-        </div>
-    );
-}
-
-// ─── Discard Confirmation Sheet ───────────────────────────────────────────────
+// ─── Discard sheet ────────────────────────────────────────────────────────────
 function DiscardSheet({ onDiscard, onKeep }) {
     return (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -73,156 +58,18 @@ function DiscardSheet({ onDiscard, onKeep }) {
     );
 }
 
-// ─── Collapsible Slot Card ────────────────────────────────────────────────────
-function SlotCard({ slot, index, onChange, onRemove }) {
-    const [collapsed, setCollapsed] = useState(true);
-    const [editingStart, setEditingStart] = useState(false);
-    const [editingEnd, setEditingEnd] = useState(false);
-    const [pendingDelete, setPendingDelete] = useState(false);
-    const deleteTimer = useRef(null);
-
-    const summary = `${slot.day} • ${slot.startTime} – ${slot.endTime}${slot.label ? ` • ${slot.label}` : ''}`;
-
-    const handleDeleteTap = () => {
-        if (pendingDelete) {
-            clearTimeout(deleteTimer.current);
-            setPendingDelete(false);
-        } else {
-            setPendingDelete(true);
-            deleteTimer.current = setTimeout(() => {
-                setPendingDelete(false);
-                onRemove?.();
-            }, 4000);
-        }
-    };
-
-    useEffect(() => () => clearTimeout(deleteTimer.current), []);
-
-    return (
-        <SectionCard className="transition-all duration-200">
-            {/* Header */}
-            <div className="flex items-center gap-3">
-                <button onClick={() => setCollapsed(c => !c)}
-                    className="w-8 h-8 min-w-[44px] min-h-[44px] rounded-full bg-[var(--color-primary)]/20 border border-[var(--color-primary)]/40 flex items-center justify-center text-primary cursor-pointer transition-transform duration-200"
-                    style={{ transform: collapsed ? 'none' : 'rotate(90deg)' }}>
-                    ›
-                </button>
-                <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setCollapsed(c => !c)}>
-                    {collapsed
-                        ? <p className="text-sm text-neutral font-bold truncate">{summary}</p>
-                        : <Label>Slot {index + 1}</Label>}
-                </div>
-                {pendingDelete ? (
-                    <div className="flex items-center gap-2 animate-in fade-in duration-150">
-                        <span className="text-xs text-red-400 font-bold">Delete?</span>
-                        <button onClick={() => { clearTimeout(deleteTimer.current); setPendingDelete(false); onRemove?.(); }}
-                            className="text-xs text-red-400 border border-red-500/40 rounded-full px-3 py-1 hover:bg-red-500/10 cursor-pointer min-h-[44px]">Yes</button>
-                        <button onClick={() => { clearTimeout(deleteTimer.current); setPendingDelete(false); }}
-                            className="text-xs text-muted border border-[var(--border-subtle)] rounded-full px-3 py-1 hover:bg-white/5 cursor-pointer min-h-[44px]">Undo</button>
-                    </div>
-                ) : onRemove && (
-                    <button onClick={handleDeleteTap}
-                        className="min-w-[44px] min-h-[44px] flex items-center justify-center text-muted hover:text-red-400 transition-colors cursor-pointer rounded-full hover:bg-red-500/10">
-                        🗑
-                    </button>
-                )}
-            </div>
-
-            {!collapsed && (
-                <div className="flex flex-col gap-1 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {/* Day */}
-                    <div className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all min-h-[44px]">
-                        <span className="text-muted text-sm font-bold">Day</span>
-                        <select value={slot.day} onChange={e => onChange({ ...slot, day: e.target.value })}
-                            className="bg-transparent text-neutral font-bold text-right outline-none cursor-pointer hover:text-primary transition-colors text-sm min-h-[44px]">
-                            {DAYS.map(d => <option key={d} value={d} className="bg-[var(--bg-raised)]">{d}</option>)}
-                        </select>
-                    </div>
-
-                    {/* Start */}
-                    <button onClick={() => { setEditingStart(s => !s); setEditingEnd(false); }}
-                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all group w-full min-h-[44px] cursor-pointer">
-                        <span className="text-muted text-sm font-bold">Start</span>
-                        <div className="flex items-center gap-2 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-full px-3 py-1.5 group-hover:border-primary/50 transition-all">
-                            <svg className="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span className="text-primary font-bold text-sm">{slot.startTime}</span>
-                        </div>
-                    </button>
-                    {editingStart && (
-                        <div className="px-2 py-2 animate-in fade-in duration-150">
-                            <TimePicker initialTime={slot.startTime} inline hideHelperText onChange={t => onChange({ ...slot, startTime: t })} />
-                            <GhostBtn onClick={() => setEditingStart(false)} className="mt-2 w-full text-sm py-2">Done</GhostBtn>
-                        </div>
-                    )}
-
-                    {/* End */}
-                    <button onClick={() => { setEditingEnd(s => !s); setEditingStart(false); }}
-                        className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all group w-full min-h-[44px] cursor-pointer">
-                        <span className="text-muted text-sm font-bold">End</span>
-                        <div className="flex items-center gap-2 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-full px-3 py-1.5 group-hover:border-primary/50 transition-all">
-                            <svg className="w-3.5 h-3.5 text-muted" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                            <span className="text-primary font-bold text-sm">{slot.endTime}</span>
-                        </div>
-                    </button>
-                    {editingEnd && (
-                        <div className="px-2 py-2 animate-in fade-in duration-150">
-                            <TimePicker initialTime={slot.endTime} inline hideHelperText onChange={t => onChange({ ...slot, endTime: t })} />
-                            <GhostBtn onClick={() => setEditingEnd(false)} className="mt-2 w-full text-sm py-2">Done</GhostBtn>
-                        </div>
-                    )}
-
-                    {/* Label */}
-                    <div className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all min-h-[44px]">
-                        <span className="text-muted text-sm font-bold">Label</span>
-                        <input value={slot.label} onChange={e => onChange({ ...slot, label: e.target.value })}
-                            placeholder="e.g. AHCI"
-                            className="bg-transparent text-right text-neutral font-bold placeholder-[var(--text-muted)]/40 outline-none w-28 text-sm" />
-                    </div>
-
-                    <button onClick={() => setCollapsed(true)}
-                        className="mt-1 text-xs text-muted hover:text-primary transition-colors text-center w-full min-h-[44px] cursor-pointer">▲ Collapse</button>
-                </div>
-            )}
-        </SectionCard>
-    );
-}
-
-// ─── Recurrence Section ───────────────────────────────────────────────────────
-function RecurrenceSection({ rec, onChange }) {
-    const set = u => onChange({ ...rec, ...u });
-    return (
-        <div className="flex flex-col gap-4 mt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="flex items-center gap-3 flex-wrap">
-                <Label>Every</Label>
-                <Stepper value={rec.interval} onChange={v => set({ interval: v })} />
-                <select value={rec.frequency} onChange={e => set({ frequency: e.target.value })}
-                    className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl px-3 py-2 text-neutral font-bold outline-none cursor-pointer hover:border-primary/50 transition-all text-sm min-h-[44px]">
-                    {FREQ.map(f => <option key={f} value={f} className="bg-[var(--bg-raised)]">{f}{rec.interval > 1 ? 's' : ''}</option>)}
-                </select>
-            </div>
-            <div className="flex flex-col gap-2.5">
-                <Label>Ends</Label>
-                {[{val:'never',label:'Never'},{val:'on_date',label:'On Date'},{val:'after',label:'After N Occurrences'}].map(({val,label}) => (
-                    <div key={val}>
-                        <label className="flex items-center gap-3 cursor-pointer group min-h-[44px]">
-                            <div onClick={() => set({ endType: val })}
-                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${rec.endType===val?'border-[var(--color-primary)] bg-[var(--color-primary)]':'border-[var(--border-subtle)] group-hover:border-primary/50'}`}>
-                                {rec.endType===val && <div className="w-2 h-2 rounded-full bg-[var(--bg-primary)]"/>}
-                            </div>
-                            <span className="text-neutral text-sm font-bold flex-1">{label}</span>
-                            {val==='after' && rec.endType==='after' && <Stepper value={rec.occurrences} onChange={v => set({occurrences:v})}/>}
-                        </label>
-                        {val==='on_date' && rec.endType==='on_date' && (
-                            <div className="mt-2 ml-8 animate-in fade-in duration-150">
-                                <DateTimePicker onChange={s => set({endDate:s.date,endTime:s.time})} />
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
+// ─── Helper: ISO → picker { date, time } ─────────────────────────────────────
+const isoToPickerDT = (iso) => {
+    if (!iso) return null;
+    const d = new Date(iso);
+    if (isNaN(d)) return null;
+    const h = d.getHours();
+    const m = d.getMinutes();
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    const mm = String(m).padStart(2, '0');
+    return { date: d, time: `${hh}:${mm} ${ampm}` };
+};
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function EditActivity() {
@@ -230,21 +77,32 @@ export default function EditActivity() {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
-    const [original, setOriginal] = useState(null);
 
     const [title, setTitle] = useState('');
     const [editingTitle, setEditingTitle] = useState(false);
     const [selectedEntityIds, setSelectedEntityIds] = useState([]);
-    const [slots, setSlots] = useState([]);
-    const [recurrence, setRecurrence] = useState({ enabled: false, interval: 1, frequency: 'Week', endType: 'never', endDate: '', occurrences: 1 });
+    const [activityType, setActivityType] = useState('non-recurring');
+
+    // Non-recurring
+    const [range, setRange] = useState(null);
+
+    // Recurring
+    const [recurringStartTime, setRecurringStartTime] = useState('08:00 AM');
+    const [recurringEndTime, setRecurringEndTime]     = useState('09:00 AM');
+    const [editingStart, setEditingStart] = useState(false);
+    const [editingEnd, setEditingEnd]     = useState(false);
+    const [everyInterval, setEveryInterval] = useState(1);
+    const [everyUnit, setEveryUnit]         = useState('Week');
+    const [recurringDay, setRecurringDay]   = useState('Monday');
+    const [expiryType, setExpiryType]       = useState('never');
+    const [expiryDate, setExpiryDate]       = useState(null);
+    const [expiryOccurrences, setExpiryOccurrences] = useState(5);
 
     const [isDirty, setIsDirty] = useState(false);
     const [showDiscard, setShowDiscard] = useState(false);
-    const [saveState, setSaveState] = useState('idle'); // idle | saving | saved | error
+    const [saveState, setSaveState] = useState('idle');
     const [saveError, setSaveError] = useState('');
-    const [toast, setToast] = useState(null); // { message, action, onAction }
 
-    // Load activity
     useEffect(() => {
         const load = async () => {
             setLoading(true);
@@ -255,9 +113,22 @@ export default function EditActivity() {
                     const a = data.data.activity;
                     setTitle(a.title);
                     setSelectedEntityIds((a.participants || []).map(p => p._id || p));
-                    setSlots((a.slots || []).map((s, i) => ({ ...s, id: s.id || i })));
-                    setRecurrence(a.recurrence || { enabled: false, interval: 1, frequency: 'Week', endType: 'never', endDate: '', occurrences: 1 });
-                    setOriginal(a);
+                    setActivityType(a.activityType || 'non-recurring');
+
+                    if (a.activityType === 'non-recurring') {
+                        if (a.rangeStart || a.rangeEnd) {
+                            setRange({ start: isoToPickerDT(a.rangeStart), end: isoToPickerDT(a.rangeEnd) });
+                        }
+                    } else {
+                        setRecurringStartTime(a.recurringStartTime || '08:00 AM');
+                        setRecurringEndTime(a.recurringEndTime   || '09:00 AM');
+                        setEveryInterval(a.everyInterval || 1);
+                        setEveryUnit(a.everyUnit || 'Week');
+                        setRecurringDay(a.recurringDay || 'Monday');
+                        setExpiryType(a.expiryType || 'never');
+                        setExpiryOccurrences(a.expiryOccurrences || 5);
+                        if (a.expiryDate) setExpiryDate(isoToPickerDT(a.expiryDate));
+                    }
                 }
             } catch (e) { console.error(e); }
             finally { setLoading(false); }
@@ -267,41 +138,25 @@ export default function EditActivity() {
 
     const markDirty = useCallback(() => setIsDirty(true), []);
 
-    const updateTitle = v => { setTitle(v); markDirty(); };
-    const updateSlot = (i, updated) => { setSlots(prev => prev.map((s, idx) => idx === i ? updated : s)); markDirty(); };
-    const removeSlot = (i) => { setSlots(prev => prev.filter((_, idx) => idx !== i)); markDirty(); };
-    const addSlot = () => { setSlots(prev => [...prev, defaultSlot()]); markDirty(); };
-    const updateRec = v => { setRecurrence(v); markDirty(); };
-    const updateEntities = v => { setSelectedEntityIds(v); markDirty(); };
-
-    const handleCancel = () => {
-        if (isDirty) setShowDiscard(true);
-        else navigate(-1);
-    };
+    const handleCancel = () => isDirty ? setShowDiscard(true) : navigate(-1);
 
     const handleSave = async () => {
-        setSaveState('saving');
-        setSaveError('');
+        setSaveState('saving'); setSaveError('');
         try {
-            const payload = { title, participants: selectedEntityIds, slots, recurrence };
+            const common = { title, participants: selectedEntityIds, activityType };
+            const extra = activityType === 'non-recurring'
+                ? { rangeStart: range?.start?.date ?? range?.start, rangeEnd: range?.end?.date ?? range?.end }
+                : { recurringStartTime, recurringEndTime, everyInterval, everyUnit,
+                    recurringDay: everyUnit === 'Week' ? recurringDay : null,
+                    expiryType, expiryDate: expiryDate?.date ?? expiryDate, expiryOccurrences };
             const res = await fetch(`/api/activities/${id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify(payload)
+                method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', body: JSON.stringify({ ...common, ...extra }),
             });
             const data = await res.json();
-            if (data.success) {
-                setSaveState('saved');
-                setTimeout(() => navigate('/activities'), 1500);
-            } else {
-                setSaveState('error');
-                setSaveError(data.message || 'Failed to save.');
-            }
-        } catch {
-            setSaveState('error');
-            setSaveError('Could not reach the server.');
-        }
+            if (data.success) { setSaveState('saved'); setTimeout(() => navigate('/activities'), 1500); }
+            else { setSaveState('error'); setSaveError(data.message || 'Failed to save.'); }
+        } catch { setSaveState('error'); setSaveError('Could not reach the server.'); }
     };
 
     if (loading) return (
@@ -318,12 +173,10 @@ export default function EditActivity() {
             {/* Page header */}
             <div className="mb-6 text-center">
                 <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-3">Edit Activity</h1>
-
-                {/* Inline-editable title */}
                 <div className="flex justify-center">
                     {editingTitle ? (
                         <input autoFocus value={title}
-                            onChange={e => updateTitle(e.target.value)}
+                            onChange={e => { setTitle(e.target.value); markDirty(); }}
                             onBlur={() => setEditingTitle(false)}
                             onKeyDown={e => { if (e.key === 'Enter') setEditingTitle(false); }}
                             className="text-center text-base sm:text-lg font-bold text-neutral bg-transparent border-b-2 border-[var(--color-primary)]/60 outline-none pb-1 w-full max-w-xs transition-all" />
@@ -331,7 +184,7 @@ export default function EditActivity() {
                         <button onClick={() => setEditingTitle(true)}
                             className="group flex items-center gap-2 px-4 py-1.5 rounded-full border border-[var(--border-subtle)]/40 hover:border-primary/50 hover:bg-white/5 transition-all cursor-pointer min-h-[44px]">
                             <span className="text-base sm:text-lg font-bold text-neutral">{title || 'Untitled'}</span>
-                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <svg className="w-3.5 h-3.5 text-muted group-hover:text-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         </button>
                     )}
                 </div>
@@ -339,43 +192,141 @@ export default function EditActivity() {
 
             <div className="flex flex-col gap-5">
 
+                {/* Activity type badge (read-only reminder) */}
+                <SectionCard>
+                    <Label>Activity Type</Label>
+                    <div className="mt-3 flex gap-3 flex-wrap">
+                        {[
+                            { id: 'non-recurring', label: 'Non-Recurring', sub: 'One-time date range' },
+                            { id: 'recurring',     label: 'Recurring',      sub: 'Repeating schedule' },
+                        ].map(({ id, label, sub }) => (
+                            <button key={id} type="button"
+                                onClick={() => { setActivityType(id); markDirty(); }}
+                                className={`flex-1 min-w-[140px] flex flex-col items-start gap-1 px-4 py-3 rounded-xl border font-bold text-sm transition-all cursor-pointer active:scale-95 min-h-[44px] ${
+                                    activityType === id
+                                        ? 'bg-[var(--color-primary)]/10 border-[var(--color-primary)]/60 text-primary'
+                                        : 'border-[var(--border-subtle)] text-neutral hover:border-primary/40 hover:bg-white/5'
+                                }`}>
+                                <span className="text-sm font-bold">{label}</span>
+                                <span className="text-[11px] font-normal text-muted">{sub}</span>
+                            </button>
+                        ))}
+                    </div>
+                </SectionCard>
+
                 {/* Participants */}
                 <SectionCard>
                     <Label>Participants</Label>
                     <p className="text-xs text-muted mt-1 mb-3">Click below to add or remove participants</p>
-                    <EntitySelector selectedIds={selectedEntityIds} onChange={updateEntities} variant="standalone" />
+                    <EntitySelector selectedIds={selectedEntityIds} onChange={v => { setSelectedEntityIds(v); markDirty(); }} variant="standalone" />
                 </SectionCard>
 
-                {/* Time Slots */}
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between px-1">
-                        <Label>Time Slots</Label>
-                        <span className="text-xs text-muted">{slots.length} slot{slots.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    {slots.map((slot, i) => (
-                        <SlotCard key={slot.id} slot={slot} index={i}
-                            onChange={updated => updateSlot(i, updated)}
-                            onRemove={slots.length > 1 ? () => removeSlot(i) : null} />
-                    ))}
-                    <GhostBtn onClick={addSlot} className="w-full justify-center">+ Add Slot</GhostBtn>
-                </div>
-
-                {/* Recurrence */}
-                <SectionCard className="border-[var(--color-primary)]/15 bg-[var(--bg-accent)]/15">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <Label>Recurrence</Label>
-                            {recurrence.enabled && (
-                                <p className="text-xs text-muted mt-0.5">Every {recurrence.interval} {recurrence.frequency}{recurrence.interval > 1 ? 's' : ''}</p>
-                            )}
+                {/* ── Non-Recurring schedule ── */}
+                {activityType === 'non-recurring' && (
+                    <SectionCard className="flex flex-col items-center py-10">
+                        <Label>Select Date & Time Range</Label>
+                        <div className="mt-6 w-full flex justify-center">
+                            <DateTimeRangePicker
+                                key={range ? `${range.start?.date}-${range.end?.date}` : 'new'}
+                                initialStart={range?.start ?? undefined}
+                                initialEnd={range?.end ?? undefined}
+                                onChange={r => { setRange(r); markDirty(); }}
+                            />
                         </div>
-                        <button onClick={() => updateRec({ ...recurrence, enabled: !recurrence.enabled })}
-                            className={`min-h-[44px] flex items-center gap-2 px-4 py-2 rounded-full border font-bold text-sm transition-all cursor-pointer active:scale-95 shrink-0 ${recurrence.enabled ? 'bg-[var(--color-primary)] text-[var(--bg-primary)] border-[var(--color-primary)]' : 'border-[var(--border-subtle)] text-neutral hover:border-primary/50 hover:bg-white/5'}`}>
-                            {recurrence.enabled ? '↺ Recurring' : '+ Recurring'}
-                        </button>
+                    </SectionCard>
+                )}
+
+                {/* ── Recurring schedule ── */}
+                {activityType === 'recurring' && (
+                    <div className="flex flex-col gap-4">
+
+                        {/* Time window */}
+                        <SectionCard>
+                            <Label>Time Window</Label>
+                            <div className="flex flex-col gap-1 mt-3">
+                                <button onClick={() => { setEditingStart(s => !s); setEditingEnd(false); }}
+                                    className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all group w-full min-h-[44px] cursor-pointer">
+                                    <span className="text-muted text-sm font-bold">Start</span>
+                                    <span className="text-primary font-bold text-sm bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-full px-3 py-1">{recurringStartTime}</span>
+                                </button>
+                                {editingStart && (
+                                    <div className="px-2 py-2 animate-in fade-in duration-150">
+                                        <TimePicker initialTime={recurringStartTime} inline hideHelperText onChange={t => { setRecurringStartTime(t); markDirty(); }} />
+                                        <GhostBtn onClick={() => setEditingStart(false)} className="mt-2 w-full text-sm py-2">Done</GhostBtn>
+                                    </div>
+                                )}
+                                <button onClick={() => { setEditingEnd(s => !s); setEditingStart(false); }}
+                                    className="flex items-center justify-between hover:bg-white/5 rounded-xl px-2 py-2 transition-all group w-full min-h-[44px] cursor-pointer">
+                                    <span className="text-muted text-sm font-bold">End</span>
+                                    <span className="text-primary font-bold text-sm bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-full px-3 py-1">{recurringEndTime}</span>
+                                </button>
+                                {editingEnd && (
+                                    <div className="px-2 py-2 animate-in fade-in duration-150">
+                                        <TimePicker initialTime={recurringEndTime} inline hideHelperText onChange={t => { setRecurringEndTime(t); markDirty(); }} />
+                                        <GhostBtn onClick={() => setEditingEnd(false)} className="mt-2 w-full text-sm py-2">Done</GhostBtn>
+                                    </div>
+                                )}
+                            </div>
+                        </SectionCard>
+
+                        {/* Period */}
+                        <SectionCard>
+                            <Label>Repeats</Label>
+                            <div className="flex items-center gap-3 flex-wrap mt-3">
+                                <span className="text-muted text-sm font-bold">Every</span>
+                                <Stepper value={everyInterval} onChange={v => { setEveryInterval(v); markDirty(); }} />
+                                <Dropdown
+                                    value={everyUnit}
+                                    onChange={v => { setEveryUnit(v); markDirty(); }}
+                                    options={FREQ_UNITS.map(u => ({ value: u, label: `${u}${everyInterval > 1 ? 's' : ''}` }))}
+                                    className="w-32"
+                                />
+                            </div>
+                            {everyUnit === 'Week' && (
+                                <div className="flex items-center justify-between mt-4 hover:bg-white/5 rounded-xl px-2 py-2 transition-all">
+                                    <span className="text-muted text-sm font-bold">On</span>
+                                    <Dropdown
+                                        value={recurringDay}
+                                        onChange={v => { setRecurringDay(v); markDirty(); }}
+                                        options={DAYS_OF_WEEK}
+                                        align="right"
+                                        className="w-36"
+                                    />
+                                </div>
+                            )}
+                        </SectionCard>
+
+                        {/* Expiry */}
+                        <SectionCard className="border-[var(--color-primary)]/15 bg-[var(--bg-accent)]/15">
+                            <Label>Ends</Label>
+                            <div className="flex flex-col gap-3 mt-3">
+                                {[
+                                    { val: 'never',   label: 'Never' },
+                                    { val: 'on_date', label: 'On a specific date' },
+                                    { val: 'after',   label: 'After N occurrences' },
+                                ].map(({ val, label }) => (
+                                    <div key={val}>
+                                        <label className="flex items-center gap-3 cursor-pointer group min-h-[44px]">
+                                            <div onClick={() => { setExpiryType(val); markDirty(); }}
+                                                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${expiryType === val ? 'border-[var(--color-primary)] bg-[var(--color-primary)]' : 'border-[var(--border-subtle)] group-hover:border-primary/50'}`}>
+                                                {expiryType === val && <div className="w-2 h-2 rounded-full bg-[var(--bg-primary)]" />}
+                                            </div>
+                                            <span className="text-neutral text-sm font-bold flex-1">{label}</span>
+                                            {val === 'after' && expiryType === 'after' && (
+                                                <Stepper value={expiryOccurrences} onChange={v => { setExpiryOccurrences(v); markDirty(); }} />
+                                            )}
+                                        </label>
+                                        {val === 'on_date' && expiryType === 'on_date' && (
+                                            <div className="mt-2 ml-8 animate-in fade-in duration-150">
+                                                <DateTimePicker onChange={s => { setExpiryDate(s); markDirty(); }} />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </SectionCard>
                     </div>
-                    {recurrence.enabled && <RecurrenceSection rec={recurrence} onChange={updateRec} />}
-                </SectionCard>
+                )}
 
                 {/* Save error */}
                 {saveState === 'error' && (
@@ -398,17 +349,10 @@ export default function EditActivity() {
                 </div>
             </div>
 
-            {/* Discard sheet */}
             {showDiscard && (
                 <DiscardSheet
                     onDiscard={() => { setShowDiscard(false); navigate(-1); }}
                     onKeep={() => setShowDiscard(false)} />
-            )}
-
-            {/* Toast */}
-            {toast && (
-                <Toast message={toast.message} action={toast.action} onAction={toast.onAction}
-                    onDismiss={() => setToast(null)} />
             )}
         </div>
     );

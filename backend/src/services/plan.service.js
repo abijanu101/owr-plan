@@ -1,4 +1,5 @@
 const Entity = require('../models/Entities');
+const Activity = require('../models/Activities');
 
 /**
  * Extracts entity names/IDs from a list of constraints.
@@ -38,6 +39,40 @@ const resolveEntities = async (namesOrIds) => {
         );
         return match || { name: nameOrId, type: 'person', color: '#f97766' };
     });
+};
+
+/**
+ * Helper: Fetch all activities an entity is involved in, including via group memberships.
+ */
+const fetchEntityActivities = async (entityId) => {
+    const entity = await Entity.findById(entityId);
+    if (!entity) return [];
+
+    let participantIds = [entityId.toString()];
+
+    if (entity.type === 'person') {
+        const associatedGroups = await Entity.find({
+            type: 'group',
+            members: entityId
+        }).select('_id');
+
+        let groupIds = associatedGroups.map(g => g._id.toString());
+        
+        if (entity.groups && entity.groups.length > 0) {
+            groupIds = groupIds.concat(entity.groups.map(g => g.toString()));
+        }
+
+        participantIds = [...new Set([...participantIds, ...groupIds])];
+    }
+
+    const activities = await Activity.find({ 
+        participants: { $in: participantIds } 
+    })
+    .populate('participants', 'name type color faceIcon')
+    .sort({ createdAt: -1 })
+    .lean();
+
+    return activities;
 };
 
 /**
@@ -87,5 +122,6 @@ const solvePlan = async (constraints) => {
 module.exports = {
     extractRequiredEntities,
     resolveEntities,
+    fetchEntityActivities,
     solvePlan
 };

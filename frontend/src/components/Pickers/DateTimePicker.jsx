@@ -105,29 +105,19 @@ export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", 
                         <span className="text-muted text-xs font-semibold">{dateTimeState.time}</span>
                     </div>
                 </button>
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <button
-                        onClick={() => {
-                            const today = new Date();
-                            setDateTimeState({ date: today, time: "12:00 PM" });
-                            if (onChange) onChange({ date: today, time: "12:00 PM" });
-                        }}
-                        className="w-12 h-12 flex shrink-0 items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white hover:border-white/40 transition-all cursor-pointer"
-                        aria-label="Clear"
-                    >
-                        <XIcon />
-                    </button>
-
-                    <button
-                        onClick={() => {
-                            setIsOpen(false);
-                            if (onChange) onChange(dateTimeState);
-                        }}
-                        className="px-6 py-3 w-full sm:w-auto flex items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-white font-bold hover:border-white/40 transition-all cursor-pointer"
-                    >
-                        Set
-                    </button>
-                </div>
+                {/* Reset — color matches page palette */}
+                <button
+                    onClick={() => {
+                        const today = new Date();
+                        const reset = { date: today, time: "12:00 PM" };
+                        setDateTimeState(reset);
+                        if (onChange) onChange(reset);
+                    }}
+                    className="w-12 h-12 flex shrink-0 items-center justify-center rounded-[0.8rem] border border-[var(--border-subtle)] hover:bg-[var(--bg-raised)] text-[var(--color-primary)] hover:border-[var(--color-primary)]/40 transition-all cursor-pointer"
+                    aria-label="Reset"
+                >
+                    <XIcon />
+                </button>
             </div>
 
             {isOpen && createPortal(

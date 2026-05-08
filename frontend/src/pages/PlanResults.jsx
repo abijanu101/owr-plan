@@ -257,20 +257,15 @@ export default function PlanResults() {
 
     if (!results && !isGenerating && !isExploding) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-8 text-[#f97766]">
-                <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'cursive' }}>No Plan Results Found</h2>
-                <button onClick={() => navigate('/plan')} className="px-6 py-2 rounded-xl border border-[#f97766]/30 hover:bg-[#f97766]/10 transition-all">
-                    Back to Constraints
-                </button>
-            </div>
-        );
-    }
-
-    if (!results) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-8 text-[#f97766]">
-                <h2 className="text-2xl font-bold mb-4" style={{ fontFamily: 'cursive' }}>No Plan Results Found</h2>
-                <button onClick={() => navigate('/plan')} className="px-6 py-2 rounded-xl border border-[#f97766]/30 hover:bg-[#f97766]/10 transition-all">
+            <div className="min-h-[80vh] flex flex-col items-center justify-center p-8 text-[#f97766] animate-in fade-in zoom-in-95 duration-500">
+                <div className="w-24 h-24 mb-6 rounded-full bg-[#1A0B16] border-2 border-[#DC8379]/30 flex items-center justify-center shadow-[0_0_30px_rgba(249,119,102,0.1)]">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#DC8379]/60"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <h2 className="text-4xl lg:text-5xl font-normal mb-4 text-center" style={{ fontFamily: 'cursive' }}>No Plan Results Found</h2>
+                <p className="text-[#DC8379]/60 text-center max-w-md mb-8">
+                    Your mandatory constraints were impossible to satisfy. Try relaxing some "must" rules or modifying your date range to generate a successful plan.
+                </p>
+                <button onClick={() => navigate('/plan')} className="px-8 py-3 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-bold hover:bg-[#f97766]/10 active:scale-95 transition-all shadow-xl">
                     Back to Constraints
                 </button>
             </div>
@@ -279,6 +274,57 @@ export default function PlanResults() {
 
     const allOptions = [results.bestOption, ...(results.alternatives || [])];
     const currentSelection = allOptions[selectedIdx];
+
+    // Calculate End Time based on start time and duration
+    const calculateEndTime = (startTime, durationStr) => {
+        if (!startTime || !durationStr) return startTime;
+        const durationHours = parseFloat(durationStr);
+        if (isNaN(durationHours)) return startTime;
+        
+        let t = startTime.trim();
+        if (!t.includes('AM') && !t.includes('PM')) t += ' AM';
+        const [timePart, period] = t.split(' ');
+        let [h, m] = timePart.split(':').map(Number);
+        if (period === 'PM' && h !== 12) h += 12;
+        if (period === 'AM' && h === 12) h = 0;
+
+        const d = new Date();
+        d.setHours(h, m + (durationHours * 60), 0, 0);
+
+        let nh = d.getHours();
+        const nm = d.getMinutes();
+        const nPeriod = nh >= 12 ? 'PM' : 'AM';
+        nh = nh % 12 || 12;
+        return `${nh.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')} ${nPeriod}`;
+    };
+
+    const handleVisualizeAround = () => {
+        const uniqueEntities = [...new Set(currentSelection.attendees.map(a => typeof a === 'object' ? (a.id || a._id) : a))];
+        navigate('/visualize', {
+            state: {
+                entities: uniqueEntities,
+                baseDate: currentSelection.date,
+                baseTime: currentSelection.time,
+                durationStr: currentSelection.duration
+            }
+        });
+    };
+
+    const getCardClass = (index, total) => {
+        let cls = "w-full animate-in fade-in zoom-in-90 slide-in-from-right-24 duration-700 animate-ease-out-back cursor-pointer transition-all";
+        if (total === 1) {
+            return `${cls} h-[30%] lg:w-full`;
+        } else if (total === 2) {
+            return `${cls} h-[25%] lg:w-[calc(50%-0.35rem)]`;
+        } else if (total === 3) {
+            if (index === 0) return `${cls} h-[26%] w-full`;
+            return `${cls} h-[22%] lg:w-[calc(50%-0.35rem)]`;
+        } else {
+            if (index === 0) return `${cls} h-[26%] w-full`;
+            if (index < 3) return `${cls} h-[21%] lg:w-[calc(50%-0.35rem)]`;
+            return `${cls} h-[19%] lg:w-[calc(25%-0.5rem)]`;
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[var(--bg-primary)] p-4 sm:p-6 lg:p-12 lg:pt-0 overflow-x-hidden relative">
@@ -334,14 +380,17 @@ export default function PlanResults() {
                             {/* Left Column: Detail View */}
                             <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-left-32 zoom-in-95 duration-1000 animate-ease-out-back">
                                 <div className="flex flex-col gap-2">
-                                    <div className="flex items-baseline gap-4">
+                                    <div className="flex items-center gap-3">
                                         <div className="bg-[#f97766]/10 border border-[#f97766]/30 px-3 py-1 rounded-lg text-[#f97766] font-bold text-sm tracking-tighter shadow-glow">
                                             {currentSelection.score}% MATCH
+                                        </div>
+                                        <div className="bg-[#f97766]/10 border border-[#f97766]/30 px-3 py-1 rounded-lg text-[#f97766] font-bold text-sm tracking-tighter shadow-glow">
+                                            {currentSelection.duration}
                                         </div>
                                         <span className="text-[#f97766]/40 text-sm font-bold uppercase tracking-[0.2em]">{currentSelection.date}</span>
                                     </div>
                                     <h1 className="text-5xl sm:text-7xl text-[#f97766] font-normal leading-none" style={{ fontFamily: 'cursive' }}>
-                                        {currentSelection.time}
+                                        {currentSelection.time} - {calculateEndTime(currentSelection.time, currentSelection.duration)}
                                     </h1>
                                 </div>
 
@@ -413,7 +462,7 @@ export default function PlanResults() {
                                     {allOptions.map((res, i) => (
                                         <div
                                             key={i}
-                                            className={`w-full ${i === 0 ? 'h-[26%]' : i < 3 ? 'lg:w-[calc(50%-0.35rem)] h-[21%]' : 'lg:w-[calc(25%-0.5rem)] h-[19%]'} animate-in fade-in zoom-in-90 slide-in-from-right-24 duration-700 animate-ease-out-back`}
+                                            className={getCardClass(i, allOptions.length)}
                                             style={{ animationDelay: `${i * 80}ms`, animationFillMode: 'both' }}
                                         >
                                             <ResultCard
@@ -431,9 +480,15 @@ export default function PlanResults() {
                                 <div className="mt-8 flex justify-end items-center gap-4 w-full animate-in slide-in-from-bottom-4 duration-700 delay-300">
                                     <button
                                         onClick={() => navigate('/plan')}
-                                        className="px-8 py-3.5 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm min-w-[180px]"
+                                        className="px-6 py-3.5 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm"
                                     >
                                         Return to Constraints
+                                    </button>
+                                    <button
+                                        onClick={handleVisualizeAround}
+                                        className="px-6 py-3.5 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm"
+                                    >
+                                        Visualize Around
                                     </button>
                                     <button
                                         onClick={handleCreateActivity}

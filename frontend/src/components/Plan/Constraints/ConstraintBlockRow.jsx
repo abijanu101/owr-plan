@@ -7,8 +7,9 @@ import TimePicker from '../../Pickers/TimePicker';
 import EntitySelector from '../../EntitySelector';
 import MultiDatePicker from '../../Pickers/MultiDatePicker';
 import Dropdown from '../../UI/Dropdown';
+import { CONSTRAINT_EXPLANATIONS } from './ConstraintExplanations';
 
-export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile, hasInclude }) {
+export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile, hasInclude, usedCustomTypes }) {
     const [isMobileCardExpanded, setIsMobileCardExpanded] = useState(false);
 
     const handleEntityChange = (entities) => {
@@ -78,10 +79,13 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
     const getTypeOptions = (currentType) => {
         const options = [];
         const groups = {};
+        const singletons = ['include', 'start after', 'start before', 'end before', 'end after'];
         
         Object.keys(CONSTRAINT_SCHEMA).forEach(k => {
             if (CONSTRAINT_SCHEMA[k].localOnly) return;
             if (k === 'include' && hasInclude && currentType !== 'include') return;
+            if (k === 'last for' && currentType !== 'last for') return;
+            if (singletons.includes(k) && usedCustomTypes.includes(k) && currentType !== k) return;
             
             const cat = CONSTRAINT_SCHEMA[k].category;
             if (!groups[cat]) groups[cat] = [];
@@ -155,16 +159,24 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                                 {block.children.map(child => (
                                     <div key={child.id} className="bg-[var(--bg-raised)]/60 rounded-xl p-3 flex flex-col gap-2 relative">
                                         <button onClick={() => removeChild(child.id)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center font-bold text-sm active:scale-90 transition-all">×</button>
-                                        <div className="flex flex-col gap-1 pr-8 relative">
-                                            <Dropdown 
-                                                value={child.type} 
-                                                onChange={(val) => updateChild(child.id, { ...child, type: val, modifier: getDefaultModifier(val), parameter: getDefaultParameter(val) })} 
-                                                options={getTypeOptions(child.type)} 
-                                                className="w-full" 
-                                                style={{ fontFamily: 'cursive' }}
-                                            />
+                                        <div className="flex flex-col gap-1 pr-8 relative z-20">
+                                            <div className="flex items-center gap-1 w-full relative">
+                                                <Dropdown 
+                                                    value={child.type} 
+                                                    onChange={(val) => updateChild(child.id, { ...child, type: val, modifier: getDefaultModifier(val), parameter: getDefaultParameter(val) })} 
+                                                    options={getTypeOptions(child.type)} 
+                                                    className="flex-1 min-w-0" 
+                                                    style={{ fontFamily: 'cursive' }}
+                                                />
+                                                <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                                    <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center" style={{fontFamily: 'sans-serif'}}>
+                                                        {CONSTRAINT_EXPLANATIONS[child.type] || 'Select a constraint'}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="mt-1">
+                                        <div className="mt-1 relative z-10">
                                             {renderParameterInput(child, (updated) => updateChild(child.id, updated))}
                                         </div>
                                     </div>
@@ -237,16 +249,22 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                                         />
                                     )}
                                 </div>
-                                <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 relative flex items-center hover:bg-white/5 transition-colors">
+                                <div className="w-40 sm:w-48 shrink-0 border-r border-[#DC8379]/10 py-1.5 px-3 flex items-center gap-1 hover:bg-white/5 transition-colors relative z-20">
                                     <Dropdown 
                                         value={child.type} 
                                         onChange={val => updateChild(child.id, { ...child, type: val, modifier: getDefaultModifier(val), parameter: getDefaultParameter(val) })} 
                                         options={getTypeOptions(child.type)} 
-                                        className="w-full" 
+                                        className="flex-1 min-w-0" 
                                         style={{ fontFamily: 'cursive' }}
                                     />
+                                    <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                        <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center pointer-events-none" style={{fontFamily: 'sans-serif'}}>
+                                            {CONSTRAINT_EXPLANATIONS[child.type] || 'Select a constraint'}
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="flex-1 py-1.5 px-3 min-w-[200px] flex items-center hover:bg-white/5 transition-colors">
+                                <div className="flex-1 py-1.5 px-3 min-w-[200px] flex items-center hover:bg-white/5 transition-colors relative z-10">
                                     {renderParameterInput(child, (updated) => updateChild(child.id, updated))}
                                 </div>
                             </div>
