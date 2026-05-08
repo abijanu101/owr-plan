@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import EntitySelector from '../components/EntitySelector';
 import { useAuth } from '../context/AuthContext';
 import { listEntities } from '../api/entitiesApi';
@@ -129,7 +129,7 @@ function calculateBlockStyle(block, durationStr, offsetSlots, isCustom, customRa
 }
 
 // Individual Timeline Row Component
-const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, customRange }) => {
+const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, customRange, navigate }) => {
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -153,7 +153,39 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
     const { start: startAbs, end: endAbs } = getTimelineBounds(durationStr, offsetSlots, isCustom, customRange);
 
     activities.forEach(act => {
-        const slots = act.slots || act.parsedSlots || [];
+        // Normalize: support both the old slot array format and new recurring/non-recurring format
+        let slots = act.slots || act.parsedSlots || [];
+
+        // Handle recurring activities: synthesize a slot from recurringDay + times
+        if (slots.length === 0 && act.activityType === 'recurring' && act.recurringStartTime) {
+            if (act.everyUnit === 'Day' || !act.recurringDay) {
+                // Daily: applies to every day — use today's day so it shows in 12hr/24hr view
+                const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+                slots = [{ day: todayName, startTime: act.recurringStartTime, endTime: act.recurringEndTime || act.recurringStartTime, _daily: true }];
+            } else {
+                // Weekly with a specific day
+                slots = [{ day: act.recurringDay, startTime: act.recurringStartTime, endTime: act.recurringEndTime || act.recurringStartTime }];
+            }
+        }
+
+        // Handle non-recurring: if rangeStart/rangeEnd exist, map to a day+time slot
+        if (slots.length === 0 && act.activityType === 'non-recurring' && act.rangeStart) {
+            const d = new Date(act.rangeStart);
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const day = dayNames[d.getDay()];
+            const fmtTime = (date) => {
+                const h = date.getHours();
+                const m = date.getMinutes();
+                const period = h >= 12 ? 'PM' : 'AM';
+                const hh = h % 12 === 0 ? 12 : h % 12;
+                const mm = String(m).padStart(2, '0');
+                return `${hh}:${mm} ${period}`;
+            };
+            const startT = fmtTime(d);
+            const endT = act.rangeEnd ? fmtTime(new Date(act.rangeEnd)) : startT;
+            slots = [{ day, startTime: startT, endTime: endT }];
+        }
+
         slots.forEach(slot => {
             if (isCustom) {
                 // Find all occurrences of this day within the custom range
@@ -163,18 +195,25 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
                 
                 while (current <= endLimit) {
                     const dayName = current.toLocaleDateString('en-US', { weekday: 'long' });
-                    if (slot.day === dayName) {
+                    // For daily slots match every day; for weekly match the specific day
+                    if (slot._daily || slot.day === dayName) {
                         const s = Math.floor(current.getTime() / 60000) + parseTimeToMinutes(slot.startTime);
                         const e = Math.floor(current.getTime() / 60000) + parseTimeToMinutes(slot.endTime);
                         // Check for overlap with the timeline view range
                         if (e > startAbs && s < endAbs) {
-                            blocks.push({ ...slot, absStart: s, absEnd: e, title: act.title });
+                            blocks.push({ ...slot, absStart: s, absEnd: e, title: act.title, activityId: act._id || act.id });
                         }
                     }
                     current.setDate(current.getDate() + 1);
                 }
             } else {
-                blocks.push({ ...slot, title: act.title });
+                // For 12hr/24hr views: show all slots (time-only axis, day doesn't matter)
+                // For week/month views: only include slots that have a day for positional rendering
+                if (durationStr === '12 hr' || durationStr === '24 hr' || slot._daily) {
+                    blocks.push({ ...slot, title: act.title, activityId: act._id || act.id });
+                } else if (slot.day) {
+                    blocks.push({ ...slot, title: act.title, activityId: act._id || act.id });
+                }
             }
         });
     });
@@ -225,7 +264,8 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
                         return (
                             <div
                                 key={i}
-                                className="absolute top-1/2 -translate-y-1/2 h-3.5 rounded-none group/block cursor-pointer shadow-[0_0_12px_rgba(249,119,102,0.5)] z-10"
+                                onClick={() => navigate(`/activities/${block.activityId}`)}
+                                className="absolute top-1/2 -translate-y-1/2 h-3.5 rounded-none group/block cursor-pointer shadow-[0_0_12px_rgba(249,119,102,0.5)] z-10 hover:brightness-125 transition-all"
                                 style={{ ...calculateBlockStyle(block, durationStr, offsetSlots, isCustom, customRange), backgroundColor: '#f97766' }}
                             >
                                 {/* Tooltip */}
@@ -251,6 +291,7 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
 
 export default function BlockVisualization() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { user } = useAuth();
     const [entities, setEntities] = useState([]);
     
@@ -415,6 +456,7 @@ export default function BlockVisualization() {
                                         onShift={handleShift}
                                         isCustom={isCustomRange}
                                         customRange={customRange}
+                                        navigate={navigate}
                                     />
                                 );
                             })}

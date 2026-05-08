@@ -23,7 +23,7 @@ const startServer = async () => {
       // Auto-seed demo data
       console.log('🌱 Seeding demo data...');
       const seed = require('../seed');
-      await seed();
+      await seed(true);
       console.log('✅ Demo data seeded (user: test@example.com / password123)');
     } catch (memErr) {
       console.error('❌ Failed to start in-memory MongoDB:', memErr.message);

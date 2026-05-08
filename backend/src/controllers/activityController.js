@@ -75,7 +75,7 @@ const transformActivity = (activity) => {
 const createActivity = async (req, res) => {
   try {
     const {
-      userId, title, description, participants,
+      title, description, participants,
       activityType,
       // non-recurring
       rangeStart, rangeEnd,
@@ -86,8 +86,10 @@ const createActivity = async (req, res) => {
       expiryType, expiryDate, expiryOccurrences,
     } = req.body;
 
-    if (!userId || !title) {
-      return res.status(400).json({ success: false, message: 'userId and title are required.' });
+    const userId = req.user._id;
+
+    if (!title) {
+      return res.status(400).json({ success: false, message: 'title is required.' });
     }
 
     const type = activityType || 'non-recurring';
@@ -313,7 +315,9 @@ const getActivitiesByEntityID = async (req, res) => {
     }
 
     // Find activities where participants array contains any of the participantIds
+    // Scope to the logged-in user's activities
     const activities = await Activity.find({
+      userId: req.user._id,
       participants: { $in: participantIds }
     })
       .populate('participants', 'name type color faceIcon')
@@ -336,8 +340,8 @@ const getActivitiesByEntityID = async (req, res) => {
 // GET /api/activities
 const listActivities = async (req, res) => {
   try {
-    const activities = await Activity.find()
-      .populate('participants', 'name icon color')
+    const activities = await Activity.find({ userId: req.user._id })
+      .populate('participants', 'name icon color faceIcon type')
       .sort({ createdAt: -1 })
       .lean();
 

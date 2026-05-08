@@ -23,12 +23,16 @@ export default function EntitySelector({
                 const data = await listEntities('all');
                 
                 // Backend returns a plain array of entities
+                // Force all ids to strings to avoid ObjectId vs string comparison bugs
                 if (Array.isArray(data)) {
                     setEntities(data.map(e => ({
-                        id: e._id || e.id,
+                        id: String(e._id || e.id || ''),
                         name: e.name,
                         type: e.type || e.kind,
                         color: e.color || 'var(--color-primary)',
+                        members: (e.members || []).map(m =>
+                            String(m._id || m.id || m)
+                        )
                     })));
                 }
             } catch (err) {

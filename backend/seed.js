@@ -9,10 +9,12 @@ const Ledger = require('./src/models/Ledgers');
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/owrplan';
 
-async function seed() {
+async function seed(skipConnection = false) {
   try {
-    await mongoose.connect(MONGO_URI);
-    console.log('Connected to DB');
+    if (!skipConnection) {
+      await mongoose.connect(MONGO_URI);
+      console.log('Connected to DB');
+    }
 
     await Promise.all([
       User.deleteMany({}),
@@ -189,8 +191,14 @@ async function seed() {
   } catch (err) {
     console.error('Seed error:', err);
   } finally {
-    await mongoose.connection.close();
+    if (!skipConnection) {
+      await mongoose.connection.close();
+    }
   }
 }
 
-seed();
+module.exports = seed;
+
+if (require.main === module) {
+  seed();
+}

@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middlewares/auth.middleware');
 const {
   createActivity,
   getActivityById,
@@ -15,6 +16,8 @@ const {
   bulkDeleteActivities,
   duplicateActivities,
 } = require('../controllers/activityController');
+
+router.use(protect); // Protect all routes below
 
 // Core CRUD
 router.post('/',       createActivity);
