@@ -74,40 +74,43 @@ const score_candidates = (time_constraints, candidates, all_entities = []) => {
         const extra = Math.max(0, c.duration - (target_dur || c.duration) - req_pad * 2);
         breakdown.padding_comfort = Math.min(100, (extra / 60) * 100);
 
+        // 6. Generosity Boost (Favor longer candidates)
+        const generosity_ratio = c.duration / (target_dur || c.duration || 60);
+        breakdown.generosity = Math.min(100, Math.max(0, (generosity_ratio - 1) * 40));
+
         // Weighted Total
-        const raw = (0.35 * breakdown.attendance) + (0.20 * breakdown.duration_fit) + 
+        const raw = (0.30 * breakdown.attendance) + (0.15 * breakdown.duration_fit) + 
                     (0.15 * breakdown.pref_time)  + (0.15 * breakdown.peak_time) +
-                    (0.10 * breakdown.earliness)  + (0.05 * breakdown.padding_comfort);
+                    (0.10 * breakdown.earliness)  + (0.10 * breakdown.generosity) +
+                    (0.05 * breakdown.padding_comfort);
         
+        breakdown.diversity_penalty = 0;
+
         return { ...c, score: Math.min(100, Math.round(raw)), breakdown };
     });
 
     const initial_scored = scored.sort((a, b) => b.score - a.score || a.start - b.start);
     
     // ── Diversity Reranking ──────────────────────────────────────────────
-    // We want to avoid returning 5 results that are all 15 mins apart on the same day.
     const final_top = [];
     const remaining = [...initial_scored];
     const top_n_limit = Math.min(remaining.length, 11);
 
     while (final_top.length < top_n_limit && remaining.length > 0) {
-        // 1. Sort remaining by current score
         remaining.sort((a, b) => b.score - a.score);
-        
-        // 2. Pick the best
         const best = remaining.shift();
         final_top.push(best);
 
-        // 3. Penalize similar ones in the remaining pool
         for (const cand of remaining) {
             const sameDay = cand.start.toDateString() === best.start.toDateString();
-            const timeDiff = Math.abs(cand.start.getTime() - best.start.getTime()) / (1000 * 60 * 60); // hours
+            const timeDiff = Math.abs(cand.start.getTime() - best.start.getTime()) / (1000 * 60 * 60);
 
             if (sameDay) {
-                // Same day penalty: 15 points
-                cand.score -= 15;
-                // If very close in time (within 3 hours), extra penalty
-                if (timeDiff < 3) cand.score -= 20;
+                let penalty = 15;
+                if (timeDiff < 3) penalty += 20;
+                
+                cand.score -= penalty;
+                cand.breakdown.diversity_penalty = (cand.breakdown.diversity_penalty || 0) + penalty;
             }
         }
     }
@@ -145,12 +148,118 @@ const parse_p = (p) => {
     return h * 60 + (p.minutes || 0);
 };
 
-const format_results = (scored, entity_map = {}, top_n = 3) => {
+const format_results = (scored, entity_map = {}, top_n = 3, all_entity_ids = [], mandatory_entity_ids = [], time_constraints = {}) => {
     const fmt_d = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const fmt_t = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     const fmt_dur = (m) => {
         const h = Math.floor(m/60); const mn = Math.round(m%60);
         return h === 0 ? `${mn}min` : (mn === 0 ? `${h}hr` : `${h}hr ${mn}min`);
+    };
+
+    const makeCommentary = (c) => {
+        const commentary = [];
+        const breakdown = c.breakdown || {};
+        const global_tc = time_constraints?.global || {};
+        
+        // 0. Base Success
+        commentary.push({ 
+            type: 'success', 
+            title: 'All Constraints Met', 
+            description: 'This time slot respects all the rules and requirements you defined.' 
+        });
+
+        // 1. Attendance Commentary
+        // Only show if there are OPTIONAL people
+        const hasOptionalPeople = (mandatory_entity_ids.length < all_entity_ids.length);
+        if (breakdown.attendance === 100) {
+            if (hasOptionalPeople) {
+                commentary.push({ 
+                    type: 'success', 
+                    title: 'Perfect Attendance', 
+                    description: 'Incredible! Everyone, including optional guests, is free for this slot.' 
+                });
+            }
+        } else {
+            const attendeeIds = c.available.map(id => id.toString());
+            const missing = all_entity_ids.filter(id => !attendeeIds.includes(id.toString()));
+            const missingNames = missing.map(id => entity_map[id]?.name || 'Unknown Entity').slice(0, 2);
+            const remainingCount = missing.length - missingNames.length;
+            
+            let missingStr = missingNames.join(' and ');
+            if (remainingCount > 0) missingStr += ` and ${remainingCount} others`;
+
+            commentary.push({ 
+                type: 'warning', 
+                title: 'Partial Attendance', 
+                description: `Most are free, but ${missingStr} ${missing.length === 1 ? 'has' : 'have'} conflicts.` 
+            });
+        }
+
+        // 2. Alignment
+        // Only show if the window was NOT a strict "must"
+        // Wait, temporal alignment is basically always true. 
+        // User wants it only when there is "optional criteria".
+        // I'll interpret this as "if there are 'should' curfews or 'should' windows"
+        const hasOptionalWindow = global_tc.modifier === 'should';
+        const hasPreferences = (global_tc.curfews || []).some(cur => cur.modifier === 'should');
+
+        if (hasOptionalWindow || hasPreferences) {
+            commentary.push({ 
+                type: 'success', 
+                title: 'Temporal Alignment', 
+                description: 'This slot aligns perfectly with your flexible timing preferences.' 
+            });
+        }
+
+        // 3. Peak Time / Prime Slot
+        if (breakdown.peak_time >= 80) {
+            commentary.push({ 
+                type: 'success', 
+                title: 'Prime Time', 
+                description: 'This occurs during high-engagement afternoon hours (2-6 PM).' 
+            });
+        }
+
+        // 4. Score context
+        if (c.score >= 90) {
+            commentary.push({ 
+                type: 'success', 
+                title: 'Top Recommendation', 
+                description: `This slot scored a ${c.score}% match due to ideal duration and timing.` 
+            });
+        }
+
+        // 5. Margin / Extra Time
+        if (breakdown.padding_comfort > 50) {
+            commentary.push({ 
+                type: 'success', 
+                title: 'Plenty of Time', 
+                description: 'This slot is much larger than required, offering great flexibility for your plans.' 
+            });
+        } else if (breakdown.padding_comfort > 0) {
+            commentary.push({ 
+                type: 'success', 
+                title: 'Breezy Transition', 
+                description: 'There is a comfortable buffer before and after this activity.' 
+            });
+        } else {
+            commentary.push({ 
+                type: 'warning', 
+                title: 'Tight Squeeze', 
+                description: 'This slot is bordered closely by other activities; minimal buffer room.' 
+            });
+        }
+
+        // 6. Diversity Context
+        if (breakdown.diversity_penalty > 0) {
+            commentary.push({ 
+                type: 'warning', 
+                title: 'Diversity Adjustment', 
+                description: 'Ranked lower to prioritize unique days and more varied time slots.' 
+            });
+        }
+
+        return commentary;
     };
 
     const make = (c) => ({
@@ -161,6 +270,7 @@ const format_results = (scored, entity_map = {}, top_n = 3) => {
         score: c.score, 
         attendees: c.available.map(id => entity_map[id] || { id }),
         breakdown: c.breakdown, 
+        commentary: makeCommentary(c),
         _raw: { start: c.start, end: c.end }
     });
 

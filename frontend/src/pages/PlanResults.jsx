@@ -9,69 +9,94 @@ import { PersonIcon, GroupIcon } from '../components/EntityIcons';
 
 const ResultCard = ({ result, index, isSelected, onClick, resolveEntity }) => {
     const isTopThree = index < 3;
+    const isBest = index === 0;
     const remainingCount = result.attendees.length - 3;
 
-    // Responsive background and border colors
-    const bgColor = `
-        bg-[#3A0B25]
-        ${isTopThree ? 'lg:bg-[#3A0B25]' : 'lg:bg-[#2A081D]'}
-    `;
-    const borderColor = `
-        border-[#f97766]/30
-        ${isTopThree ? 'lg:border-[#f97766]/30' : 'lg:border-[#f97766]/10'}
-    `;
+    // Premium background colors
+    const bgColor = isSelected
+        ? 'bg-[#f97766]'
+        : isBest
+            ? 'bg-[#3A0B25]'
+            : isTopThree
+                ? 'bg-[#2D091D]'
+                : 'bg-[#1F0715]';
+
+    const borderColor = isSelected
+        ? 'border-[#f97766]'
+        : isBest
+            ? 'border-[#f97766]/40'
+            : 'border-[#f97766]/20';
+
+    const textColor = isSelected ? 'text-[#1A0B16]' : 'text-[#f97766]';
+    const subTextColor = isSelected ? 'text-[#1A0B16]/50' : 'text-[#f97766]/50';
 
     const entitiesData = result.attendees.map(a => resolveEntity(a));
+    const displayEndTime = result.endTime || calculateEndTime(result.time, result.duration);
 
     return (
         <div
             onClick={onClick}
             className={`
                 relative group transition-all duration-300 cursor-pointer snap-center shrink-0
-                ${isSelected ? 'ring-2 ring-[#f97766] scale-[1.02]' : 'hover:scale-[1.01]'}
-                ${bgColor} border ${borderColor} p-2.5 lg:p-3
+                ${isSelected ? 'shadow-[0_0_30px_rgba(249,119,102,0.3)]' : ''}
+                ${bgColor} border ${borderColor} 
                 rounded-[1.2rem] lg:rounded-[1.5rem] shadow-xl hover:brightness-110 active:scale-95 flex flex-col justify-between
-                w-[42vw] lg:w-full h-[110px] lg:h-full
+                w-[42vw] lg:w-full h-[120px] lg:h-full p-3 lg:p-4
             `}
         >
-            <div className="flex justify-between items-start mb-1 lg:mb-1.5">
+            <div className="flex justify-between items-start">
                 <div className="flex flex-col">
-                    <span className={`text-[#f97766]/60 font-bold uppercase tracking-widest mb-0.5 ${isTopThree ? 'text-[8px] lg:text-[10px]' : 'text-[7px] lg:text-[8px]'}`}>
+                    <span className={`${subTextColor} font-bold uppercase tracking-widest mb-0.5 ${isTopThree ? 'text-[9px] lg:text-[10px]' : 'text-[8px] lg:text-[9px]'}`}>
                         {result.date}
                     </span>
-                    <span className={`text-[#f97766] font-bold italic transition-all ${isTopThree ? 'text-lg lg:text-2xl' : 'text-base lg:text-lg'}`} style={{ fontFamily: 'cursive' }}>
-                        {result.time}
-                    </span>
+                    <div className="flex items-baseline flex-wrap gap-x-1">
+                        <span className={`${textColor} font-bold italic whitespace-nowrap transition-all ${isBest ? 'text-lg lg:text-3xl' : isTopThree ? 'text-base lg:text-xl' : 'text-[13px] lg:text-base'}`} style={{ fontFamily: 'cursive' }}>
+                            {result.time}
+                        </span>
+                        {isTopThree && (
+                            <span className={`${isSelected ? 'text-[#1A0B16]/30' : 'text-[#f97766]/40'} font-bold italic whitespace-nowrap ${isBest ? 'text-xs lg:text-lg' : 'text-[10px] lg:text-sm'}`} style={{ fontFamily: 'cursive' }}>
+                                - {displayEndTime}
+                            </span>
+                        )}
+                    </div>
                 </div>
-                <div className={`bg-[#f97766] text-[#1A0B16] font-bold shadow-lg shrink-0 border border-[#1A0B16]/20 rounded-full ${isTopThree ? 'px-2 py-0.5 lg:px-2.5 lg:py-0.5 text-[9px] lg:text-[10px]' : 'px-1.5 py-0.5 text-[8px] lg:text-[9px]'}`}>
+                <div className={`${isSelected ? 'bg-[#1A0B16] text-[#f97766]' : 'bg-[#f97766] text-[#1A0B16]'} font-black shadow-lg shrink-0 border border-black/10 rounded-full px-2 py-0.5 uppercase tracking-tighter leading-none ${isTopThree ? 'text-[8px] lg:text-[10px]' : 'text-[7px] lg:text-[8px]'}`}>
                     {result.duration}
                 </div>
             </div>
+
             <div className="flex items-center justify-between mt-auto">
                 <div className="flex items-center">
                     {isTopThree ? (
-                        <div className="flex -space-x-1.5 lg:-space-x-2">
-                            {entitiesData.slice(0, 3).map((e, i) => (
-                                e.type === 'group' ? (
-                                    <GroupIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
-                                ) : (
-                                    <PersonIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
-                                )
-                            ))}
-                            {remainingCount > 0 && (
-                                <div className="w-5 h-5 lg:w-6 lg:h-6 rounded-full border-2 border-[#1A0B16] bg-[#1A0B16]/80 flex items-center justify-center text-[6px] lg:text-[7px] text-[#f97766] font-bold z-30">
-                                    +{remainingCount}
-                                </div>
-                            )}
+                        <div className={`flex items-center transition-all duration-500 animate-ease-out-back rounded-full ${isSelected ? 'bg-[#1A0B16] px-2 py-1 lg:px-2.5 lg:py-1.5 shadow-lg' : 'bg-transparent px-0 py-0 shadow-none'}`}>
+                            <div className="flex -space-x-1.5 lg:-space-x-2">
+                                {entitiesData.slice(0, 3).map((e, i) => (
+                                    e.type === 'group' ? (
+                                        <GroupIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
+                                    ) : (
+                                        <PersonIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
+                                    )
+                                ))}
+                                {remainingCount > 0 && (
+                                    <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full border-2 ${isSelected ? 'border-[#1A0B16] bg-[#1A0B16] text-[#f97766]' : 'border-[#1A0B16] bg-[#1A0B16] text-[#f97766]'} flex items-center justify-center text-[7px] font-bold z-30`}>
+                                        +{remainingCount}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     ) : (
-                        <span className="text-[9px] lg:text-[10px] font-bold text-[#f97766]/60 uppercase tracking-wider">
-                            {result.attendees.length} entities
-                        </span>
+                        <div className="flex flex-col gap-0.5">
+                            <span className={`text-[8px] lg:text-[9px] font-bold ${subTextColor} uppercase tracking-widest`}>
+                                Attendees
+                            </span>
+                            <span className={`text-[10px] lg:text-[11px] font-bold ${isSelected ? 'text-[#1A0B16]/80' : 'text-[#f97766]/70'} uppercase tracking-tighter`}>
+                                {result.attendees.length} entities
+                            </span>
+                        </div>
                     )}
                 </div>
                 {isTopThree && (
-                    <div className="text-[2.2rem] lg:text-[3rem] font-bold text-[#f97766]/10 absolute bottom-0 right-2 lg:right-3 leading-none select-none" style={{ fontFamily: 'cursive' }}>
+                    <div className={`text-[2rem] lg:text-[3.5rem] font-bold ${isSelected ? 'text-[#1A0B16]/10' : 'text-[#f97766]/10'} absolute bottom-0 right-2 lg:right-4 leading-none select-none pointer-events-none`} style={{ fontFamily: 'cursive' }}>
                         #{index + 1}
                     </div>
                 )}
@@ -282,7 +307,7 @@ export default function PlanResults() {
         if (!startTime || !durationStr) return startTime;
         const durationHours = parseFloat(durationStr);
         if (isNaN(durationHours)) return startTime;
-        
+
         let t = startTime.trim();
         if (!t.includes('AM') && !t.includes('PM')) t += ' AM';
         const [timePart, period] = t.split(' ');
@@ -313,19 +338,20 @@ export default function PlanResults() {
     };
 
     const getCardClass = (index, total) => {
-        let cls = "w-full animate-in fade-in zoom-in-90 slide-in-from-right-24 duration-700 animate-ease-out-back cursor-pointer transition-all";
-        if (total === 1) {
-            return `${cls} h-[30%] lg:w-full`;
-        } else if (total === 2) {
-            return `${cls} h-[25%] lg:w-[calc(50%-0.35rem)]`;
-        } else if (total === 3) {
-            if (index === 0) return `${cls} h-[26%] w-full`;
-            return `${cls} h-[22%] lg:w-[calc(50%-0.35rem)]`;
-        } else {
-            if (index === 0) return `${cls} h-[26%] w-full`;
-            if (index < 3) return `${cls} h-[21%] lg:w-[calc(50%-0.35rem)]`;
-            return `${cls} h-[19%] lg:w-[calc(25%-0.5rem)]`;
+        let baseCls = "animate-in fade-in zoom-in-90 slide-in-from-right-24 duration-700 animate-ease-out-back cursor-pointer transition-all";
+
+        if (index === 0) {
+            // #1 Best Option - Full Width
+            return `${baseCls} w-full h-[140px] lg:h-[180px]`;
         }
+
+        if (index < 3) {
+            // #2 and #3 Top Alternatives - Full on smaller laptops, Half on large
+            return `${baseCls} w-full xl:w-[calc(50%-0.5rem)] h-[120px] lg:h-[150px]`;
+        }
+
+        // Other Alternatives - Full on smaller laptops, Quarter on large
+        return `${baseCls} w-full lg:w-full xl:w-[calc(25%-0.75rem)] h-[110px] lg:h-[130px]`;
     };
 
     return (
@@ -377,89 +403,117 @@ export default function PlanResults() {
                         className={`fixed inset-0 z-40 bg-black/40 backdrop-blur-md transition-opacity duration-500 lg:hidden ${isExpanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
                     />
 
-                    <div className={`max-w-7xl mx-auto flex flex-col gap-6 transition-all duration-500 ${isExpanded ? 'pb-[220px]' : 'pb-12'} lg:pb-0 pt-6 lg:pt-12`}>
-                        <div className={`flex-1 flex flex-col lg:flex-row gap-8 lg:gap-16 transition-all duration-500`}>
+                    <div className={`max-w-[1600px] mx-auto px-6 lg:px-12 flex flex-col gap-6 transition-all duration-500 ${isExpanded ? 'pb-[220px]' : 'pb-12'} lg:pb-0 pt-6 lg:pt-12`}>
+                        <div className={`flex-1 flex flex-col lg:flex-row gap-8 lg:gap-12 transition-all duration-500`}>
                             {/* Left Column: Detail View */}
-                            <div className="flex-1 flex flex-col gap-8 animate-in fade-in slide-in-from-left-32 zoom-in-95 duration-1000 animate-ease-out-back">
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-[#f97766]/10 border border-[#f97766]/30 px-3 py-1 rounded-lg text-[#f97766] font-bold text-sm tracking-tighter shadow-glow">
-                                            {currentSelection.score}% MATCH
+                            <div className="lg:w-[60%] xl:w-1/2 flex-shrink-0 flex flex-col">
+                                <div
+                                    key={selectedIdx}
+                                    className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-24 zoom-in-95 duration-700 animate-ease-out-back"
+                                >
+                                    <div className="flex flex-col gap-6">
+                                        {/* Header Info */}
+                                        <div className="flex flex-wrap items-center justify-between gap-y-4 gap-x-4">
+                                            <div className="flex items-center gap-4 flex-wrap">
+                                                <span className="text-[#f97766]/40 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] whitespace-nowrap">{currentSelection.date}</span>
+                                                <div className="bg-[#f97766]/10 border border-[#f97766]/30 px-3 py-1.5 rounded-xl text-[#f97766] font-black text-[10px] tracking-widest shadow-glow uppercase shrink-0">
+                                                    {currentSelection.score}% MATCH
+                                                </div>
+                                            </div>
+                                            <div className="bg-[#f97766] text-[#1A0B16] font-black shadow-glow border border-[#1A0B16]/20 rounded-full px-4 py-2 uppercase tracking-tighter leading-none text-xs shrink-0">
+                                                {currentSelection.duration}
+                                            </div>
                                         </div>
-                                        <div className="bg-[#f97766]/10 border border-[#f97766]/30 px-3 py-1 rounded-lg text-[#f97766] font-bold text-sm tracking-tighter shadow-glow">
-                                            {currentSelection.duration}
-                                        </div>
-                                        <span className="text-[#f97766]/40 text-sm font-bold uppercase tracking-[0.2em]">{currentSelection.date}</span>
-                                    </div>
-                                    <h1 className="text-5xl sm:text-7xl text-[#f97766] font-normal leading-none" style={{ fontFamily: 'cursive' }}>
-                                        {currentSelection.time} - {currentSelection.endTime || calculateEndTime(currentSelection.time, currentSelection.duration)}
-                                    </h1>
-                                </div>
 
-                                <div className="flex flex-col gap-4">
-                                    <h3 className="text-xs font-bold text-[#DC8379]/40 uppercase tracking-widest flex items-center gap-3">
-                                        Attendees <div className="h-px bg-[#DC8379]/10 flex-1" />
-                                    </h3>
-                                    <div className="flex flex-wrap gap-2">
-                                        {currentSelection.attendees.map((attendee, i) => {
-                                            const data = getEntityData(attendee);
-                                            return (
-                                                <EntityChip
-                                                    key={i}
-                                                    name={data.name}
-                                                    color={data.color}
-                                                    isSelected={true}
-                                                    isGroup={data.type === 'group'}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (data.id || data._id) {
-                                                            navigate(`/entities/${data.id || data._id}`);
-                                                        }
-                                                    }}
-                                                />
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                        {/* Timeline Block */}
+                                        <div className="flex flex-col gap-4 relative py-2">
+                                            {/* Vertical connecting line */}
+                                            <div className="absolute left-4 top-10 bottom-10 w-0.5 bg-gradient-to-b from-[#f97766] via-[#f97766]/40 to-transparent" />
 
-                                <div className="flex flex-col gap-4 flex-1">
-                                    <h3 className="text-xs font-bold text-[#DC8379]/40 uppercase tracking-widest flex items-center gap-3">
-                                        Quest Integrity <div className="h-px bg-[#DC8379]/10 flex-1" />
-                                    </h3>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 custom-scrollbar">
-                                        <div className="bg-[#f97766]/5 border border-[#f97766]/20 rounded-[1.5rem] p-4 flex items-start gap-4 group hover:bg-[#f97766]/10 transition-all">
-                                            <div className="w-10 h-10 rounded-full bg-[#f97766]/20 flex items-center justify-center shrink-0 shadow-glow">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97766" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                            <div className="flex items-center gap-8 group">
+                                                <div className="w-8 h-8 rounded-full bg-[#f97766] flex items-center justify-center shadow-glow shrink-0 relative z-10 transition-transform group-hover:scale-110">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#1A0B16" stroke="none"><path d="M5 3l14 9-14 9V3z" /></svg>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-[#f97766]/40 uppercase tracking-[0.2em] leading-none mb-1">Start Time</span>
+                                                    <h1 className="text-4xl sm:text-5xl lg:text-7xl text-[#f97766] font-normal leading-none" style={{ fontFamily: 'cursive' }}>
+                                                        {currentSelection.time}
+                                                    </h1>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-sm text-[#f97766] font-bold italic" style={{ fontFamily: 'cursive' }}>Time Window Met</span>
-                                                <p className="text-[10px] text-[#DC8379]/60 leading-relaxed">Slot falls perfectly within the requested availability range.</p>
+
+                                            <div className="flex items-center gap-8 group">
+                                                <div className="w-8 h-8 rounded-full bg-[#1A0B16] border-2 border-[#f97766]/40 flex items-center justify-center shrink-0 relative z-10 transition-transform group-hover:scale-110">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f97766" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" y1="22" x2="4" y2="15" /></svg>
+                                                </div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-[#f97766]/40 uppercase tracking-[0.2em] leading-none mb-1">End Time</span>
+                                                    <h1 className="text-4xl sm:text-5xl lg:text-7xl text-[#f97766] font-normal leading-none opacity-80" style={{ fontFamily: 'cursive' }}>
+                                                        {currentSelection.endTime || calculateEndTime(currentSelection.time, currentSelection.duration)}
+                                                    </h1>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="bg-[#f97766]/5 border border-[#f97766]/20 rounded-[1.5rem] p-4 flex items-start gap-4 group hover:bg-[#f97766]/10 transition-all">
-                                            <div className="w-10 h-10 rounded-full bg-[#f97766]/20 flex items-center justify-center shrink-0 shadow-glow">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97766" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-sm text-[#f97766] font-bold italic" style={{ fontFamily: 'cursive' }}>Full Attendance</span>
-                                                <p className="text-[10px] text-[#DC8379]/60 leading-relaxed">Everyone invited is confirmed free for this duration.</p>
-                                            </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <h3 className="text-[10px] font-bold text-[#DC8379]/40 uppercase tracking-[0.2em] flex items-center gap-3">
+                                            Attendees <div className="h-px bg-[#DC8379]/10 flex-1" />
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {currentSelection.attendees.map((attendee, i) => {
+                                                const data = getEntityData(attendee);
+                                                return (
+                                                    <EntityChip
+                                                        key={i}
+                                                        name={data.name}
+                                                        color={data.color}
+                                                        isSelected={true}
+                                                        isGroup={data.type === 'group'}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (data.id || data._id) {
+                                                                navigate(`/entities/${data.id || data._id}`);
+                                                            }
+                                                        }}
+                                                    />
+                                                );
+                                            })}
                                         </div>
-                                        <div className="bg-white/5 border border-white/10 rounded-[1.5rem] p-4 flex items-start gap-4 opacity-60">
-                                            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
-                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC8379" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                            </div>
-                                            <div className="flex flex-col gap-1">
-                                                <span className="text-sm text-[#DC8379] font-bold italic" style={{ fontFamily: 'cursive' }}>Minor Fatigue Risk</span>
-                                                <p className="text-[10px] text-[#DC8379]/40 leading-relaxed">Ayesha has a back-to-back event immediately following this slot.</p>
-                                            </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-4">
+                                        <h3 className="text-[10px] font-bold text-[#DC8379]/40 uppercase tracking-[0.2em] flex items-center gap-3">
+                                            Quest Integrity <div className="h-px bg-[#DC8379]/10 flex-1" />
+                                        </h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pr-2 custom-scrollbar">
+                                            {(currentSelection.commentary || [
+                                                { type: 'success', title: 'Temporal Alignment', description: 'Slot fits perfectly within the requested date-time window.' },
+                                                { type: 'success', title: 'Full Availability', description: 'All selected entities are confirmed to be free during this slot.' },
+                                                { type: 'success', title: 'Score Factor', description: 'Ranked higher based on consistency across all member schedules.' },
+                                                { type: 'warning', title: 'Constraint Margin', description: 'Minimal buffer space detected between this and existing activities.' }
+                                            ]).map((comment, idx) => (
+                                                <div key={idx} className={`${comment.type === 'success' ? 'bg-[#f97766]/5 border-[#f97766]/10' : 'bg-white/5 border-white/10 opacity-60'} border rounded-[1.2rem] p-4 flex items-start gap-4 group hover:brightness-110 transition-all`}>
+                                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-glow ${comment.type === 'success' ? 'bg-[#f97766]/20' : 'bg-white/10'}`}>
+                                                        {comment.type === 'success' ? (
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="#f97766" stroke="none"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                                                        ) : (
+                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC8379" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col gap-0.5">
+                                                        <span className={`text-sm font-bold italic ${comment.type === 'success' ? 'text-[#f97766]' : 'text-[#DC8379]'}`} style={{ fontFamily: 'cursive' }}>{comment.title}</span>
+                                                        <p className="text-[10px] text-[#DC8379]/50 leading-relaxed">{comment.description}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Right Column: Cards (Desktop only) */}
-                            <div className="hidden lg:flex flex-1 flex flex-col relative h-full">
+                            <div className="hidden lg:flex lg:w-[40%] xl:w-1/2 flex-shrink-0 flex flex-col relative h-full">
                                 <div className="h-full flex flex-wrap gap-2.5 scroll-smooth content-start">
                                     {allOptions.map((res, i) => (
                                         <div
@@ -482,53 +536,87 @@ export default function PlanResults() {
                                 <div className="mt-8 flex justify-end items-center gap-4 w-full animate-in slide-in-from-bottom-4 duration-700 delay-300">
                                     <button
                                         onClick={() => navigate('/plan')}
-                                        className="px-6 py-3.5 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm"
+                                        className="h-[54px] w-[54px] flex items-center justify-center rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 shadow-lg group"
+                                        title="Return to Constraints"
                                     >
-                                        Return to Constraints
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>
                                     </button>
                                     <button
                                         onClick={handleVisualizeAround}
-                                        className="px-6 py-3.5 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm"
+                                        className="h-[54px] px-6 rounded-2xl border border-[#f97766]/30 text-[#f97766] font-semibold hover:bg-[#f97766]/10 transition-all active:scale-95 text-sm shadow-lg whitespace-nowrap"
                                     >
                                         Visualize Around
                                     </button>
                                     <button
                                         onClick={handleCreateActivity}
                                         disabled={isCreating}
-                                        className="flex items-center justify-center gap-2 px-10 py-3.5 rounded-2xl bg-[#f97766] text-[#1A0B16] font-bold hover:brightness-110 transition-all shadow-lg active:scale-95 text-sm min-w-[220px] disabled:opacity-50"
+                                        className="h-[54px] flex items-center justify-center gap-3 px-10 rounded-2xl bg-[#f97766] text-[#1A0B16] font-black hover:brightness-110 transition-all shadow-glow active:scale-95 text-sm min-w-[220px] disabled:opacity-50"
                                     >
                                         {isCreating ? (
                                             <div className="w-5 h-5 border-2 border-[#1A0B16]/30 border-t-[#1A0B16] rounded-full animate-spin" />
                                         ) : (
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                            <>
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                                Save Activity
+                                            </>
                                         )}
-                                        {isCreating ? 'Creating...' : 'Create Activity'}
                                     </button>
                                 </div>
                             </div>
                         </div>
 
+                        {/* Action Buttons (Mobile) */}
+                        <div className="lg:hidden mt-12 mb-8 flex items-center gap-2.5 w-full animate-in slide-in-from-bottom-8 duration-1000 delay-300">
+                            <button
+                                onClick={() => navigate('/plan')}
+                                className="h-[56px] w-[56px] shrink-0 flex items-center justify-center rounded-2xl border border-[#f97766]/20 bg-[#f97766]/5 text-[#f97766] transition-all active:scale-90 shadow-lg group"
+                                title="Back"
+                            >
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-0.5 transition-transform"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>
+                            </button>
+
+                            <button
+                                onClick={handleVisualizeAround}
+                                className="flex-1 h-[56px] flex items-center justify-center rounded-2xl border border-[#f97766]/20 bg-[#f97766]/5 text-[#f97766] font-bold text-[10px] uppercase tracking-[0.15em] transition-all active:scale-95 shadow-lg whitespace-nowrap"
+                            >
+                                Visualize
+                            </button>
+
+                            <button
+                                onClick={handleCreateActivity}
+                                disabled={isCreating}
+                                className="flex-[1.5] h-[56px] flex items-center justify-center gap-2 rounded-2xl bg-[#f97766] text-[#1A0B16] font-black text-[10px] uppercase tracking-[0.15em] transition-all shadow-glow active:scale-95 disabled:opacity-50"
+                            >
+                                {isCreating ? (
+                                    <div className="w-5 h-5 border-2 border-[#1A0B16]/30 border-t-[#1A0B16] rounded-full animate-spin" />
+                                ) : (
+                                    <>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                        Save
+                                    </>
+                                )}
+                            </button>
+                        </div>
 
                         {/* Mobile Fixed Option Picker */}
                         <div
                             onClick={() => !isExpanded && setIsExpanded(true)}
-                            className={`lg:hidden fixed bottom-0 left-0 right-0 bg-[#1A0B16] z-50 border-t-2 border-[#f97766]/30 backdrop-blur-md transition-all duration-500 ease-in-out ${isExpanded ? 'h-[200px]' : 'h-[48px] cursor-pointer'}`}
+                            className={`lg:hidden fixed bottom-0 left-0 right-0 bg-[#1A0B16] z-50 border-t-2 border-[#f97766]/30 backdrop-blur-md transition-all duration-500 ease-in-out ${isExpanded ? 'h-[200px]' : 'h-[52px] cursor-pointer'}`}
                         >
                             {/* Tray Header */}
-                            <div className="flex items-center justify-between px-6 h-[48px] border-b border-[#f97766]/20 bg-[#3A0B25] shadow-lg relative z-[60]">
+                            <div className={`flex items-center justify-between px-6 h-[52px] shadow-2xl relative z-[60] transition-colors duration-500 ease-in-out ${isExpanded ? 'bg-[#3A0B25] border-b border-[#f97766]/20' : 'bg-[#f97766]'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#f97766] animate-pulse shadow-[0_0_8px_#f97766]" />
-                                    <span className="text-[10px] font-black text-[#f97766] uppercase tracking-[0.25em]">Select a timeslot</span>
-
+                                    <div className={`w-2 h-2 rounded-full animate-pulse transition-colors duration-500 ease-in-out ${isExpanded ? 'bg-[#f97766] shadow-[0_0_8px_#f97766]' : 'bg-[#1A0B16]/40'}`} />
+                                    <span className={`text-[11px] font-black uppercase tracking-[0.25em] transition-colors duration-500 ease-in-out ${isExpanded ? 'text-[#f97766]' : 'text-[#1A0B16]'}`}>Select a timeslot</span>
                                 </div>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         setIsExpanded(!isExpanded);
                                     }}
-                                    className="w-8 h-8 rounded-full bg-[#1A0B16]/40 flex items-center justify-center text-[#f97766] active:scale-95 transition-all border border-[#f97766]/20"
+                                    className={`w-8 h-8 rounded-full flex items-center justify-center active:scale-95 transition-all duration-500 ease-in-out border ${isExpanded ? 'bg-[#1A0B16]/40 text-[#f97766] border-[#f97766]/20' : 'bg-[#1A0B16]/10 text-[#1A0B16] border-[#1A0B16]/20'}`}
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className={`transition-transform duration-500 ${isExpanded ? 'rotate-0' : 'rotate-180'}`}>
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" className={`transition-transform duration-500 ${isExpanded ? 'rotate-0' : 'rotate-180'}`}>
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </button>

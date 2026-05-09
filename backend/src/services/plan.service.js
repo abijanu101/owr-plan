@@ -67,7 +67,7 @@ const solvePlan = async (constraints, entity_map = {}) => {
 
     // ── Step 7: Format ────────────────────────────────────────────────────
     console.log('\n── Step 7: format_results ──');
-    const result = format_results(scored, entity_map, 11);
+    const result = format_results(scored, entity_map, 11, all_entity_ids, mandatory_entity_ids, time_constraints);
     console.log(`[ solver] Returning ${1 + (result.alternatives?.length || 0)} total results to UI`);
 
     console.log('\n══════════════ PLAN SOLVER DONE ═══════════════\n');
