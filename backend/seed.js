@@ -330,14 +330,27 @@ async function seed(skipConnection = false) {
 
     // ---------------- LEDGER FIX ----------------
     await Ledger.create({
-      title: 'Seed Ledger',
-      members: [
+      userId: user._id,
+      name: 'Birthday Party',
+      icon: 'cake',
+      amount: 1000,
+      date: new Date(),
+      people: [
         entities['Ahmed']._id,
         entities['Alizeh']._id,
-        entities['Zoha']._id
+        entities['Zoha']._id,
+        entities['Abi']._id
       ],
-      userId: user._id,
-      expenses: []
+      initialTransactions: [
+        { from: String(entities['Ahmed']._id), to: 'External Vendor', amount: 400 },
+        { from: String(entities['Alizeh']._id), to: 'External Vendor', amount: 600 }
+      ],
+      settlementTransactions: [
+        { from: String(entities['Zoha']._id), to: String(entities['Alizeh']._id), amount: 250 },
+        { from: String(entities['Abi']._id), to: String(entities['Alizeh']._id), amount: 100 },
+        { from: String(entities['Abi']._id), to: String(entities['Ahmed']._id), amount: 150 }
+      ],
+      status: 'pending'
     });
 
     console.log('Seed complete ✔');

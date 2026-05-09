@@ -1,63 +1,22 @@
 const mongoose = require("mongoose");
 
-const payerSchema = new mongoose.Schema({
-  entity: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Entity",
-    required: true
-  },
-  amount: {
-    type: Number,
-    required: true,
-    min: 0
-  }
-}, { _id: false });
-
-const splitSchema = new mongoose.Schema({
-  entity: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Entity",
-    required: true
-  },
-  share: {
-    type: Number,
-    default: null,
-    min: 0
-  }
-}, { _id: false });
-
-const expenseSchema = new mongoose.Schema({
-  icon: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Icon"
-  },
-
-  title: {
+const transactionSchema = new mongoose.Schema({
+  from: {
     type: String,
-    default: "Expense"
+    required: true
   },
-
+  to: {
+    type: String,
+    required: true
+  },
   amount: {
     type: Number,
     required: true,
     min: 0
   },
-
-  paidBy: {
-    type: [payerSchema],
-    required: true,
-    validate: v => v.length > 0
-  },
-
-  splitBetween: {
-    type: [splitSchema],
-    required: true,
-    validate: v => v.length > 0
-  },
-
-  createdAt: {
-    type: Date,
-    default: Date.now
+  paid: {
+    type: Boolean,
+    default: false
   }
 }, { _id: true });
 
@@ -68,23 +27,44 @@ const ledgerSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-
-  title: {
+  name: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-
-  members: [{
+  icon: {
+    type: String,
+    enum: ['cake', 'gift', 'food'],
+    default: 'food'
+  },
+  amount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  date: {
+    type: Date,
+    default: Date.now
+  },
+  people: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Entity",
     required: true
   }],
-
-  expenses: {
-    type: [expenseSchema],
+  initialTransactions: {
+    type: [transactionSchema],
     default: []
+  },
+  settlementTransactions: {
+    type: [transactionSchema],
+    default: []
+  },
+  // Added status to track if the ledger is settled
+  status: {
+    type: String,
+    enum: ['pending', 'settled'],
+    default: 'pending'
   }
-
 }, { timestamps: true });
 
 module.exports = mongoose.model("Ledger", ledgerSchema);
