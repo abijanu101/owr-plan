@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { listActivities } from '../api/activitiesApi';
 import { listEntities } from '../api/entitiesApi';
 import { Link, useNavigate } from 'react-router-dom';
+import Avatar from '../components/avatar';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -132,10 +133,22 @@ export default function Dashboard() {
                                 {[1,2,3,4].map(i => <div key={i} className="h-12 bg-white/5 rounded-xl"></div>)}
                             </div>
                         ) : entities.length > 0 ? (
-                            entities.slice(0, 5).map(ent => (
+                            entities.slice(0, 5).map(ent => {
+                              const face = (ent.faceIcon || '').split('/').pop() || '';
+                              const acc = (ent.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a);
+                              const theme = ent.theme || 'dark';
+                              return (
                                 <div key={ent.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-colors group/ent border border-transparent hover:border-white/5">
-                                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl shadow-inner border border-white/10 shrink-0 cursor-pointer" style={{ backgroundColor: ent.color || '#333' }} onClick={() => navigate(`/entities/${ent.id}`)}>
-                                        {ent.faceIcon || '🧑'}
+                                    <div className="shrink-0 cursor-pointer" onClick={() => navigate(`/entities/${ent.id}`)}>
+                                        <Avatar
+                                          face={face}
+                                          accessories={acc}
+                                          theme={theme}
+                                          size={40}
+                                          isGroup={ent.type === 'group'}
+                                          bgColor={ent.color || '#f97766'}
+                                          shape="circle"
+                                        />
                                     </div>
                                     <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/entities/${ent.id}`)}>
                                         <h4 className="font-bold text-white/80 truncate text-sm">{ent.name}</h4>
@@ -152,7 +165,8 @@ export default function Dashboard() {
                                         <AddIcon className="w-4 h-4" />
                                     </button>
                                 </div>
-                            ))
+                              );
+                            })
                         ) : (
                             <div className="text-center py-8 text-white/40 font-medium italic" style={{ fontFamily: 'cursive' }}>
                                 No entities added yet.

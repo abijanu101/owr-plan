@@ -7,6 +7,7 @@ import { generatePlan } from '../api/planApi';
 import { getActivitiesByEntity } from '../api/activitiesApi';
 import { usePlan } from '../context/PlanContext';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
+import Avatar from '../components/avatar';
 
 // --- REMOVED DUMMY DATA ---
 
@@ -232,9 +233,16 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
         <div className="flex items-center gap-6 mt-6 group/row hover:scale-[1.02] transition-all duration-300 relative">
             {/* Avatar Section */}
             <div className="flex flex-col items-center gap-2 w-16 shrink-0 mt-[-16px]">
-                <div className="w-12 h-12 rounded-xl bg-[#200412] flex items-center justify-center overflow-hidden border-[3px] shadow-[0_0_15px_rgba(249,119,102,0.3)]" style={{ borderColor: entity.color }}>
-                    <img src={`/avatar/${entity.faceIcon || 'base.svg'}`} alt={entity.name} className="w-full h-full object-cover bg-[var(--bg-primary)]" />
-                </div>
+                <Avatar
+                  face={(entity.faceIcon || '').split('/').pop() || ''}
+                  accessories={(entity.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a)}
+                  theme={entity.theme || 'dark'}
+                  size={48}
+                  isGroup={entity.type === 'group'}
+                  bgColor={entity.color || '#200412'}
+                  shape="rounded"
+                  style={{ borderColor: entity.color, borderWidth: '3px' }}
+                />
                 <span className="text-[#f97766]/80 text-sm tracking-wide">{entity.name}</span>
             </div>
 
