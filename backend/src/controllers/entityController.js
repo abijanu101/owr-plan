@@ -4,7 +4,7 @@ const Entity = require('../models/Entities');
 
 // Only pick keys that were actually sent in the body
 function pickEntityUpdate(body = {}) {
-  const allowed = ['name', 'type', 'color', 'faceIcon', 'accessories', 'members', 'groups'];
+  const allowed = ['name', 'type', 'color', 'faceIcon', 'accessories', 'members', 'groups', 'theme'];
   const next = {};
   for (const key of allowed) {
     if (Object.prototype.hasOwnProperty.call(body, key)) next[key] = body[key];
@@ -42,6 +42,7 @@ const createEntity = async (req, res) => {
       color:       incoming.color,
       faceIcon:    incoming.faceIcon,
       accessories: Array.isArray(incoming.accessories) ? incoming.accessories : [],
+      theme:       incoming.theme ?? 'dark',
     }, false);
 
     const entity = await Entity.create({ userId: req.user._id, ...coerced });

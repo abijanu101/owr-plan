@@ -250,9 +250,10 @@ export default function EntityDetails() {
         ...e,
         _id: String(e.id || e._id),
         type: e.type || 'person',
-        face: (e.faceIcon || e.face || 'face/happy.svg').replace(/^\/avatar\//, ''),
-        accessories: (e.accessories || []).map(a => typeof a === 'string' ? a.replace(/^\/avatar\//, '') : a),
+        face: (e.faceIcon || e.face || '').split('/').pop() || 'happy.svg',
+        accessories: (e.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
         color: e.color || '#f97766',
+        theme: e.theme || 'dark',
         members: (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
         groups: (e.groups || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group' })),
       });
@@ -308,7 +309,13 @@ export default function EntityDetails() {
   };
 
   const handleSave = (saved) => {
-    setEntity(prev => ({ ...prev, ...saved }));
+    setEntity(prev => ({
+      ...prev,
+      ...saved,
+      face: (saved.faceIcon || saved.face || prev.face || '').split('/').pop() || prev.face,
+      accessories: (saved.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
+      theme: saved.theme || prev.theme || 'dark',
+    }));
   };
 
   if (loading) return (
@@ -335,6 +342,7 @@ export default function EntityDetails() {
             key={entity._id}
             face={entity.face}
             accessories={entity.accessories || []}
+            theme={entity.theme || "dark"}
             size={220}
             isGroup={isGroup}
             bgColor={entity.color}
@@ -374,11 +382,13 @@ export default function EntityDetails() {
           _id: entity._id,
           name: entity.name,
           type: entity.type,
+          theme: entity.theme || "dark",
           face: entity.face,
           faceIcon: entity.face,
           accessories: entity.accessories || [],
           color: entity.color,
         }}
+        existingNames={Object.values(allEntities).map(e => e.name)}
         onSuccess={handleSave}
       />
     </div>

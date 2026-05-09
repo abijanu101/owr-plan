@@ -35,6 +35,12 @@ const entitySchema = new mongoose.Schema({
     default: []
   },
 
+  theme: {
+    type: String,
+    enum: ["dark", "light"],
+    default: "dark"
+  },
+
   members: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Entity",

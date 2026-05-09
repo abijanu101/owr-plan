@@ -1,136 +1,84 @@
-import { useState, useEffect, useCallback } from "react";
-import Avatar from "./avatar";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Avatar, { facesFor, accessoriesFor } from "./avatar";
 
-/* ─── constants ─────────────────────────────────────────────── */
-
-const FACES = [
-  "face/happy.svg",
-  "face/sassy.svg",
-  "face/naughty.svg",
+/* ─── Color palettes ─────────────────────────────────────────── */
+const LIGHT_COLORS = [
+  "#f97766","#ff8a75","#ff6b5a","#ff7f6a","#ff9a7a","#ffad8a",
+  "#ff8f70","#f56c8b","#ff7a9c","#e85d75","#ff9f43","#ffa552",
+  "#ffb36b","#e85c4a","#d94f3d","#c94433",
+];
+const DARK_COLORS = [
+  "#200412","#4c0e36","#3a0b2a","#1a040f",
+  "#3b0d1a","#4a1a1f","#5a1f2a","#34121a",
+  "#3c0f0f","#3a1410","#1f0606","#4a0f24",
+  "#5c1a2f","#1d050b","#32101f","#1f2a1e",
 ];
 
-const FACES_GROUP = [
-  "face/happy-g.svg",
-  "face/sassy-g.svg",
-  "face/naughty-g.svg",
-];
+const DEFAULT_LIGHT_COLOR = LIGHT_COLORS[0];
+const DEFAULT_DARK_COLOR  = DARK_COLORS[1]; // #4c0e36
 
-const ACCESSORIES = [
-  "accessories/crown.svg",
-  "accessories/glasses.svg",
-  "accessories/flower.svg",
-  "accessories/blush.svg",
-];
-
-const ACCESSORIES_GROUP = [
-  "accessories/glasses-g.svg",
-];
-
-const COLORS = [
-  "#f97766", "#ff8a75", "#ff6b5a", "#ff7f6a", "#ff9a7a", "#ffad8a",
-  "#ff8f70", "#f56c8b", "#ff7a9c", "#e85d75", "#ff9f43", "#ffa552",
-  "#ffb36b", "#e85c4a", "#d94f3d", "#c94433",
-];
-
-const DEFAULT_COLOR = COLORS[0];
-const DEFAULT_FACE  = "face/happy.svg";
-
-/* ─── sub-components ────────────────────────────────────────── */
-
-function Carousel({ src, onPrev, onNext, toggleBtn }) {
+/* ─── Carousel ───────────────────────────────────────────────── */
+function Carousel({ src, onPrev, onNext, toggleBtn, label }) {
   return (
-    // wrapper has padding-bottom so the + button never gets clipped
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:12 }}>
       <div className="entity-modal-face-swiper">
         <button onClick={onPrev} className="entity-modal-arrow-btn">&#8249;</button>
-        <div className="entity-modal-preview-box" style={{ position: "relative" }}>
-          <img src={src} alt="" />
+        <div className="entity-modal-preview-box" style={{ position:"relative" }}>
+          <img src={src} alt={label||""} />
           {toggleBtn && (
-            <div style={{ position: "absolute", bottom: -10, right: -10 }}>
-              {toggleBtn}
-            </div>
+            <div style={{ position:"absolute", bottom:-10, right:-10 }}>{toggleBtn}</div>
           )}
         </div>
         <button onClick={onNext} className="entity-modal-arrow-btn">&#8250;</button>
       </div>
+      {label && (
+        <span style={{ fontSize:11, color:"var(--text-muted)", letterSpacing:"0.05em" }}>{label}</span>
+      )}
     </div>
   );
 }
 
-const DARK_COLORS =
-[
-  "#200412", "#4c0e36", "#3a0b2a", "#1a040f",
-  "#3b0d1a", "#4a1a1f", "#5a1f2a", "#34121a",
-  "#3c0f0f", "#3a1410", "#1f0606", "#4a0f24",
-  "#5c1a2f", "#1d050b", "#32101f",
-  "#1f2a1e",
-];
-function ColorGrid({ colors, current, onChange }) {
-  const [dark, setDark] = useState(true);
-  const palette = dark ? DARK_COLORS : colors;
+/* ─── ColorGrid ─────────────────────────────────────────────── */
+// Grid of color swatches + < > arrows to cycle. Changes name pill color only.
+// Has its own dark/light toggle (independent of avatar theme toggle).
+// Replace the two separate palettes + toggle with:
+const ALL_COLORS = [...LIGHT_COLORS, ...DARK_COLORS]; // 32 swatches total
+
+function ColorGrid({ current, onChange }) {
+  const [page, setPage] = useState(0); // 0 = light page, 1 = dark page
+  const palette = page === 0 ? LIGHT_COLORS : DARK_COLORS;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10, width: "100%" }}>
-      {/* Dark mode toggle — pill checkbox, top-right */}
-      <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
-        <label style={{
-          display: "flex", alignItems: "center", gap: 6,
-          cursor: "pointer",
-          color: "var(--text-muted)",
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-        }}>
-          <span>Dark</span>
-          {/* custom pill toggle */}
-          <span
-            onClick={() => setDark(d => !d)}
-            style={{
-              display: "inline-flex",
-              width: 36, height: 20,
-              borderRadius: 9999,
-              background: dark ? "var(--color-primary)" : "var(--bg-accent)",
-              border: "2px solid var(--text-muted)",
-              position: "relative",
-              transition: "background 0.2s",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            <span style={{
-              position: "absolute",
-              top: 1, left: dark ? 17 : 1,
-              width: 14, height: 14,
-              borderRadius: "50%",
-              background: dark ? "var(--bg-primary)" : "var(--text-muted)",
-              transition: "left 0.2s",
-            }} />
-          </span>
-        </label>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 11, color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          {page === 0 ? "Light tones" : "Dark tones"}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <button onClick={() => setPage(0)} className="entity-modal-arrow-btn" disabled={page === 0}>&#8249;</button>
+          <button onClick={() => setPage(1)} className="entity-modal-arrow-btn" disabled={page === 1}>&#8250;</button>
+        </div>
       </div>
-
       <div className="entity-modal-color-grid">
         {palette.map(c => (
-          <button
-            key={c}
-            onClick={() => onChange(c)}
-            title={c}
+          <button key={c} onClick={() => onChange(c)} title={c}
             className={`entity-modal-color-btn ${current === c ? "active" : ""}`}
-            style={{ backgroundColor: c }}
-          />
+            style={{ backgroundColor: c }} />
         ))}
       </div>
     </div>
   );
 }
 
-/* ─── shells ─────────────────────────────────────────────────── */
-
+/* ─── Shells ─────────────────────────────────────────────────── */
 function MobileShell({ onClose, children }) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="entity-modal" onClick={e => e.stopPropagation()}>
+      <div
+        className="entity-modal"
+        onClick={e=>e.stopPropagation()}
+        style={{ display:"flex", flexDirection:"column", maxHeight:"92vh", overflow:"hidden" }}
+      >
         {children}
       </div>
     </div>
@@ -139,61 +87,42 @@ function MobileShell({ onClose, children }) {
 
 function DesktopShell({ onClose, borderColor, children }) {
   return (
-    // z-[100] puts this above the navbar (typically z-10–z-50)
-    <div style={{ position: "fixed", inset: 0, zIndex: 100 }}>
-      {/* blurred backdrop covers everything including navbar */}
+    <div style={{ position:"fixed", inset:0, zIndex:100 }}>
       <button
         type="button"
         aria-label="Close modal"
         onClick={onClose}
         style={{
-          position: "absolute", inset: 0,
-          width: "100%", height: "100%",
-          background: "rgba(0,0,0,0.65)",
-          backdropFilter: "blur(8px)",
-          WebkitBackdropFilter: "blur(8px)",
-          border: "none", cursor: "pointer",
+          position:"absolute", inset:0, width:"100%", height:"100%",
+          background:"rgba(0,0,0,0.65)",
+          backdropFilter:"blur(8px)", WebkitBackdropFilter:"blur(8px)",
+          border:"none", cursor:"pointer",
         }}
       />
-
-      {/* centred modal card */}
       <div style={{
-        position: "absolute", inset: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "24px 16px",
-        pointerEvents: "none",
+        position:"absolute", inset:0,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        padding:"24px 16px", pointerEvents:"none",
       }}>
-        <div
-          style={{
-            pointerEvents: "auto",
-            position: "relative",
-            width: "min(640px, 96vw)",
-            maxHeight: "88vh",
-            borderRadius: "2rem",
-            background: "var(--bg-primary)",
-            border: `4px solid ${borderColor || "var(--bg-accent)"}`,
-            boxShadow: "0 25px 60px rgba(0,0,0,0.6)",
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          }}
-        >
-          {/* ✕ close button */}
+        <div style={{
+          pointerEvents:"auto", position:"relative",
+          width:"min(660px,96vw)", maxHeight:"88vh",
+          borderRadius:"2rem",
+          background:"var(--bg-primary)",
+          border:`4px solid ${borderColor||"var(--bg-accent)"}`,
+          boxShadow:"0 25px 60px rgba(0,0,0,0.6)",
+          display:"flex", flexDirection:"column", overflow:"hidden",
+        }}>
           <button
             onClick={onClose}
             style={{
-              position: "absolute", top: 12, right: 12,
-              width: 36, height: 36, borderRadius: "50%",
-              background: "var(--bg-accent)",
-              color: "var(--text-neutral)",
-              border: "none", cursor: "pointer",
-              fontWeight: "bold", fontSize: 16,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              zIndex: 10,
+              position:"absolute", top:12, right:12,
+              width:36, height:36, borderRadius:"50%",
+              background:"var(--bg-accent)", color:"var(--text-neutral)",
+              border:"none", cursor:"pointer", fontWeight:"bold", fontSize:16,
+              display:"flex", alignItems:"center", justifyContent:"center", zIndex:10,
             }}
-          >
-            ✕
-          </button>
+          >✕</button>
           {children}
         </div>
       </div>
@@ -201,46 +130,86 @@ function DesktopShell({ onClose, borderColor, children }) {
   );
 }
 
-/* ─── main component ─────────────────────────────────────────── */
-
+/* ─── Main component ─────────────────────────────────────────── */
 export default function EntityModal({
   isOpen,
   onClose,
   entityType = "person",
   editingEntity = null,
   onSuccess,
+  // Optional: pass all existing names for uniqueness check
+  existingNames = [],
 }) {
   const isEditMode = Boolean(editingEntity);
   const isGroup    = (editingEntity?.type ?? entityType) === "group";
-  const faceList   = isGroup ? FACES_GROUP : FACES;
-  const accList    = isGroup ? ACCESSORIES_GROUP : ACCESSORIES;
 
+  // ── Theme toggle: controls avatar source folder ONLY ──
+  const [theme, setTheme] = useState("dark");
+
+  // ── Face/accessory lists come from the selected theme ──
+  const faceList = facesFor(isGroup, theme);
+  const accList  = accessoriesFor(isGroup, theme);
+
+  // ── State ──
   const [tab,         setTab]         = useState("face");
   const [name,        setName]        = useState("");
+  const [nameError,   setNameError]   = useState("");
   const [faceIndex,   setFaceIndex]   = useState(0);
   const [addonIndex,  setAddonIndex]  = useState(0);
   const [accessories, setAccessories] = useState([]);
-  const [color,       setColor]       = useState(DEFAULT_COLOR);
+  const [color,       setColor]       = useState(DEFAULT_LIGHT_COLOR);
 
+  // ── Sync on open ──
   useEffect(() => {
     if (!isOpen) return;
     setTab("face");
     setAddonIndex(0);
+    setNameError("");
+
+    const initTheme = editingEntity?.theme || "dark";
+    setTheme(initTheme);
+
     if (isEditMode && editingEntity) {
       setName(editingEntity.name ?? "");
-      const raw  = editingEntity.faceIcon?.replace(/^\/avatar\//, "") ?? DEFAULT_FACE;
-      const fIdx = faceList.indexOf(raw);
+
+      // Face stored as filename only (e.g. "happy.svg") or with old path
+      const rawFace = (editingEntity.faceIcon || editingEntity.face || "")
+        .replace(/^\/avatar\/(dark|light)\/face\//, "")
+        .replace(/^\/avatar\/face\//, "")
+        .replace(/^\/avatar\//, "")
+        .split("/").pop();
+
+      const fl = facesFor(isGroup, initTheme);
+      const fIdx = fl.indexOf(rawFace);
       setFaceIndex(fIdx !== -1 ? fIdx : 0);
-      setAccessories(Array.isArray(editingEntity.accessories) ? editingEntity.accessories : []);
-      setColor(editingEntity.color ?? DEFAULT_COLOR);
+
+      const rawAcc = Array.isArray(editingEntity.accessories)
+        ? editingEntity.accessories.map(a =>
+            typeof a === "string" ? a.split("/").pop() : a
+          )
+        : [];
+      setAccessories(rawAcc);
+      setColor(editingEntity.color ?? (initTheme === "dark" ? DEFAULT_DARK_COLOR : DEFAULT_LIGHT_COLOR));
     } else {
       setName("");
       setFaceIndex(0);
       setAccessories([]);
-      setColor(DEFAULT_COLOR);
+      setColor(DEFAULT_LIGHT_COLOR);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isEditMode, editingEntity]);
 
+  // When theme changes, clamp face index and reset accessories (different file sets)
+  useEffect(() => {
+    const fl = facesFor(isGroup, theme);
+    setFaceIndex(i => Math.min(i, Math.max(0, fl.length - 1)));
+    setAccessories([]);
+    setAddonIndex(0);
+    // Color is independent of theme — don't reset it
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [theme]);
+
+  // ── Navigation ──
   const prevFace  = () => setFaceIndex(i => (i - 1 + faceList.length) % faceList.length);
   const nextFace  = () => setFaceIndex(i => (i + 1) % faceList.length);
   const prevAddon = () => setAddonIndex(i => (i - 1 + accList.length) % accList.length);
@@ -257,19 +226,38 @@ export default function EntityModal({
     );
   }, [currentAddon]);
 
+  // ── Name validation ──
+  const handleNameChange = (val) => {
+    if (val.length > 16) { setNameError("Max 16 characters"); return; }
+    setName(val);
+    if (!val.trim()) { setNameError("Name is required"); return; }
+    const lower = val.trim().toLowerCase();
+    const isDupe = existingNames.some(n =>
+      n.toLowerCase() === lower && n !== editingEntity?.name
+    );
+    setNameError(isDupe ? "Name already taken" : "");
+  };
+
+  // ── Submit ──
   const handleSubmit = async () => {
+    if (!name.trim())   { setNameError("Name is required"); return; }
+    if (nameError)      return;
+
+    const currentFaceList = facesFor(isGroup, theme);
     const payload = {
-      name,
-      type:     isGroup ? "group" : "person",
-      faceIcon: faceList[faceIndex],
-      face:     faceList[faceIndex],
-      accessories,
+      name:        name.trim(),
+      type:        isGroup ? "group" : "person",
+      theme,
+      faceIcon:    currentFaceList[faceIndex] ?? "",
+      accessories: (accessories || []).map(a => a.split("/").pop()),
       color,
     };
+
     try {
       const url    = isEditMode ? `/api/entities/${editingEntity._id}` : "/api/entities";
       const method = isEditMode ? "PUT" : "POST";
       const token  = localStorage.getItem("token");
+
       let res;
       try {
         res = await fetch(url, {
@@ -282,16 +270,17 @@ export default function EntityModal({
         });
       } catch (networkErr) {
         if (import.meta.env.MODE === "development") {
-          console.log("Mock Submit (backend unreachable):", method, payload);
-          onSuccess?.({ ...(editingEntity || {}), ...payload });
+          console.warn("Mock submit (no backend):", method, payload);
+          onSuccess?.({ ...(editingEntity||{}), ...payload });
           onClose();
           return;
         }
         throw networkErr;
       }
+
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.message || "Submission failed");
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `Server error ${res.status}`);
       }
       const data = await res.json();
       onSuccess?.(data);
@@ -303,42 +292,98 @@ export default function EntityModal({
 
   if (!isOpen) return null;
 
+  if (faceList.length === 0) {
+    return (
+      <DesktopShell onClose={onClose} borderColor={color}>
+        <div style={{ padding:32, color:"var(--color-error)", textAlign:"center" }}>
+          No face SVGs found in <code>/public/avatar/{theme}/face/</code>.<br/>
+          Check that the files exist and Vite's glob pattern matches.
+        </div>
+      </DesktopShell>
+    );
+  }
+
   const isDesktop = window.innerWidth >= 768;
 
-  /* ── shared pieces ── */
+  /* ── Theme toggle button ── */
+  const themeToggle = (
+    <div style={{
+      display:"flex", alignItems:"center", gap:8,
+      padding: isDesktop ? "0 48px" : "0 16px",
+      justifyContent:"flex-end",
+      flexShrink:0,
+    }}>
+      <span style={{ fontSize:12, color:"var(--text-muted)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.08em" }}>
+        {theme === "dark" ? "Dark" : "Light"}
+      </span>
+      <span
+        onClick={() => setTheme(t => t==="dark" ? "light" : "dark")}
+        style={{
+          display:"inline-flex", width:44, height:24, borderRadius:9999,
+          background: theme==="dark" ? "var(--color-primary)" : "var(--bg-accent)",
+          border:"2px solid var(--text-muted)",
+          position:"relative", transition:"background 0.2s",
+          cursor:"pointer", flexShrink:0,
+        }}
+      >
+        <span style={{
+          position:"absolute", top:2,
+          left: theme==="dark" ? 21 : 2,
+          width:16, height:16, borderRadius:"50%",
+          background: theme==="dark" ? "var(--bg-primary)" : "var(--text-muted)",
+          transition:"left 0.2s",
+        }} />
+      </span>
+    </div>
+  );
 
+  /* ── Name pill preview ── */
+  const namePill = (
+    <div style={{
+      display:"inline-block",
+      padding:"6px 22px",
+      borderRadius:9999,
+      background: color,
+      color:"#fff",
+      fontFamily:"inherit",
+      fontWeight:900,
+      fontSize:18,
+      letterSpacing:"0.12em",
+      textTransform:"uppercase",
+      boxShadow:`0 2px 12px ${color}66`,
+      transition:"background 0.2s, box-shadow 0.2s",
+      maxWidth:"100%",
+      overflow:"hidden",
+      textOverflow:"ellipsis",
+      whiteSpace:"nowrap",
+    }}>
+      {name || (isEditMode ? "…" : "Name")}
+    </div>
+  );
+
+  /* ── Avatar preview ── */
+  // bgColor is the avatar card background — use a fixed dark color, NOT the name pill color
   const avatarNode = (
     <Avatar
       face={faceList[faceIndex]}
       accessories={accessories}
-      size={isDesktop ? 190 : 140}
+      theme={theme}
+      size={isDesktop ? 190 : 130}
       isGroup={isGroup}
-      bgColor={color}
+      bgColor="var(--bg-accent)"
       shape="rounded"
     />
   );
 
-  // Tab bar — same visual for both layouts, just uses CSS class
+  /* ── Tab bar ── */
   const tabBar = (
-    <div style={{
-      display: "flex",
-      borderBottom: "2px solid var(--text-muted)",
-      flexShrink: 0,
-    }}>
-      {[
-        { key: "face",   label: "Face"    },
-        { key: "addons", label: "Add-ons" },
-        { key: "color",  label: "Color"   },
-      ].map(t => (
+    <div style={{ display:"flex", borderBottom:"2px solid var(--text-muted)", flexShrink:0 }}>
+      {[{key:"face",label:"Face"},{key:"addons",label:"Add-ons"},{key:"color",label:"Color"}].map(t => (
         <button
           key={t.key}
           onClick={() => setTab(t.key)}
           className="entity-modal-tab-btn"
-          style={tab === t.key ? {
-            color: "var(--color-primary)",
-            borderBottom: "2px solid var(--color-primary)",
-            marginBottom: -2,
-          } : {}}
+          style={tab===t.key ? { color:"var(--color-primary)", borderBottom:"2px solid var(--color-primary)", marginBottom:-2 } : {}}
         >
           {t.label}
         </button>
@@ -346,161 +391,120 @@ export default function EntityModal({
     </div>
   );
 
+  const faceName  = faceList[faceIndex]?.split("/").pop() ?? "";
+  const addonName = currentAddon?.split("/").pop() ?? "";
+
   const faceCarousel = (
-    <Carousel src={`/avatar/${faceList[faceIndex]}`} onPrev={prevFace} onNext={nextFace} />
+    <Carousel
+      src={`/avatar/${theme}/face/${faceList[faceIndex]}`}
+      onPrev={prevFace} onNext={nextFace}
+      label={`${faceIndex+1} / ${faceList.length}  •  ${faceName}`}
+    />
   );
 
-  const addonToggleBtn = (
+  const addonToggleBtn = accList.length > 0 ? (
     <button
       onClick={toggleAddon}
       style={{
-        width: 40, height: 40, borderRadius: "50%",
-        border: "none", cursor: "pointer",
-        fontWeight: "bold", fontSize: 22,
-        display: "flex", alignItems: "center", justifyContent: "center",
+        width:40, height:40, borderRadius:"50%",
+        border:"2px solid var(--text-muted)", cursor:"pointer",
+        fontWeight:"bold", fontSize:22,
+        display:"flex", alignItems:"center", justifyContent:"center",
         background: isCurrentAddonActive ? "var(--color-primary)" : "var(--bg-accent)",
-        color: isCurrentAddonActive ? "var(--bg-primary)" : "var(--text-neutral)",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.5)",
-        border: "2px solid var(--text-muted)",
-        transition: "background 0.15s",
-        zIndex: 20, 
+        color:      isCurrentAddonActive ? "var(--bg-primary)"    : "var(--text-neutral)",
+        boxShadow:"0 2px 8px rgba(0,0,0,0.5)",
+        transition:"background 0.15s", zIndex:20,
       }}
     >
       {isCurrentAddonActive ? "−" : "+"}
     </button>
-  );
+  ) : null;
 
-  const addonCarousel = (
+  const addonCarousel = accList.length === 0 ? (
+    <p style={{ color:"var(--text-muted)", fontSize:13 }}>No accessories for {isGroup?"groups":"people"} in {theme} theme.</p>
+  ) : (
     <Carousel
-      src={`/avatar/${currentAddon}`}
-      onPrev={prevAddon}
-      onNext={nextAddon}
+      src={`/avatar/${theme}/accessories/${currentAddon}`}
+      onPrev={prevAddon} onNext={nextAddon}
       toggleBtn={addonToggleBtn}
+      label={`${addonIndex+1} / ${accList.length}  •  ${addonName}`}
     />
   );
 
-  const colorGrid = (
-    <ColorGrid colors={COLORS} current={color} onChange={setColor} />
+  const colorTab = (
+    <ColorGrid current={color} onChange={setColor} />
   );
 
-  /* ── action buttons — identical for both layouts ── */
+  /* ── Action buttons ── */
   const actionButtons = (
     <div style={{
-      display: "flex",
-      justifyContent: "center",
-      gap: 12,
-      padding: "16px 24px",
-      flexShrink: 0,
+      display:"flex", justifyContent:"center", gap:12,
+      padding:"16px 24px", flexShrink:0,
       borderTop: isDesktop ? "1px solid var(--border-subtle)" : "none",
       background: isDesktop ? "var(--bg-primary)" : "transparent",
     }}>
-      <button
-        onClick={handleSubmit}
-        className="btn-pill"
-        data-active="true"
-        style={{ minWidth: 110 }}
-      >
+      <button onClick={handleSubmit} className="btn-pill" data-active="true" style={{ minWidth:110 }}>
         {isEditMode ? "Save" : "Create"}
       </button>
-      <button
-        onClick={onClose}
-        className="btn-pill"
-        style={{ minWidth: 110 }}
-      >
+      <button onClick={onClose} className="btn-pill" style={{ minWidth:110 }}>
         Cancel
       </button>
     </div>
   );
 
-  /* ════════════════════════════════════════
-     DESKTOP render
-     Left col: avatar (centred)
-     Right col: carousel / color grid (centred)
-  ════════════════════════════════════════ */
+  /* ════════════ DESKTOP ════════════ */
   if (isDesktop) {
     return (
       <DesktopShell onClose={onClose} borderColor={color}>
 
         {/* Title */}
-        <div style={{
-          textAlign: "center",
-          padding: "20px 48px 0",
-          color: "var(--color-primary)",
-          fontWeight: 700,
-          fontSize: 20,
-          letterSpacing: "0.15em",
-          textTransform: "uppercase",
-          flexShrink: 0,
-        }}>
-          {isEditMode ? "Edit Profile" : `Create ${isGroup ? "Group" : "Person"}`}
+        <div style={{ textAlign:"center", padding:"20px 48px 0", color:"var(--color-primary)", fontWeight:700, fontSize:20, letterSpacing:"0.15em", textTransform:"uppercase", flexShrink:0 }}>
+          {isEditMode ? "Edit Profile" : `Create ${isGroup?"Group":"Person"}`}
         </div>
 
-        {/* Name input */}
-        <div style={{ padding: "12px 48px 0", flexShrink: 0 }}>
+        {/* Name input + pill preview */}
+        <div style={{ padding:"10px 48px 0", flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", gap:8 }}>
           <input
             type="text"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={e => handleNameChange(e.target.value)}
             placeholder="Name"
+            maxLength={16}
             style={{
-              width: "100%",
-              textAlign: "center",
-              background: "transparent",
-              border: "none",
-              borderBottom: "2px solid var(--text-muted)",
-              color: "var(--text-neutral)",
-              fontFamily: "inherit",
-              fontSize: 24,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              outline: "none",
-              padding: "8px 0",
+              width:"100%", textAlign:"center",
+              background:"transparent", border:"none",
+              borderBottom:"2px solid var(--text-muted)",
+              color:"var(--text-neutral)", fontFamily:"inherit",
+              fontSize:20, fontWeight:700, letterSpacing:"0.08em",
+              outline:"none", padding:"6px 0",
             }}
           />
+          {nameError && <span style={{ color:"var(--color-error)", fontSize:12 }}>{nameError}</span>}
+          {namePill}
         </div>
 
         {/* Tabs */}
-        <div style={{ padding: "16px 0 0", flexShrink: 0 }}>
-          {tabBar}
-        </div>
+        <div style={{ padding:"14px 0 0", flexShrink:0 }}>{tabBar}</div>
 
-        {/* Body: two equal columns */}
+        {/* Body: avatar left, tab content right */}
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr",
-          alignItems: "center",
-          justifyItems: "center",
-          gap: 24,
-          padding: "28px 40px 24px",
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          background: "var(--bg-raised)",
+          display:"grid", gridTemplateColumns:"1fr 1fr",
+          alignItems:"center", justifyItems:"center",
+          gap:24, padding:"24px 40px 24px",
+          flex:1, minHeight:0, overflowY:"auto",
+          background:"var(--bg-raised)",
         }}>
-          {/* Left: live avatar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center" }}>
             {avatarNode}
           </div>
-
-          {/* Right: tab content */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: "100%",
-          }}>
-            {tab === "face"   && faceCarousel}
-            {tab === "addons" && addonCarousel}
-            {tab === "color"  && (
-              <div style={{
-                width: "100%", maxWidth: 220,
-                border: "2px solid var(--text-muted)",
-                borderRadius: 16,
-                padding: "14px 12px",
-                background: "var(--bg-primary)",
-                boxSizing: "border-box",
-              }}>
-                {colorGrid}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", width:"100%", gap:12 }}>
+            {/* Theme toggle — right under tab line, right-aligned */}
+            <div style={{ width:"100%", display:"flex", justifyContent:"flex-end" }}>{themeToggle}</div>
+            {tab==="face"   && faceCarousel}
+            {tab==="addons" && addonCarousel}
+            {tab==="color"  && (
+              <div style={{ width:"100%", maxWidth:240, border:"2px solid var(--text-muted)", borderRadius:16, padding:"16px 14px", background:"var(--bg-primary)", boxSizing:"border-box" }}>
+                {colorTab}
               </div>
             )}
           </div>
@@ -511,41 +515,46 @@ export default function EntityModal({
     );
   }
 
-  /* ════════════════════════════════════════
-     MOBILE render  (unchanged from original EntityModal)
-  ════════════════════════════════════════ */
+  /* ════════════ MOBILE ════════════ */
   return (
     <MobileShell onClose={onClose}>
-      <div className="entity-modal-preview">
+      {/* Avatar + name pill */}
+      <div className="entity-modal-preview" style={{ flexShrink:0, gap:8 }}>
         {avatarNode}
+        {namePill}
         <input
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => handleNameChange(e.target.value)}
           placeholder={isEditMode ? "" : "Name..."}
+          maxLength={16}
           className="entity-modal-name-input"
         />
+        {nameError && <span style={{ color:"var(--color-error)", fontSize:11 }}>{nameError}</span>}
       </div>
 
-      {tabBar}
+      {/* Tab bar */}
+      <div style={{ flexShrink:0 }}>{tabBar}</div>
 
-      <div className="entity-modal-tab-content" style={{ padding: "20px 16px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
-        {tab === "face"   && faceCarousel}
-        {tab === "addons" && addonCarousel}
-        {tab === "color"  && (
-          <div style={{
-            border: "2px solid var(--text-muted)",
-            borderRadius: 14,
-            padding: "12px 10px",
-            background: "var(--bg-primary)",
-            width: "100%",
-            boxSizing: "border-box",
-          }}>
-            {colorGrid}
+      {/* Tab content */}
+      <div style={{
+        flex:1, overflowY:"auto",
+        padding:"12px 20px 8px",
+        display:"flex", flexDirection:"column", alignItems:"center",
+        justifyContent:"center", gap:12, minHeight:0,
+      }}>
+        {/* Theme toggle — right under tab line */}
+        <div style={{ width:"100%", display:"flex", justifyContent:"flex-end" }}>{themeToggle}</div>
+        {tab==="face"   && faceCarousel}
+        {tab==="addons" && addonCarousel}
+        {tab==="color"  && (
+          <div style={{ border:"2px solid var(--text-muted)", borderRadius:14, padding:"14px 12px", background:"var(--bg-primary)", width:"100%", boxSizing:"border-box" }}>
+            {colorTab}
           </div>
         )}
       </div>
 
-      {actionButtons}
+      {/* Buttons */}
+      <div style={{ flexShrink:0 }}>{actionButtons}</div>
     </MobileShell>
   );
 }

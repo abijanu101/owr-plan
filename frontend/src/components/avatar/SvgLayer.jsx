@@ -5,6 +5,7 @@ export default function SvgLayer({ src, filter }) {
     <img
       src={src}
       alt=""
+      onError={e => { e.currentTarget.style.display = "none"; }}
       style={{
         position: "absolute",
         top: 0,
