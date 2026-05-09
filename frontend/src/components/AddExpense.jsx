@@ -1,15 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import EntitySelector from './EntitySelector';
 import IconButton from './IconButton';
 import DateTimePicker from './pickers/DateTimePicker';
+import { listEntities } from '../api/entitiesApi';
 
-export default function AddExpense({ isOpen, onClose, onConfirm }) {
+export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) {
     const [name, setName] = useState('');
     const [amount, setAmount] = useState('');
     const [icon, setIcon] = useState('');
     const [selectedDateTime, setSelectedDateTime] = useState({ date: new Date(), time: '12:00 PM' });
     const [selectedEntities, setSelectedEntities] = useState([]);
     const [transactions, setTransactions] = useState([{ id: Date.now(), to: '', from: '', amount: '' }]);
+    const [allEntities, setAllEntities] = useState([]);
+
+    useEffect(() => {
+        const fetchEntities = async () => {
+            try {
+                const data = await listEntities('all');
+                setAllEntities(data);
+            } catch (err) {
+                console.error("Failed to fetch entities:", err);
+            }
+        };
+        fetchEntities();
+    }, []);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                setName(initialData.name || '');
+                setAmount(initialData.amount || '');
+                setIcon(initialData.icon || 'food');
+                if (initialData.date) {
+                    const d = new Date(initialData.date);
+                    setSelectedDateTime({
+                        date: d,
+                        time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    });
+                }
+                setSelectedEntities(initialData.people || initialData.selectedEntities || []);
+                const txs = (initialData.initialTransactions || initialData.transactions || []).map(tx => ({
+                    ...tx,
+                    id: tx.id || tx._id || Date.now() + Math.random()
+                }));
+                setTransactions(txs.length > 0 ? txs : [{ id: Date.now(), to: '', from: '', amount: '' }]);
+            } else {
+                // Reset for new expense
+                setName('');
+                setAmount('');
+                setIcon('food');
+                setSelectedDateTime({ date: new Date(), time: '12:00 PM' });
+                setSelectedEntities([]);
+                setTransactions([{ id: Date.now(), to: '', from: '', amount: '' }]);
+            }
+        }
+    }, [isOpen, initialData]);
+
+    const participants = allEntities.filter(e => 
+        selectedEntities.includes(String(e._id || e.id))
+    );
 
     const handleAddTransaction = () => {
         setTransactions([...transactions, { id: Date.now(), to: '', from: '', amount: '' }]);
@@ -22,7 +71,7 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
     const handleConfirm = () => {
         if (onConfirm) {
             onConfirm({
-                id: Date.now(),
+                id: initialData ? (initialData._id || initialData.id) : Date.now(),
                 name,
                 amount,
                 icon,
@@ -35,7 +84,6 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
         setName('');
         setAmount('');
         setIcon('');
-        setSelectedDays([]);
         setSelectedEntities([]);
         setTransactions([{ id: Date.now(), to: '', from: '', amount: '' }]);
         onClose();
@@ -57,10 +105,12 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
                 {/* Header: Add Expense */}
                 <div className="flex items-center gap-4 mb-8">
                     <button className="w-10 h-10 rounded-full border border-[#f97766]/40 flex items-center justify-center hover:bg-[#f97766]/10 transition-colors">
-                        <span className="text-[#f97766] text-3xl font-light leading-none mb-1.5">+</span>
+                        <span className="text-[#f97766] text-3xl font-light leading-none mb-1.5">
+                            {initialData ? '✎' : '+'}
+                        </span>
                     </button>
                     <h2 className="text-2xl sm:text-3xl text-[#f97766] tracking-wide" style={{ fontFamily: 'cursive' }}>
-                        Add Expense
+                        {initialData ? 'Edit Expense' : 'Add Expense'}
                     </h2>
                 </div>
 
@@ -101,7 +151,12 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
                     <div className="flex flex-col gap-3">
                         <span className="text-[#f97766]/80 text-sm font-medium">Select Date:</span>
                         <div className="pt-2">
-                            <DateTimePicker variant="inline-text" onChange={setSelectedDateTime} />
+                            <DateTimePicker 
+                                variant="inline-text" 
+                                initialDate={selectedDateTime.date}
+                                initialTime={selectedDateTime.time}
+                                onChange={setSelectedDateTime} 
+                            />
                         </div>
                     </div>
                 </div>
@@ -133,20 +188,31 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
                         <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1">
                             {transactions.map((t) => (
                                 <div key={t.id} className="grid grid-cols-3 gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="To"
+                                    <select
                                         value={t.to}
                                         onChange={(e) => handleTransactionChange(t.id, 'to', e.target.value)}
-                                        className="bg-white/5 text-[#f97766] placeholder-[#f97766]/50 px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base"
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="From"
+                                        className="bg-white/5 text-[#f97766] px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base appearance-none cursor-pointer"
+                                    >
+                                        <option value="" className="bg-[#200412]">To</option>
+                                        <option value="External Vendor" className="bg-[#200412]">External Vendor</option>
+                                        {participants.map(p => (
+                                            <option key={p._id || p.id} value={String(p._id || p.id)} className="bg-[#200412]">
+                                                {p.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <select
                                         value={t.from}
                                         onChange={(e) => handleTransactionChange(t.id, 'from', e.target.value)}
-                                        className="bg-white/5 text-[#f97766] placeholder-[#f97766]/50 px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base"
-                                    />
+                                        className="bg-white/5 text-[#f97766] px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base appearance-none cursor-pointer"
+                                    >
+                                        <option value="" className="bg-[#200412]">From</option>
+                                        {participants.map(p => (
+                                            <option key={p._id || p.id} value={String(p._id || p.id)} className="bg-[#200412]">
+                                                {p.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                     <input
                                         type="text"
                                         placeholder="Amount"
@@ -190,7 +256,7 @@ export default function AddExpense({ isOpen, onClose, onConfirm }) {
                         onClick={handleConfirm}
                         className="bg-[#f97766] hover:bg-[#e86655] text-[#200412] px-8 py-3 rounded-full font-bold tracking-wide transition-colors shadow-lg"
                     >
-                        Confirm
+                        {initialData ? 'Save Changes' : 'Confirm'}
                     </button>
                 </div>
 

@@ -1,13 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AddExpense from '../components/AddExpense';
 import HeartOrbitAnimation from '../components/HeartOrbitAnimation';
 import { useNavigate } from 'react-router-dom';
+import { listEntities } from '../api/entitiesApi';
+import { createSettledLedger } from '../api/ledgerApi';
 
 export default function AddExpensePage() {
     const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
     const [currentExpense, setCurrentExpense] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [entities, setEntities] = useState([]);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        const fetchEntities = async () => {
+            try {
+                const data = await listEntities('all');
+                setEntities(data);
+            } catch (err) {
+                console.error("Failed to fetch entities:", err);
+            }
+        };
+        fetchEntities();
+    }, []);
+
+    const getEntityName = (id) => {
+        if (!id) return 'Someone';
+        if (id === 'External Vendor') return 'External Vendor';
+        const entity = entities.find(e => String(e._id || e.id) === String(id));
+        return entity ? entity.name : id;
+    };
 
     const handleConfirmExpense = (newExpense) => {
         setCurrentExpense(newExpense);
@@ -60,11 +82,11 @@ export default function AddExpensePage() {
                                     {currentExpense.transactions?.map((t, i) => (
                                         <div key={t.id || i} className="flex items-center justify-between bg-white/5 border border-white/5 p-4 rounded-lg hover:bg-white/10 transition-colors">
                                             <div className="flex items-center gap-3">
-                                                <span className="text-[#f97766] font-medium">{t.from || 'Someone'}</span>
+                                                <span className="text-[#f97766] font-medium">{getEntityName(t.from)}</span>
                                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#f97766]">
                                                     <path d="M5 12h14M12 5l7 7-7 7" />
                                                 </svg>
-                                                <span className="text-[#f97766] font-medium">{t.to || 'Someone'}</span>
+                                                <span className="text-[#f97766] font-medium">{getEntityName(t.to)}</span>
                                             </div>
                                             <span className="text-[#f97766]/90 font-bold">${t.amount || 0}</span>
                                         </div>
@@ -129,20 +151,29 @@ export default function AddExpensePage() {
                                         Edit
                                     </button>
                                     <button 
-                                        onClick={() => {
-                                            const saved = localStorage.getItem('mockLedgers');
-                                            const ledgers = saved ? JSON.parse(saved) : [
-                                                { id: 1, name: 'After-Mid Hangout', icon: 'food', date: 'Oct 14, 2026' },
-                                                { id: 2, name: "Abi's Birthday", icon: 'cake', date: 'Oct 16, 2026' },
-                                                { id: 3, name: 'Iftar Party', icon: 'food', date: 'Oct 18, 2026' }
-                                            ];
-                                            const newLedger = { ...currentExpense, id: Date.now() };
-                                            localStorage.setItem('mockLedgers', JSON.stringify([...ledgers, newLedger]));
-                                            
-                                            setIsAnimating(true);
-                                            setTimeout(() => {
-                                                navigate('/ledgers');
-                                            }, 3000);
+                                        onClick={async () => {
+                                            try {
+                                                const ledgerData = {
+                                                    name: currentExpense.name,
+                                                    amount: currentExpense.amount,
+                                                    icon: currentExpense.icon,
+                                                    date: currentExpense.selectedDateTime?.date || new Date(),
+                                                    people: currentExpense.selectedEntities,
+                                                    transactions: currentExpense.transactions
+                                                };
+
+                                                const result = await createSettledLedger(ledgerData);
+                                                
+                                                if (result) {
+                                                    setIsAnimating(true);
+                                                    setTimeout(() => {
+                                                        navigate('/ledgers');
+                                                    }, 3000);
+                                                }
+                                            } catch (err) {
+                                                console.error("Failed to save ledger:", err);
+                                                alert("Failed to save ledger to database.");
+                                            }
                                         }}
                                         className="w-2/3 py-4 rounded-xl bg-[#f97766] hover:bg-[#e86655] text-[#200412] font-bold transition-colors shadow-lg shadow-[#f97766]/20"
                                     >

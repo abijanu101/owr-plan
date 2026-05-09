@@ -33,12 +33,19 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 
 export default function DateTimePicker({ initialDate, initialTime = "08:40 PM", onChange, variant = 'full' }) {
     const [dateTimeState, setDateTimeState] = useState({
-        date: initialDate || new Date(2026, 3, 29), // Apr 29, 2026
+        date: initialDate ? (initialDate instanceof Date ? initialDate : new Date(initialDate)) : new Date(),
         time: initialTime
     });
 
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef(null);
+
+    useEffect(() => {
+        setDateTimeState({
+            date: initialDate ? (initialDate instanceof Date ? initialDate : new Date(initialDate)) : new Date(),
+            time: initialTime || "12:00 PM"
+        });
+    }, [initialDate, initialTime]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {

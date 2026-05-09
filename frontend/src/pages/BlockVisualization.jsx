@@ -267,7 +267,7 @@ const TimelineRow = ({ entity, durationStr, offsetSlots, onShift, isCustom, cust
                             <div
                                 key={i}
                                 onClick={() => navigate(`/activities/${block.activityId}`)}
-                                className="absolute top-1/2 -translate-y-1/2 h-3.5 rounded-none group/block cursor-pointer shadow-[0_0_12px_rgba(249,119,102,0.5)] z-10 hover:brightness-125 transition-all"
+                                className="absolute top-1/2 -translate-y-1/2 h-3.5 rounded-none group/block cursor-pointer shadow-[0_0_8px_rgba(249,119,102,0.35)] z-10 hover:brightness-125 transition-all"
                                 style={{ ...calculateBlockStyle(block, durationStr, offsetSlots, isCustom, customRange), backgroundColor: '#f97766' }}
                             >
                                 {/* Tooltip */}
