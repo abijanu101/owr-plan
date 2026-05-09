@@ -23,15 +23,17 @@ export const getEntity = async (id) => {
 };
 
 export const listEntities = async (kind) => {
-    try {
-        const res = await fetch(`/api/entities?kind=${kind}`, { credentials: 'include' });
-        if (!res.ok) return [];
-        const data = await res.json();
-        return normalize(data);
-    } catch (err) {
-        console.error('Failed to list entities:', err);
-        return [];
-    }
+  try {
+    // 'all' → no type param, backend returns everything
+    const url = kind === 'all' ? `/api/entities` : `/api/entities?type=${kind}`;
+    const res = await fetch(url, { credentials: 'include' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return normalize(data);
+  } catch (err) {
+    console.error('Failed to list entities:', err);
+    return [];
+  }
 };
 
 export const updateEntity = async (id, data) => {

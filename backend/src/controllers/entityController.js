@@ -109,14 +109,23 @@ const getEntityById = async (req, res) => {
 // ─── GET ALL FOR USER ─────────────────────────────────────────
 // FIX: was missing .populate() entirely — members/groups came back as raw
 // ObjectId arrays with no name/color, so frontend chips had nothing to render
+// ─── GET ALL FOR USER ─────────────────────────────────────────
 const getEntitiesByUser = async (req, res) => {
   try {
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: 'No user in request' });
     }
-    const entities = await Entity.find({ userId: req.user._id })
-      .populate('members', 'name color type')
-      .populate('groups',  'name color type')
+
+    // Build query — if ?type=person or ?type=group is passed, filter by it.
+    // No ?type param (or ?type=all) returns everything.
+    const query = { userId: req.user._id };
+    if (req.query.type && req.query.type !== 'all') {
+      query.type = req.query.type;
+    }
+
+    const entities = await Entity.find(query)
+      .populate('members', 'name color type faceIcon theme')
+      .populate('groups',  'name color type faceIcon theme')
       .sort({ createdAt: -1 });
 
     res.json(entities);

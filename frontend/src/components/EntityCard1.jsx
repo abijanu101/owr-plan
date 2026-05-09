@@ -2,112 +2,186 @@
 import { useNavigate } from 'react-router-dom';
 import Avatar from './avatar/index.jsx';
 
-export default function EntityCard1({ item, onDelete, onDuplicate }) {
-  const navigate = useNavigate();
-  const color = item.color || '#f97766';
+// ─── Mini stacked avatars (bottom-right of card) ──────────────
+function AvatarStack({ items, color }) {
+  if (!items || items.length === 0) return null;
+
+  const shown   = items.slice(0, 4);
+  const overflow = items.length - shown.length;
+  const OVERLAP  = 14; // px each chip slides left
 
   return (
-    <div 
+    <div style={{ display: 'flex', alignItems: 'center' }}>
+      {shown.map((item, idx) => (
+        <div
+          key={item._id || item.id || idx}
+          title={item.name}
+          style={{
+            marginLeft: idx === 0 ? 0 : -OVERLAP,
+            zIndex: shown.length - idx,
+            position: 'relative',
+            // ring so overlapping avatars are distinguishable
+            borderRadius: '50%',
+            boxShadow: `0 0 0 2px var(--bg-primary)`,
+          }}
+        >
+          <Avatar
+            face={(item.faceIcon || item.face || '').split('/').pop() || undefined}
+            accessories={[]}
+            size={26}
+            isGroup={item.type === 'group'}
+            theme={item.theme || 'dark'}
+            bgColor={item.color || color}
+            shape="circle"
+          />
+        </div>
+      ))}
+      {overflow > 0 && (
+        <div
+          style={{
+            marginLeft: -OVERLAP,
+            zIndex: 0,
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            background: `${color}25`,
+            border: `2px solid ${color}60`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: 9,
+            fontWeight: 800,
+            color,
+            boxShadow: `0 0 0 2px var(--bg-primary)`,
+          }}
+        >
+          +{overflow}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── EntityCard1 ──────────────────────────────────────────────
+export default function EntityCard1({ item, onDelete, onDuplicate }) {
+  const navigate = useNavigate();
+  const color    = item.color || '#f97766';
+  const isGroup  = item.kind === 'group' || item.type === 'group';
+
+  // Resolve face filename — handles full paths or plain filenames
+  const faceFile = (item.faceIcon || item.face || '').split('/').pop() || undefined;
+
+  // Related entities: groups show their members, people show their groups
+  const related = isGroup ? (item.members || []) : (item.groups || []);
+
+  return (
+    <div
       className="entity-card"
-      onClick={() => navigate(`/entities/${item.id}`)}
-      style={{ 
-        borderColor: `${color}40`,
-        borderRadius: '20px',
-        paddingLeft: '10px',
+      onClick={() => navigate(`/entities/${item.id || item._id}`)}
+      style={{
+        borderColor:   `${color}40`,
+        borderRadius:  '20px',
+        // Extra left padding so the checkbox (absolute, left:12) doesn't
+        // overlap the avatar — checkbox is 22px wide + 12px left = 34px,
+        // so we start content at 44px
+        paddingLeft:   '44px',
+        paddingRight:  '16px',
+        paddingTop:    '14px',
+        paddingBottom: '14px',
+        display:       'flex',
+        alignItems:    'center',
+        gap:           12,
+        position:      'relative',   // needed for absolute avatar below
       }}
     >
+      {/* Avatar — positioned absolutely so it sits right after the
+          checkbox zone and doesn't push layout */}
+      <div style={{ flexShrink: 0 }}>
+        <Avatar
+          face={faceFile}
+          accessories={(item.accessories || []).map(a =>
+            typeof a === 'string' ? a.split('/').pop() : a
+          )}
+          size={44}
+          isGroup={isGroup}
+          theme={item.theme || 'dark'}
+          bgColor={color}
+          shape="rounded"
+        />
+      </div>
 
-      <Avatar
-        face={item.faceIcon}     
-        accessories={item.accessories || []}
-        size={28}
-        shape="circle"
-        bgColor={item.color}
-      />
-      <div style={{ flex: 1, minWidth: 0 }}></div>
-
-
+      {/* Text content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <h3 style={{
-          fontSize: '16px',
+          fontSize:   '15px',
           fontWeight: 700,
-          color: 'var(--text-neutral)',
-          margin: '0 0 10px 0',
+          color:      'var(--text-neutral)',
+          margin:     '0 0 6px 0',
+          overflow:   'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
         }}>
           {item.name}
         </h3>
-        
+
         <div style={{
-          height: '2px',
+          height:     '1.5px',
           background: `${color}30`,
-          margin: '0 0 10px 0',
+          margin:     '0 0 8px 0',
           borderRadius: '1px',
-        }}></div>
-        
-        {item.kind === 'group' && item.members && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {item.members.slice(0, 3).map((member, idx) => (
-              <span key={idx} style={{
-                backgroundColor: `${color}20`,
-                color: color,
-                border: `2px solid ${color}40`,
+        }} />
+
+        {/* Name chips for first 2 related items */}
+        {related.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+            {related.slice(0, 2).map((r, idx) => (
+              <span key={r._id || idx} style={{
+                backgroundColor: `${color}18`,
+                color,
+                border:       `1.5px solid ${color}40`,
                 borderRadius: '20px',
-                padding: '3px 12px',
-                fontSize: '11px',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
+                padding:      '2px 10px',
+                fontSize:     '10px',
+                fontWeight:   600,
+                whiteSpace:   'nowrap',
+                maxWidth:     '90px',
+                overflow:     'hidden',
+                textOverflow: 'ellipsis',
               }}>
-                {member}
+                {r.name || r}
               </span>
             ))}
-            {item.memberCount > 3 && (
+            {related.length > 2 && (
               <span style={{
-                backgroundColor: `${color}20`,
-                color: color,
-                border: `2px solid ${color}40`,
+                backgroundColor: `${color}18`,
+                color,
+                border:       `1.5px solid ${color}40`,
                 borderRadius: '20px',
-                padding: '3px 12px',
-                fontSize: '11px',
-                fontWeight: 600,
+                padding:      '2px 10px',
+                fontSize:     '10px',
+                fontWeight:   600,
               }}>
-                +{item.memberCount - 3}
-              </span>
-            )}
-          </div>
-        )}
-        
-        {item.kind === 'person' && item.groups && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px' }}>
-            {item.groups.slice(0, 2).map((group, idx) => (
-              <span key={idx} style={{
-                backgroundColor: `${color}20`,
-                color: color,
-                border: `2px solid ${color}40`,
-                borderRadius: '20px',
-                padding: '3px 12px',
-                fontSize: '11px',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}>
-                {group}
-              </span>
-            ))}
-            {item.groups.length > 2 && (
-              <span style={{
-                backgroundColor: `${color}20`,
-                color: color,
-                border: `2px solid ${color}40`,
-                borderRadius: '20px',
-                padding: '3px 12px',
-                fontSize: '11px',
-                fontWeight: 600,
-              }}>
-                +{item.groups.length - 2}
+                +{related.length - 2}
               </span>
             )}
           </div>
         )}
       </div>
+
+      {/* Avatar stack — bottom-right, only when there are related entities
+          with enough data to render an avatar (need color or face) 
+      {related.length > 0 && (
+        <div style={{
+          position:  'absolute',
+          bottom:    10,
+          right:     12,
+          display:   'flex',
+          alignItems: 'center',
+        }}>
+          <AvatarStack items={related} color={color} />
+        </div>
+      )}
+        */}
     </div>
   );
 }
