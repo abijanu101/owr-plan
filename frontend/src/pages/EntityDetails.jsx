@@ -10,6 +10,7 @@ import Button from '../components/UI/Button';
 import AllActivitiesModal from '../components/AllActivitiesModal';
 import { getActivitiesByEntity } from '../api/activitiesApi';
 import { listEntities, getEntity } from '../api/entitiesApi';
+
 const PREVIEW_COUNT = 2;
 
 // ─── CollapsibleSection ───────────────────────────────────────
@@ -36,20 +37,13 @@ function CollapsibleSection({ title, children, defaultOpen = true, action }) {
   );
 }
 
-
 // ─── sortByProximity ─────────────────────────────────────────
-// Returns a score (ms timestamp) representing how close this activity
-// is to "now". Lower distance = shown first.
-// Non-recurring: use rangeStart. Recurring: use next occurrence from recurringDay.
 function proximityScore(a) {
   const now = Date.now();
-
   if (a.activityType === 'non-recurring') {
     if (a.rangeStart) return Math.abs(new Date(a.rangeStart).getTime() - now);
-    return Infinity; // no date — push to end
+    return Infinity;
   }
-
-  // recurring: find next weekday occurrence
   if (a.recurringDay) {
     const dayMap = { Sunday: 0, Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
     const target = dayMap[a.recurringDay];
@@ -62,7 +56,6 @@ function proximityScore(a) {
       return Math.abs(next.getTime() - now);
     }
   }
-  // recurring but no day pinned — sort by createdAt proximity
   return Math.abs((a.createdAt || 0) - now);
 }
 
@@ -80,20 +73,14 @@ function useIsMobile() {
 // ─── ActivitiesSection ────────────────────────────────────────
 function ActivitiesSection({ activities, onSchedule }) {
   const [showAllModal, setShowAllModal] = useState(false);
-  const isMobile = useIsMobile();
-  const previewCount = 2;//isMobile ? 2 : 3;
+  const previewCount = 2;
 
-  // Step 1 — No transformation needed, backend returns transformed data
-  const transformed = activities;
-
-  // Step 2 — sort by proximity to now (closest first)
   const sorted = useMemo(
-    () => [...transformed].sort((a, b) => proximityScore(a) - proximityScore(b)),
-    [transformed]
+    () => [...activities].sort((a, b) => proximityScore(a) - proximityScore(b)),
+    [activities]
   );
 
   const preview = sorted.slice(0, previewCount);
-  const hasMore = sorted.length > previewCount;
 
   return (
     <>
@@ -107,23 +94,9 @@ function ActivitiesSection({ activities, onSchedule }) {
                 <ActivityCard key={a.id || idx} activity={a} />
               ))}
             </div>
-
-            {/* "View all" always shown when there are any activities, not just overflow */}
             <button
               onClick={() => setShowAllModal(true)}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '8px 0 12px',
-                color: 'var(--color-primary)',
-                fontWeight: 700,
-                fontSize: 13,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                marginBottom: 12,
-              }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0 12px', color: 'var(--color-primary)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}
             >
               <svg style={{ width: 16, height: 16 }} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
@@ -132,11 +105,9 @@ function ActivitiesSection({ activities, onSchedule }) {
             </button>
           </>
         )}
-
         <Button onClick={onSchedule} variant="outline">+ Schedule New Activity</Button>
       </CollapsibleSection>
 
-      {/* ── All Activities Modal ─────────────────────────────── */}
       <AllActivitiesModal
         isOpen={showAllModal}
         onClose={() => setShowAllModal(false)}
@@ -153,7 +124,6 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
 
   const selectedIds = useMemo(() => currentItems.map(i => String(i._id)), [currentItems]);
-
   const [overlayOpen, setOverlayOpen] = useState(false);
 
   const handleOverlayToggle = (newIds) => {
@@ -226,16 +196,72 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
   );
 }
 
+// ─── ViewAvailabilitySection ──────────────────────────────────
+// Sits in the right column with the same divider+heading as Members/Activities.
+// The hollow "Visualize" button navigates to /visualize and passes the entity
+// as a full object in location.state.entities so BlockVisualization pre-selects it.
+function ViewAvailabilitySection({ entity, navigate }) {
+  const handleVisualize = () => {
+    // BlockVisualization reads initialState.selectedEntities (array of entity IDs).
+    // EntitySelector expects an array of ID strings to auto-select.
+    navigate('/visualize', {
+      state: {
+        selectedEntities: [entity._id],
+      },
+    });
+  };
+
+  return (
+    <CollapsibleSection title="View Availability" defaultOpen={true}>
+      <button
+        onClick={handleVisualize}
+        style={{
+          display:       'inline-flex',
+          alignItems:    'center',
+          gap:           8,
+          padding:       '10px 24px',
+          borderRadius:  12,
+          background:    'transparent',
+          // same colour as the section headings — not the entity's dynamic color
+          border:        '2px solid var(--color-primary)',
+          color:         'var(--color-primary)',
+          cursor:        'pointer',
+          fontFamily:    'inherit',
+          fontWeight:    700,
+          fontSize:      14,
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          transition:    'all 0.2s ease',
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.background = 'color-mix(in srgb, var(--color-primary) 10%, transparent)';
+          e.currentTarget.style.boxShadow  = '0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.boxShadow  = 'none';
+        }}
+      >
+        <svg style={{ width: 16, height: 16, flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+        </svg>
+        Visualize
+      </button>
+    </CollapsibleSection>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────
 export default function EntityDetails() {
-  const { id } = useParams();
+  const { id }   = useParams();
   const navigate = useNavigate();
 
-  const [entity, setEntity] = useState(null);
-  const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [entity,      setEntity]      = useState(null);
+  const [activities,  setActivities]  = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [isEditOpen,  setIsEditOpen]  = useState(false);
   const [allEntities, setAllEntities] = useState({});
+  const isMobile = useIsMobile(); // ← must be here with all other hooks, never after early returns
 
   const fetchData = async () => {
     setLoading(true);
@@ -248,14 +274,14 @@ export default function EntityDetails() {
 
       const normalizeEntity = (e) => ({
         ...e,
-        _id: String(e.id || e._id),
-        type: e.type || 'person',
-        face: (e.faceIcon || e.face || '').split('/').pop() || 'happy.svg',
+        _id:         String(e.id || e._id),
+        type:        e.type || 'person',
+        face:        (e.faceIcon || e.face || '').split('/').pop() || 'happy.svg',
         accessories: (e.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
-        color: e.color || '#f97766',
-        theme: e.theme || 'dark',
-        members: (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
-        groups: (e.groups || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group' })),
+        color:       e.color || '#f97766',
+        theme:       e.theme || 'dark',
+        members:     (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
+        groups:      (e.groups  || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group'  })),
       });
 
       const allEntitiesObj = {};
@@ -283,22 +309,20 @@ export default function EntityDetails() {
     const updatedItems = newIds
       .map(id => {
         const found = allEntities[String(id)];
-        return found
-          ? { _id: String(found._id), name: found.name, color: found.color, type: found.type }
-          : null;
+        return found ? { _id: String(found._id), name: found.name, color: found.color, type: found.type } : null;
       })
       .filter(Boolean);
 
     setEntity(prev => ({ ...prev, [field]: updatedItems }));
 
-    const token = localStorage.getItem('token');
+    const token   = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
       const res = await fetch(`/api/entities/${entity._id}`, {
-        method: 'PATCH',
+        method:  'PATCH',
         headers,
-        body: JSON.stringify({ [field]: newIds }),
+        body:    JSON.stringify({ [field]: newIds }),
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
     } catch (err) {
@@ -312,9 +336,9 @@ export default function EntityDetails() {
     setEntity(prev => ({
       ...prev,
       ...saved,
-      face: (saved.faceIcon || saved.face || prev.face || '').split('/').pop() || prev.face,
+      face:        (saved.faceIcon || saved.face || prev.face || '').split('/').pop() || prev.face,
       accessories: (saved.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
-      theme: saved.theme || prev.theme || 'dark',
+      theme:       saved.theme || prev.theme || 'dark',
     }));
   };
 
@@ -336,13 +360,13 @@ export default function EntityDetails() {
     <div style={{ width: '100%', minHeight: '100%', padding: '32px 24px', boxSizing: 'border-box', overflowY: 'auto' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
 
-        {/* Left: Avatar + Name */}
+        {/* ── Left: Avatar + Name + (desktop) View Availability ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0, width: 220 }}>
           <Avatar
             key={entity._id}
             face={entity.face}
             accessories={entity.accessories || []}
-            theme={entity.theme || "dark"}
+            theme={entity.theme || 'dark'}
             size={220}
             isGroup={isGroup}
             bgColor={entity.color}
@@ -360,14 +384,27 @@ export default function EntityDetails() {
               ✎
             </button>
           </div>
+
+          {/* Desktop only: View Availability sits under the name tag in the left column */}
+          {!isMobile && (
+            <div style={{ width: '100%' }}>
+              <ViewAvailabilitySection entity={entity} navigate={navigate} />
+            </div>
+          )}
         </div>
 
-        {/* Right: Sections */}
+        {/* ── Right: Sections ── */}
         <div style={{ flex: 1, minWidth: 280 }}>
           <MembersGroupsSection
             entity={entity}
             onRelationsChange={updateRelations}
           />
+
+          {/* Mobile only: View Availability sits above Activities */}
+          {isMobile && (
+            <ViewAvailabilitySection entity={entity} navigate={navigate} />
+          )}
+
           <ActivitiesSection
             activities={activities}
             onSchedule={() => navigate('/activities/create')}
@@ -379,14 +416,14 @@ export default function EntityDetails() {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         editingEntity={{
-          _id: entity._id,
-          name: entity.name,
-          type: entity.type,
-          theme: entity.theme || "dark",
-          face: entity.face,
-          faceIcon: entity.face,
+          _id:         entity._id,
+          name:        entity.name,
+          type:        entity.type,
+          theme:       entity.theme || 'dark',
+          face:        entity.face,
+          faceIcon:    entity.face,
           accessories: entity.accessories || [],
-          color: entity.color,
+          color:       entity.color,
         }}
         existingNames={Object.values(allEntities).map(e => e.name)}
         onSuccess={handleSave}

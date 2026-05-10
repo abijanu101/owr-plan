@@ -308,7 +308,7 @@ export default function BlockVisualization() {
     // Parse initial state from PlanResults if available
     const initialState = location.state || {};
     
-    const [selectedEntities, setSelectedEntities] = useState(initialState.entities || []);
+    const [selectedEntities, setSelectedEntities] = useState(initialState.selectedEntities || []);
     
     // Calculate initial duration index based on passed duration
     // DURATIONS = ['12 hr', '24 hr', '1 week', '1 month']
