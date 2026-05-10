@@ -3,15 +3,79 @@ import Avatar, { facesFor, accessoriesFor } from "./avatar";
 
 /* ─── Color palettes ─────────────────────────────────────────── */
 const LIGHT_COLORS = [
-  "#f97766","#ff8a75","#ff6b5a","#ff7f6a","#ff9a7a","#ffad8a",
-  "#ff8f70","#f56c8b","#ff7a9c","#e85d75","#ff9f43","#ffa552",
-  "#ffb36b","#e85c4a","#d94f3d","#c94433",
+  // Reds
+  "#ff4d6d",
+  "#ff6b6b",
+
+  // Oranges
+  "#ff922b",
+  "#ff7f50",
+
+  // Yellows
+  "#ffd43b",
+  "#ffe066",
+
+  // Greens
+  "#69db7c",
+  "#38d9a9",
+
+  // Teals
+  "#3bc9db",
+  "#66d9e8",
+
+  // Blues
+  "#4dabf7",
+  "#74c0fc",
+
+  // Purples
+  "#9775fa",
+  "#b197fc",
+
+  // Pinks
+  "#f06595",
+  "#ff8fab",
+
+  // Extra vibrant shades
+  "#f783ac",
+  "#faa2c1"
 ];
+
 const DARK_COLORS = [
-  "#200412","#4c0e36","#3a0b2a","#1a040f",
-  "#3b0d1a","#4a1a1f","#5a1f2a","#34121a",
-  "#3c0f0f","#3a1410","#1f0606","#4a0f24",
-  "#5c1a2f","#1d050b","#32101f","#1f2a1e",
+  // Deep Reds
+  "#c9184a",
+  "#a4133c",
+
+  // Deep Oranges
+  "#d9480f",
+  "#bc6c25",
+
+  // Deep Yellows / Golds
+  "#e09f3e",
+  "#c99700",
+
+  // Deep Greens
+  "#2b9348",
+  "#1b7f5a",
+
+  // Deep Teals
+  "#0f766e",
+  "#006d77",
+
+  // Deep Blues
+  "#1d4ed8",
+  "#1e3a8a",
+
+  // Deep Purples
+  "#6a00f4",
+  "#7b2cbf",
+
+  // Deep Pinks
+  "#c2255c",
+  "#9d174d",
+
+  // Extra rich tones
+  "#5f0f40",
+  "#3a0ca3"
 ];
 
 const DEFAULT_LIGHT_COLOR = LIGHT_COLORS[0];
