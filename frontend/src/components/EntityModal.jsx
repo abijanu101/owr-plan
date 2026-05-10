@@ -263,12 +263,11 @@ export default function EntityModal({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, isEditMode, editingEntity]);
 
-  // When theme changes, clamp face index and reset accessories (different file sets)
+  // When theme changes, clamp face index but preserve accessories (same filenames in both themes)
   useEffect(() => {
     const fl = facesFor(isGroup, theme);
     setFaceIndex(i => Math.min(i, Math.max(0, fl.length - 1)));
-    setAccessories([]);
-    setAddonIndex(0);
+    // Don't reset accessories or addonIndex — both light/dark have same filenames
     // Color is independent of theme — don't reset it
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
