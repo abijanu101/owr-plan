@@ -77,10 +77,10 @@ export default function StructuredPlan() {
                         </h1>
                         <button 
                             onClick={() => setShowHelp(true)}
-                            className="w-8 h-8 rounded-full border border-[#DC8379]/40 flex items-center justify-center text-[#DC8379] hover:bg-[#DC8379]/10 transition-colors cursor-pointer absolute right-0 lg:static shrink-0"
+                            className="w-10 h-10 rounded-full border border-[#f97766] flex items-center justify-center text-[#f97766] hover:bg-[#f97766]/10 transition-all cursor-pointer absolute right-0 lg:static shrink-0 hover:scale-105"
                             title="Help"
                         >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                         </button>
                     </div>
                     <hr className="border-t border-[#DC8379]/10 w-full" />

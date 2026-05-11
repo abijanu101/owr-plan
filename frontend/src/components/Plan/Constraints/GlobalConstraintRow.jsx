@@ -226,8 +226,8 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
                                         className="flex-1 min-w-0" 
                                         style={{ fontFamily: 'cursive' }}
                                     />
-                                    <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                                    <div className="shrink-0 text-[#f97766] hover:text-[#ffffff] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                                         <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center" style={{fontFamily: 'sans-serif'}}>
                                             {CONSTRAINT_EXPLANATIONS[constraint.type] || 'Select a constraint'}
                                         </div>
@@ -295,8 +295,8 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
                     className="flex-1 min-w-0" 
                     style={{ fontFamily: 'cursive' }}
                 />
-                <div className="shrink-0 text-[#DC8379]/40 hover:text-[#DC8379] cursor-help group/tooltip relative flex items-center justify-center z-50">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+                <div className="shrink-0 text-[#f97766] hover:text-[#ffffff] cursor-help group/tooltip relative flex items-center justify-center z-50">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
                     <div className="absolute hidden group-hover/tooltip:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 bg-[#1A0B16] border border-[#DC8379]/30 text-[#DC8379] text-xs p-2 rounded-lg shadow-xl z-[9999] text-center pointer-events-none" style={{fontFamily: 'sans-serif'}}>
                         {CONSTRAINT_EXPLANATIONS[constraint.type] || 'Select a constraint'}
                     </div>

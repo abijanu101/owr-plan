@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import Toolbar from '../components/Toolbar';
 import ActivityList from '../components/ActivityList';
+import Toast from '../components/UI/Toast';
 import {
   listActivities,
   deleteActivities,
@@ -27,6 +28,7 @@ export default function ActivitiesPage() {
   const [filterKey, setFilterKey] = useState('all');
   const [selected, setSelected] = useState(new Set());
   const [loading, setLoading] = useState(true);
+  const [toastConfig, setToastConfig] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,13 +78,32 @@ export default function ActivitiesPage() {
 
   const onDelete = async () => {
     const ids = [...selected];
-    try {
-      await deleteActivities(ids);
-      setItems((prev) => prev.filter((i) => !selected.has(i.id)));
-    } catch (err) {
-      console.error('Delete failed:', err);
-    }
+    const itemsToDelete = items.filter(i => ids.includes(i.id) || ids.includes(i._id));
+
+    // Optimistic UI update
+    setItems((prev) => prev.filter((i) => !selected.has(i.id) && !selected.has(i._id)));
     setSelected(new Set());
+
+    let isUndone = false;
+
+    setToastConfig({
+      message: `Deleted ${ids.length} activity${ids.length > 1 ? 'ies' : ''}`,
+      type: 'warning',
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          isUndone = true;
+          setItems(prev => [...itemsToDelete, ...prev]);
+        }
+      },
+      onClose: () => {
+        if (!isUndone) {
+          deleteActivities(ids).catch(err => console.error('Delete failed:', err));
+        }
+        setToastConfig(null);
+      }
+    });
   };
 
   const onDuplicate = async () => {
@@ -137,6 +158,7 @@ export default function ActivitiesPage() {
           onDuplicate={onDuplicate}
         />
       </div>
+      {toastConfig && <Toast {...toastConfig} />}
     </div>
   );
 }

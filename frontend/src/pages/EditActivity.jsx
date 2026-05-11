@@ -5,7 +5,8 @@ import DateTimePicker from '../components/Pickers/DateTimePicker';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 import Dropdown from '../components/UI/Dropdown';
 import EntitySelector from '../components/EntitySelector';
-import { getActivity, updateActivity } from '../api/activitiesApi';
+import Toast from '../components/UI/Toast';
+import { getActivity, updateActivity, deleteActivities } from '../api/activitiesApi';
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const FREQ_UNITS   = ['Day', 'Week'];
@@ -103,6 +104,8 @@ export default function EditActivity() {
     const [showDiscard, setShowDiscard] = useState(false);
     const [saveState, setSaveState] = useState('idle');
     const [saveError, setSaveError] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [toastConfig, setToastConfig] = useState(null);
 
     useEffect(() => {
         const load = async () => {
@@ -156,6 +159,36 @@ export default function EditActivity() {
         }
     };
 
+    const handleDelete = () => {
+        let isUndone = false;
+        setIsDeleting(true);
+
+        setToastConfig({
+            message: `Activity deleted`,
+            type: 'warning',
+            duration: 5000,
+            action: {
+                label: 'Undo',
+                onClick: () => {
+                    isUndone = true;
+                    setIsDeleting(false);
+                    setToastConfig(null);
+                }
+            },
+            onClose: () => {
+                if (!isUndone) {
+                    deleteActivities([id])
+                        .then(() => navigate('/activities', { replace: true }))
+                        .catch(err => {
+                            console.error("Delete failed:", err);
+                            setIsDeleting(false);
+                        });
+                }
+                setToastConfig(null);
+            }
+        });
+    };
+
     if (loading) return (
         <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-primary font-bold text-lg animate-pulse">Loading…</div>
@@ -165,7 +198,8 @@ export default function EditActivity() {
     const saveLabel = saveState === 'saving' ? '⏳ Saving…' : saveState === 'saved' ? '✓ Saved!' : '✓ Save Changes';
 
     return (
-        <div className="min-h-full w-full px-4 pt-6 pb-28 sm:px-8 max-w-2xl mx-auto">
+        <>
+            <div className={`min-h-full w-full px-4 pt-6 pb-28 sm:px-8 max-w-2xl mx-auto transition-all duration-300 ${isDeleting ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
 
             {/* Page header */}
             <div className="mb-6 text-center">
@@ -208,6 +242,9 @@ export default function EditActivity() {
                                 <span className="text-[11px] font-normal text-muted">{sub}</span>
                             </button>
                         ))}
+                        <button type="button" onClick={handleDelete} className="min-w-[44px] flex items-center justify-center px-4 py-3 rounded-xl border border-red-500/40 text-red-400 hover:bg-red-500/10 hover:border-red-400 font-bold transition-all cursor-pointer active:scale-95" title="Delete Activity">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                        </button>
                     </div>
                 </SectionCard>
 
@@ -351,6 +388,9 @@ export default function EditActivity() {
                     onDiscard={() => { setShowDiscard(false); navigate(-1); }}
                     onKeep={() => setShowDiscard(false)} />
             )}
-        </div>
+            </div>
+            
+            {toastConfig && <Toast {...toastConfig} />}
+        </>
     );
 }

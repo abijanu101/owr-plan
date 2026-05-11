@@ -53,12 +53,15 @@ export async function updateActivity(id, data) {
 }
 
 export async function deleteActivities(ids) {
-  await fetch('/api/activities/bulk', {
+  const response = await fetch('/api/activities/bulk', {
     ...OPTS,
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ ids }),
   });
+  if (!response.ok) {
+    throw new Error('Failed to delete activities');
+  }
 }
 
 export async function duplicateActivities(ids) {

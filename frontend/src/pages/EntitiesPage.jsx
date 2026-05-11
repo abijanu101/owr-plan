@@ -4,6 +4,7 @@ import Tabs from '../components/Tabs';
 import Toolbar from '../components/Toolbar';
 import EntityList from '../components/EntityList1';
 import EntityModal from '../components/EntityModal';
+import Toast from '../components/UI/Toast';
 import { listEntities, deleteEntities, duplicateEntities } from '../api/entitiesApi';
 
 const SORT = [
@@ -25,6 +26,7 @@ export default function EntitiesPage() {
   const [sortKey, setSortKey] = useState('recent');
   const [selected, setSelected] = useState(new Set());
   const [editor,   setEditor]   = useState({ open: false, draft: null });
+  const [toastConfig, setToastConfig] = useState(null);
 
   // ── Fetch ──
   useEffect(() => {
@@ -83,9 +85,32 @@ export default function EntitiesPage() {
   // ── Actions ──
   const onDelete = async (id) => {
     const ids = id ? [id] : [...selected];
-    await deleteEntities(ids);
+    const itemsToDelete = items.filter(i => ids.includes(i.id) || ids.includes(i._id));
+    
+    // Optimistic UI deletion
     setItems(p => p.filter(i => !ids.includes(i.id) && !ids.includes(i._id)));
     if (!id) setSelected(new Set());
+
+    let isUndone = false;
+    
+    setToastConfig({
+      message: `Deleted ${ids.length} item${ids.length > 1 ? 's' : ''}`,
+      type: 'warning',
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          isUndone = true;
+          setItems(p => [...itemsToDelete, ...p]);
+        }
+      },
+      onClose: () => {
+        if (!isUndone) {
+          deleteEntities(ids).catch(err => console.error("Delete failed:", err));
+        }
+        setToastConfig(null);
+      }
+    });
   };
 
   const onDuplicate = async (id) => {
@@ -151,6 +176,7 @@ export default function EntitiesPage() {
         editingEntity={editor.draft ?? null}
         onSuccess={onModalSuccess}
       />
+      {toastConfig && <Toast {...toastConfig} />}
     </div>
   );
 }
