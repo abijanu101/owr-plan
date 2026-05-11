@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getLedger, toggleSettlementPaid, createSettledLedger } from '../api/ledgerApi';
 import { listEntities } from '../api/entitiesApi';
 import AddExpense from '../components/AddExpense';
+import Avatar from '../components/avatar';
 
 export default function ViewExpensePage() {
     const { id } = useParams();
@@ -66,6 +67,18 @@ export default function ViewExpensePage() {
         if (entityId === 'External Vendor') return 'External Vendor';
         const entity = entities.find(e => String(e._id || e.id) === String(entityId));
         return entity ? entity.name : entityId;
+    };
+
+    const getEntityData = (entityId) => {
+        if (!entityId || entityId === 'External Vendor') return null;
+        const entity = entities.find(e => String(e._id || e.id) === String(entityId));
+        return entity ? {
+            face: (entity.faceIcon || entity.face || '').split('/').pop() || 'happy.svg',
+            accessories: (entity.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
+            theme: entity.theme || 'dark',
+            isGroup: entity.type === 'group',
+            bgColor: entity.color || '#f97766'
+        } : null;
     };
 
     if (loading) return (
@@ -210,10 +223,24 @@ export default function ViewExpensePage() {
                                     <div className="flex justify-between items-center mb-6 mt-2">
                                         <div className="flex flex-col items-center gap-2">
                                             <div className={`w-16 h-16 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${tx.paid ? 'bg-[#4c0e36]/20 border-[#4c0e36]/40' : 'bg-[#f97766]/10 border-[#f97766]/20'}`}>
-                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                                                    <circle cx="12" cy="7" r="4" />
-                                                </svg>
+                                                {(() => {
+                                                    const entityData = getEntityData(tx.from);
+                                                    return entityData ? (
+                                                        <Avatar
+                                                            face={entityData.face}
+                                                            accessories={entityData.accessories}
+                                                            theme={entityData.theme}
+                                                            size={64}
+                                                            isGroup={entityData.isGroup}
+                                                            bgColor={entityData.bgColor}
+                                                        />
+                                                    ) : (
+                                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                            <circle cx="12" cy="7" r="4" />
+                                                        </svg>
+                                                    );
+                                                })()}
                                             </div>
                                             <span className={`text-xs font-bold uppercase tracking-wider max-w-[90px] truncate text-center ${tx.paid ? 'text-[#dc8379]/70 line-through' : 'text-[#f97766]'}`}>{getEntityName(tx.from)}</span>
                                             <span className="text-[#f97766]/50 text-[10px] uppercase font-bold">Owes</span>
@@ -227,10 +254,24 @@ export default function ViewExpensePage() {
 
                                         <div className="flex flex-col items-center gap-2">
                                             <div className={`w-16 h-16 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${tx.paid ? 'bg-[#4c0e36]/30 border-[#dc8379]/30 shadow-[0_0_10px_rgba(76,14,54,0.4)]' : 'bg-[#f97766]/20 border-[#f97766]/40 shadow-[0_0_10px_rgba(249,119,102,0.2)]'}`}>
-                                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}>
-                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-                                                    <circle cx="12" cy="7" r="4" />
-                                                </svg>
+                                                {(() => {
+                                                    const entityData = getEntityData(tx.to);
+                                                    return entityData ? (
+                                                        <Avatar
+                                                            face={entityData.face}
+                                                            accessories={entityData.accessories}
+                                                            theme={entityData.theme}
+                                                            size={64}
+                                                            isGroup={entityData.isGroup}
+                                                            bgColor={entityData.bgColor}
+                                                        />
+                                                    ) : (
+                                                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                                                            <circle cx="12" cy="7" r="4" />
+                                                        </svg>
+                                                    );
+                                                })()}
                                             </div>
                                             <span className={`text-xs font-bold uppercase tracking-wider max-w-[90px] truncate text-center ${tx.paid ? 'text-[#dc8379]/70 line-through' : 'text-[#f97766]'}`}>{getEntityName(tx.to)}</span>
                                             <span className="text-[#f97766]/50 text-[10px] uppercase font-bold">To Receive</span>

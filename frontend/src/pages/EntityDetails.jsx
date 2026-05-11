@@ -138,9 +138,6 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
     handleOverlayToggle(next);
   };
 
-  const previewItems = currentItems.slice(0, PREVIEW_COUNT);
-  const extraCount = currentItems.length - PREVIEW_COUNT;
-
   return (
     <>
       <CollapsibleSection title={listTitle} defaultOpen={true}>
@@ -156,7 +153,7 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            {previewItems.map(item => (
+            {currentItems.map(item => (
               <EntityChip
                 key={item._id}
                 name={item.name}
@@ -166,14 +163,6 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
                 onClick={() => handleChipClick(String(item._id))}
               />
             ))}
-            {extraCount > 0 && (
-              <button
-                onClick={() => setOverlayOpen(true)}
-                style={{ padding: '5px 14px', borderRadius: 9999, background: 'var(--bg-raised)', border: '2px solid var(--color-primary)', color: 'var(--color-primary)', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
-              >
-                +{extraCount} more
-              </button>
-            )}
             <button
               onClick={() => setOverlayOpen(true)}
               title={`Edit ${listTitle}`}
