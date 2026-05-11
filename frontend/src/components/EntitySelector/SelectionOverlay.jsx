@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import EntityChip from './EntityChip';
 
-export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggle, entities }) {
+export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggle, entities, individualsOnly = false }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedSections, setExpandedSections] = useState(['people', 'groups']);
 
@@ -42,7 +42,21 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
     };
 
     const handleSelectAll = (sectionId, sectionEntities) => {
-        const entityIds = sectionEntities.map(e => e.id);
+        let entityIds = sectionEntities.map(e => e.id);
+        
+        if (individualsOnly) {
+            // Resolve all groups in this section to their members
+            const resolvedIds = new Set();
+            sectionEntities.forEach(e => {
+                if (e.type === 'group') {
+                    (e.members || []).forEach(mid => resolvedIds.add(mid));
+                } else {
+                    resolvedIds.add(e.id);
+                }
+            });
+            entityIds = Array.from(resolvedIds);
+        }
+
         if (entityIds.length === 0) return;
 
         const allSelected = entityIds.every(id => selectedIds.includes(id));
@@ -242,16 +256,22 @@ export default function SelectionOverlay({ isOpen, onClose, selectedIds, onToggl
                                                 </button>
 
                                                 <div className="flex flex-wrap gap-2 md:gap-3 flex-1">
-                                                    {sectionEntities.map(entity => (
-                                                        <EntityChip
-                                                            key={entity.id}
-                                                            name={entity.name}
-                                                            color={entity.color}
-                                                            isSelected={selectedIds.includes(entity.id)}
-                                                            isGroup={entity.type === 'group'}
-                                                            onClick={() => onToggle(entity.id)}
-                                                        />
-                                                    ))}
+                                                    {sectionEntities.map(entity => {
+                                                        const isSelected = individualsOnly && entity.type === 'group'
+                                                            ? (entity.members?.length > 0 && entity.members.every(mid => selectedIds.includes(mid)))
+                                                            : selectedIds.includes(entity.id);
+
+                                                        return (
+                                                            <EntityChip
+                                                                key={entity.id}
+                                                                name={entity.name}
+                                                                color={entity.color}
+                                                                isSelected={isSelected}
+                                                                isGroup={entity.type === 'group'}
+                                                                onClick={() => onToggle(entity.id)}
+                                                            />
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         )}

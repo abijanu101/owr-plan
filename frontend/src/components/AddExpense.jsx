@@ -266,6 +266,7 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                                     selectedIds={selectedEntities}
                                     onChange={setSelectedEntities}
                                     variant="table"
+                                    individualsOnly={true}
                                 />
                             </div>
                         </div>
