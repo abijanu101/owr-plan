@@ -81,28 +81,24 @@ export default function EntityCard1({ item, onDelete, onDuplicate }) {
       style={{
         borderColor:   `${color}40`,
         borderRadius:  '20px',
-        // Extra left padding so the checkbox (absolute, left:12) doesn't
-        // overlap the avatar — checkbox is 22px wide + 12px left = 34px,
-        // so we start content at 44px
-        paddingLeft:   '44px',
+        paddingLeft:   '16px',
         paddingRight:  '16px',
         paddingTop:    '14px',
         paddingBottom: '14px',
         display:       'flex',
         alignItems:    'center',
-        gap:           12,
-        position:      'relative',   // needed for absolute avatar below
+        gap:           16,
+        position:      'relative',
       }}
     >
-      {/* Avatar — positioned absolutely so it sits right after the
-          checkbox zone and doesn't push layout */}
+      {/* Avatar — larger and on the left */}
       <div style={{ flexShrink: 0 }}>
         <Avatar
           face={faceFile}
           accessories={(item.accessories || []).map(a =>
             typeof a === 'string' ? a.split('/').pop() : a
           )}
-          size={44}
+          size={64}
           isGroup={isGroup}
           theme={item.theme || 'dark'}
           bgColor={color}
