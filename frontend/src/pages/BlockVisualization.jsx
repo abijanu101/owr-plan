@@ -305,7 +305,7 @@ export default function BlockVisualization() {
     const { user } = useAuth();
     const [entities, setEntities] = useState([]);
     
-    // Parse initial state from PlanResults if available
+    // Parse initial state from EntityDetails or PlanResults if available
     const initialState = location.state || {};
     
     const [selectedEntities, setSelectedEntities] = useState(initialState.selectedEntities || []);
