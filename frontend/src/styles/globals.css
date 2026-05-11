@@ -255,11 +255,12 @@
   content: '';
   position: absolute;
   bottom: 0;
-  left: 20%;
-  right: 20%;
-  height: 3px;
+  left: 10%;
+  right: 10%;
+  height: 4px;
   background: var(--color-primary);
-  border-radius: 3px 3px 0 0;
+  border-radius: 4px 4px 0 0;
+  box-shadow: 0 -2px 10px rgba(249, 111, 102, 0.4);
 }
 
 /* Header wave area below the navbar */
@@ -362,7 +363,6 @@
   font-weight: 700;
   text-align: center;
   letter-spacing: 0.12em;
-  text-transform: uppercase;
   outline: none;
   width: 100%;
   padding: 4px 0;

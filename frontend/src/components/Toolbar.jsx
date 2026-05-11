@@ -71,7 +71,7 @@ export default function Toolbar({
           }}
         >
           <DuplicateIcon />
-          <span>Duplicate</span>
+          <span className="hidden sm:inline">Duplicate</span>
         </button>
 
         <button 
@@ -94,7 +94,7 @@ export default function Toolbar({
           }}
         >
           <TrashIcon />
-          <span>Delete</span>
+          <span className="hidden sm:inline">Delete</span>
         </button>
       </div>
 

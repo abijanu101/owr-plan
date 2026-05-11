@@ -412,7 +412,6 @@ export default function EntityModal({
       fontWeight:900,
       fontSize:18,
       letterSpacing:"0.12em",
-      textTransform:"uppercase",
       boxShadow:`0 2px 12px ${color}66`,
       transition:"background 0.2s, box-shadow 0.2s",
       maxWidth:"100%",

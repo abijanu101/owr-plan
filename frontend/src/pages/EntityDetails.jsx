@@ -14,26 +14,23 @@ import { listEntities, getEntity } from '../api/entitiesApi';
 
 const PREVIEW_COUNT = 2;
 
-// ─── CollapsibleSection ───────────────────────────────────────
-function CollapsibleSection({ title, children, defaultOpen = true, action }) {
-  const [open, setOpen] = useState(defaultOpen);
+// ─── SimpleSection ───────────────────────────────────────────
+function SimpleSection({ title, children, action, titleAction }) {
   return (
-    <div style={{ marginBottom: 28 }}>
-      <div style={{ width: '100%', height: 1, background: 'var(--text-muted)', opacity: 0.35, marginBottom: 10 }} />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 14 : 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <h2 style={{ color: 'var(--color-primary)', fontFamily: 'inherit', fontWeight: 900, fontSize: 18, letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>
-            {title}
-          </h2>
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 8px 0' }}>
+        <h2 style={{ color: 'var(--color-primary)', fontFamily: 'inherit', fontWeight: 900, fontSize: 16, letterSpacing: '0.12em', textTransform: 'uppercase', margin: 0 }}>
+          {title}
+        </h2>
+        {titleAction}
+      </div>
+      <div style={{ width: '100%', height: 1, background: 'var(--text-muted)', opacity: 0.15, marginBottom: 12 }} />
+      {action && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
           {action}
         </div>
-        <button onClick={() => setOpen(o => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, display: 'flex' }}>
-          <svg style={{ width: 20, height: 20, color: 'var(--text-muted)', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform 0.2s ease' }} fill="currentColor" viewBox="0 0 24 24">
-            <path d="M7 10l5 5 5-5z" />
-          </svg>
-        </button>
-      </div>
-      {open && children}
+      )}
+      {children}
     </div>
   );
 }
@@ -72,49 +69,157 @@ function useIsMobile() {
 }
 
 // ─── ActivitiesSection ────────────────────────────────────────
-function ActivitiesSection({ activities, onSchedule }) {
-  const [showAllModal, setShowAllModal] = useState(false);
-  const previewCount = 2;
+function ActivitiesSection({ activities, onSchedule, entityId, navigate }) {
+  const [visibleCount, setVisibleCount] = useState(3);
+  const [search, setSearch] = useState('');
 
   const sorted = useMemo(
     () => [...activities].sort((a, b) => proximityScore(a) - proximityScore(b)),
     [activities]
   );
 
-  const preview = sorted.slice(0, previewCount);
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sorted;
+    const lower = search.toLowerCase();
+    return sorted.filter(a => (a.title || '').toLowerCase().includes(lower));
+  }, [sorted, search]);
+
+  const preview = filtered.slice(0, visibleCount);
+
+  const handleVisualize = () => {
+    navigate('/visualize', { state: { selectedEntities: [entityId] } });
+  };
+
+  const actions = (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', justifyContent: 'space-between' }}>
+      <div style={{ position: 'relative', flex: 1, maxWidth: 320 }}>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search activities..."
+          style={{
+            width: '100%',
+            background: 'var(--bg-raised)',
+            border: '1.2px solid rgba(249, 111, 102, 0.2)',
+            borderRadius: 12,
+            padding: '8px 12px 8px 38px',
+            color: 'var(--text-neutral)',
+            fontSize: 13,
+            fontFamily: 'inherit',
+            outline: 'none',
+            transition: 'all 0.2s ease',
+          }}
+          onFocus={e => e.target.style.borderColor = 'var(--color-primary)'}
+          onBlur={e => e.target.style.borderColor = 'rgba(249, 111, 102, 0.2)'}
+        />
+        <svg
+          style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', width: 14, height: 14, color: 'var(--text-muted)' }}
+          fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"
+        >
+          <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+        </svg>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          onClick={onSchedule}
+          title="Schedule New Activity"
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            background: 'var(--color-primary)',
+            border: 'none',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(249, 111, 102, 0.3)',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+          onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <svg style={{ width: 22, height: 22 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="3">
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+        </button>
+        <button
+          onClick={handleVisualize}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '0 16px',
+            height: 38,
+            borderRadius: 10,
+            background: 'rgba(249, 111, 102, 0.08)',
+            border: '1.5px solid var(--color-primary)',
+            color: 'var(--color-primary)',
+            cursor: 'pointer',
+            fontFamily: 'inherit',
+            fontWeight: 700,
+            fontSize: 11,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(249, 111, 102, 0.15)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(249, 111, 102, 0.08)'}
+        >
+          <svg style={{ width: 14, height: 14 }} fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+          </svg>
+          <span className="hidden sm:inline">Visualize</span>
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <>
-      <CollapsibleSection title="Activities" defaultOpen={true}>
-        {sorted.length === 0 ? (
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 12px' }}>No activities yet.</p>
-        ) : (
-          <>
-            <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {preview.map((a, idx) => (
-                <ActivityCard key={a.id || idx} activity={a} />
-              ))}
-            </div>
+    <SimpleSection title="Activities" action={actions}>
+      {sorted.length === 0 ? (
+        <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: '0 0 12px' }}>No activities yet.</p>
+      ) : (
+        <>
+          <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {preview.map((a, idx) => (
+              <ActivityCard key={a.id || idx} activity={a} />
+            ))}
+          </div>
+          {visibleCount < sorted.length && (
             <button
-              onClick={() => setShowAllModal(true)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0 12px', color: 'var(--color-primary)', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}
+              onClick={() => setVisibleCount(prev => prev + 5)}
+              style={{
+                background: 'none',
+                border: `1.5px solid var(--text-muted)`,
+                borderRadius: 8,
+                padding: '8px 16px',
+                color: 'var(--text-muted)',
+                fontWeight: 700,
+                fontSize: 12,
+                cursor: 'pointer',
+                marginTop: 8,
+                width: '100%',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.borderColor = 'var(--color-primary)';
+                e.currentTarget.style.color = 'var(--color-primary)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.borderColor = 'var(--text-muted)';
+                e.currentTarget.style.color = 'var(--text-muted)';
+              }}
             >
-              <svg style={{ width: 16, height: 16 }} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M4 6h16M4 10h16M4 14h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" fill="none" />
-              </svg>
-              View all {sorted.length} {sorted.length === 1 ? 'activity' : 'activities'}
+              View More ({sorted.length - visibleCount} remaining)
             </button>
-          </>
-        )}
-        <Button onClick={onSchedule} variant="outline">+ Schedule New Activity</Button>
-      </CollapsibleSection>
-
-      <AllActivitiesModal
-        isOpen={showAllModal}
-        onClose={() => setShowAllModal(false)}
-        activities={sorted}
-      />
-    </>
+          )}
+        </>
+      )}
+    </SimpleSection>
   );
 }
 
@@ -141,9 +246,41 @@ function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
 
   const previewItems = currentItems.slice(0, PREVIEW_COUNT);
   const extraCount = currentItems.length - PREVIEW_COUNT;
+  const editBtn = (
+    <button
+      onClick={() => setOverlayOpen(true)}
+      title={`Edit ${listTitle}`}
+      style={{
+        background: 'none',
+        border: 'none',
+        padding: 4,
+        color: 'var(--color-primary)',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0,
+        transition: 'all 0.2s ease'
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'scale(1.2)';
+        e.currentTarget.style.opacity = '0.8';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.opacity = '1';
+      }}
+    >
+      <svg style={{ width: 16, height: 16 }} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+      </svg>
+    </button>
+  );
+
   return (
     <>
-      <CollapsibleSection title={listTitle} defaultOpen={true}>
+      <SimpleSection title={listTitle} titleAction={editBtn}>
         {currentItems.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <p style={{ color: 'var(--text-muted)', fontSize: 13, margin: 0 }}>No {listTitle.toLowerCase()} yet.</p>
@@ -157,22 +294,15 @@ function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
             <EntitySelector
-              variant="inline"
+              variant="grid"
               selectedIds={selectedIds}
               onChange={handleOverlayToggle}
               bubbleColor={entity.color}
               filterType={isGroup ? 'people' : 'groups'}
             />
-            <button
-              onClick={() => setOverlayOpen(true)}
-              title={`Edit ${listTitle}`}
-              style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--bg-raised)', border: '2px solid var(--text-muted)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
-            >
-              ✎
-            </button>
           </div>
         )}
-      </CollapsibleSection>
+      </SimpleSection>
 
       {console.log('EntityDetails overlay filterType:', isGroup ? 'people' : 'groups')}
       <SelectionOverlayFiltered
@@ -187,60 +317,8 @@ function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
   );
 }
 
-// ─── ViewAvailabilitySection ──────────────────────────────────
-// Sits in the right column with the same divider+heading as Members/Activities.
-// The hollow "Visualize" button navigates to /visualize and passes the entity
-// as a full object in location.state.entities so BlockVisualization pre-selects it.
-function ViewAvailabilitySection({ entity, navigate }) {
-  const handleVisualize = () => {
-    // BlockVisualization reads initialState.selectedEntities (array of entity IDs).
-    // EntitySelector expects an array of ID strings to auto-select.
-    navigate('/visualize', {
-      state: {
-        selectedEntities: [entity._id],
-      },
-    });
-  };
+// DELETED ViewAvailabilitySection - integrated into ActivitiesSection
 
-  return (
-    <CollapsibleSection title="View Availability" defaultOpen={true}>
-      <button
-        onClick={handleVisualize}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '10px 24px',
-          borderRadius: 12,
-          background: 'transparent',
-          // same colour as the section headings — not the entity's dynamic color
-          border: '2px solid var(--color-primary)',
-          color: 'var(--color-primary)',
-          cursor: 'pointer',
-          fontFamily: 'inherit',
-          fontWeight: 700,
-          fontSize: 14,
-          letterSpacing: '0.08em',
-          textTransform: 'uppercase',
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.background = 'color-mix(in srgb, var(--color-primary) 10%, transparent)';
-          e.currentTarget.style.boxShadow = '0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
-      >
-        <svg style={{ width: 16, height: 16, flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-        </svg>
-        Visualize
-      </button>
-    </CollapsibleSection>
-  );
-}
 
 // ─── Main Component ───────────────────────────────────────────
 export default function EntityDetails() {
@@ -351,55 +429,70 @@ export default function EntityDetails() {
     <div style={{ width: '100%', minHeight: '100%', padding: '32px 24px', boxSizing: 'border-box', overflowY: 'auto' }}>
       <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
 
-        {/* ── Left: Avatar + Name + (desktop) View Availability ── */}
+        {/* ── Left: Avatar + Name + Groups/Members ── */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, flexShrink: 0, width: 220 }}>
-          <Avatar
-            key={entity._id}
-            face={entity.face}
-            accessories={entity.accessories || []}
-            theme={entity.theme || 'dark'}
-            size={220}
-            isGroup={isGroup}
-            bgColor={entity.color}
-            shape="rounded"
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ padding: '8px 22px', borderRadius: 9999, background: entity.color || 'var(--color-primary)', color: '#fff', fontFamily: 'inherit', fontWeight: 900, fontSize: 18, letterSpacing: '0.15em', textTransform: 'uppercase' }}>
-              {entity.name}
-            </div>
+          <div style={{ position: 'relative' }}>
+            <Avatar
+              key={entity._id}
+              face={entity.face}
+              accessories={entity.accessories || []}
+              theme={entity.theme || 'dark'}
+              size={220}
+              isGroup={isGroup}
+              bgColor={entity.color}
+              shape="rounded"
+            />
             <button
               onClick={() => setIsEditOpen(true)}
-              title="Edit"
-              style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--bg-raised)', border: '2px solid var(--text-muted)', color: 'var(--text-neutral)', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Edit Profile"
+              style={{
+                position: 'absolute',
+                top: -12,
+                right: -12,
+                width: 44,
+                height: 44,
+                borderRadius: '50%',
+                background: 'var(--bg-raised)',
+                border: `3px solid ${entity.color || 'var(--color-primary)'}`,
+                color: entity.color || 'var(--color-primary)',
+                cursor: 'pointer',
+                fontSize: 20,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                transition: 'all 0.2s ease',
+                zIndex: 20
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.15)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
               ✎
             </button>
           </div>
 
-          {/* Desktop only: View Availability sits under the name tag in the left column */}
-          {!isMobile && (
-            <div style={{ width: '100%' }}>
-              <ViewAvailabilitySection entity={entity} navigate={navigate} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div className="text-center" style={{ padding: '8px 22px', borderRadius: 9999, background: entity.color || 'var(--color-primary)', color: '#fff', fontFamily: 'inherit', fontWeight: 900, fontSize: 18, letterSpacing: '0.15em' }}>
+              {entity.name}
             </div>
-          )}
+          </div>
+
+          <div style={{ width: '100%' }}>
+            <MembersGroupsSection
+              entity={entity}
+              allEntities={allEntities}
+              onRelationsChange={updateRelations}
+            />
+          </div>
         </div>
 
-        {/* ── Right: Sections ── */}
+        {/* ── Right: Activities ── */}
         <div style={{ flex: 1, minWidth: 280 }}>
-          <MembersGroupsSection
-            entity={entity}
-            allEntities={allEntities}
-            onRelationsChange={updateRelations}
-          />
-
-          {/* Mobile only: View Availability sits above Activities */}
-          {isMobile && (
-            <ViewAvailabilitySection entity={entity} navigate={navigate} />
-          )}
-
           <ActivitiesSection
             activities={activities}
             onSchedule={() => navigate('/activities/create')}
+            entityId={entity._id}
+            navigate={navigate}
           />
         </div>
       </div>

@@ -20,7 +20,8 @@ export default function EntitySelector({
     const [loadingEntities, setLoadingEntities] = useState(false);
 
     // If variant is inline, we only show 1 entity max to keep it very compact
-    const effectiveMaxVisible = variant === 'inline' ? 1 : maxVisible;
+    // If variant is grid, we show all entities (exhaustive)
+    const effectiveMaxVisible = variant === 'inline' ? 1 : (variant === 'grid' ? Infinity : maxVisible);
 
     useEffect(() => {
         if (!user?._id) return;
@@ -109,8 +110,8 @@ export default function EntitySelector({
                 onClick={() => setIsOverlayOpen(true)}
                 className={`
                     cursor-pointer transition-all duration-300 flex items-center
-                    ${variant === 'table'
-                        ? 'p-0 py-0 border border-transparent hover:bg-white/5 rounded-xl'
+                    ${variant === 'table' || variant === 'grid'
+                        ? 'p-0 py-0 border border-transparent rounded-xl'
                         : isInline
                             ? 'flex-nowrap gap-1 bg-black/10 rounded-xl p-1 -m-1 transition-all hover:bg-black/20 w-fit'
                             : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
@@ -132,7 +133,7 @@ export default function EntitySelector({
                                 isSelected={true}
                                 isGroup={entity.type === 'group'}
                                 small={isInline}
-                                disableHover={isInline}
+                                disableHover={isInline || variant === 'grid'}
                             />
                         ))}
                         {remainingCount > 0 && (

@@ -14,13 +14,13 @@ const SORT = [
 
 // Tab definitions — 'all' fetches both types and merges
 const TABS = [
+  { value: 'all', label: 'All' },
   { value: 'person', label: 'People' },
   { value: 'group', label: 'Groups' },
-  { value: 'all', label: 'All' },
 ];
 
 export default function EntitiesPage() {
-  const [tab, setTab] = useState('person');
+  const [tab, setTab] = useState('all');
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('recent');
