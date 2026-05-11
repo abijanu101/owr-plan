@@ -8,23 +8,24 @@ import { listEntities, deleteEntities, duplicateEntities, updateEntity } from '.
 
 const SORT = [
   { value: 'recent', label: 'Recently added' },
-  { value: 'name',   label: 'Name (A–Z)'     },
+  { value: 'name', label: 'Name (A–Z)' },
 ];
 
 // Tab definitions — 'all' fetches both types and merges
 const TABS = [
   { value: 'person', label: 'People' },
-  { value: 'group',  label: 'Groups' },
-  { value: 'all',    label: 'All'    },
+  { value: 'group', label: 'Groups' },
+  { value: 'all', label: 'All' },
 ];
 
 export default function EntitiesPage() {
-  const [tab,     setTab]     = useState('person');
-  const [items,   setItems]   = useState([]);
-  const [search,  setSearch]  = useState('');
+  const [tab, setTab] = useState('person');
+  const [items, setItems] = useState([]);
+  const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('recent');
   const [selected, setSelected] = useState(new Set());
-  const [editor,   setEditor]   = useState({ open: false, draft: null });
+  const [editor, setEditor] = useState({ open: false, draft: null });
+  const [toastConfig, setToastConfig] = useState(null);
 
   // ── Fetch ──
   useEffect(() => {
@@ -86,10 +87,31 @@ export default function EntitiesPage() {
     await deleteEntities(ids);
     setItems(p => p.filter(i => !ids.includes(String(i.id || i._id))));
     if (!id) setSelected(new Set());
+
+    let isUndone = false;
+
+    setToastConfig({
+      message: `Deleted ${ids.length} item${ids.length > 1 ? 's' : ''}`,
+      type: 'warning',
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          isUndone = true;
+          setItems(p => [...itemsToDelete, ...p]);
+        }
+      },
+      onClose: () => {
+        if (!isUndone) {
+          deleteEntities(ids).catch(err => console.error("Delete failed:", err));
+        }
+        setToastConfig(null);
+      }
+    });
   };
 
   const onDuplicate = async (id) => {
-    const ids  = id ? [String(id)] : [...selected];
+    const ids = id ? [String(id)] : [...selected];
     const dupes = await duplicateEntities(ids);
     setItems(p => [...dupes, ...p]);
     if (!id) setSelected(new Set());
@@ -112,7 +134,7 @@ export default function EntitiesPage() {
   // When creating from the "All" tab, default to person
   const createType = tab === 'all' ? 'person' : tab;
   // When editing, use the existing entity's type; fall back to createType
-  const modalType  = editor.draft?.type ?? editor.draft?.kind ?? createType;
+  const modalType = editor.draft?.type ?? editor.draft?.kind ?? createType;
 
   return (
     <div className="stage">
@@ -161,6 +183,7 @@ export default function EntitiesPage() {
         editingEntity={editor.draft ?? null}
         onSuccess={onModalSuccess}
       />
+      {toastConfig && <Toast {...toastConfig} />}
     </div>
   );
 }

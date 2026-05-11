@@ -46,7 +46,7 @@ export default function Navbar() {
                             <span className="text-lg font-bold hidden lg:inline opacity-80">Hi, {user.name}</span>
                             <button
                                 onClick={logout}
-                                className="text-xl whitespace-nowrap hover:text-red-400 transition-colors px-3"
+                                className="text-xl whitespace-nowrap hover:text-red-400 transition-colors px-3 cursor-pointer"
                             >
                                 logout
                             </button>
@@ -83,7 +83,7 @@ export default function Navbar() {
                             key={item.name}
                             to={user ? item.path : '/login'}
                             onClick={() => handleItemClick(item.name)}
-                            className={`relative flex flex-col items-center gap-2 group/link transition-all ${isActive ? 'scale-110' : 'hover:scale-105 opacity-80 hover:opacity-100'} ${clickedItem === item.name ? 'pulse' : ''}`}
+                            className={`relative flex flex-col items-center gap-2 group/link transition-all ${isActive ? 'scale-110 hover:scale-[1.15]' : 'hover:scale-105 opacity-80 hover:opacity-100'} ${clickedItem === item.name ? 'pulse' : ''}`}
                         >
                             {clickedItem === item.name && (
                                 <svg className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-20 text-[var(--color-primary)] animate-burst pointer-events-none z-0" viewBox="0 0 100 100">

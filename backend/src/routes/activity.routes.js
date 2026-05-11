@@ -32,8 +32,8 @@ router.get('/plan',                getBestTimeSlots);
 router.get('/:id',                 getActivityById);
 
 router.put('/:id',    updateActivity);
-router.delete('/:id', deleteActivity);
 router.delete('/bulk', bulkDeleteActivities);
+router.delete('/:id', deleteActivity);
 router.post('/duplicate', duplicateActivities);
 
 module.exports = router;

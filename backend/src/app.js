@@ -19,6 +19,10 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'OwrPlan API Server is running. Please access the frontend at the appropriate port (e.g., localhost:3000 or localhost:5173) or endpoints via /api' });
+});
+
 app.use('/api', routes);
 
 app.get('/health', (req, res) => {
