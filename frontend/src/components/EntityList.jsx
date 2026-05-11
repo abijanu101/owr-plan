@@ -1,7 +1,10 @@
 // components/EntityList.jsx
+import { useNavigate } from 'react-router-dom';
 import EntityCard from './EntityCard';
 
-export default function EntityList({ items, selectedIds, onToggleSelect, emptyLabel, onDelete, onDuplicate }) {
+export default function EntityList({ items, selectedIds, onToggleSelect, emptyLabel, onDelete, onDuplicate, onRelationsChange }) {
+  const navigate = useNavigate();
+
   if (!items || items.length === 0) {
     return (
       <div className="entity-list-empty">
@@ -13,57 +16,25 @@ export default function EntityList({ items, selectedIds, onToggleSelect, emptyLa
 
   return (
     <div className="entity-grid">
-      {items.map((entity) => (
-        <div key={entity.id} style={{ position: 'relative' }}>
-          {/* Checkbox - TOP LEFT */}
-          <div 
-            style={{ 
-              position: 'absolute', 
-              top: '12px', 
-              left: '12px', 
-              zIndex: 20,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <input
-              type="checkbox"
-              checked={selectedIds.has(entity.id)}
-              onChange={() => onToggleSelect(entity.id)}
-              style={{
-                width: '22px',
-                height: '22px',
-                cursor: 'pointer',
-                accentColor: '#f97766',
-                backgroundColor: selectedIds.has(entity.id) ? '#f97766' : 'transparent',
-                border: '2px solid #f97766',
-                borderRadius: '4px',
-                outline: 'none',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-                position: 'relative',
-              }}
-            />
-            {selectedIds.has(entity.id) && (
-              <span style={{
-                position: 'absolute',
-                top: '1px',
-                left: '5px',
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                pointerEvents: 'none',
-              }}>
-                ✓
-              </span>
-            )}
-          </div>
+      {items.map((entity) => {
+        const id = String(entity.id || entity._id);
+        return (
           <EntityCard
+            key={id}
             item={entity}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
+            isSelected={selectedIds.has(id)}
+            onSelect={() => onToggleSelect(id)}
+            onRelationsChange={(type, ids) => onRelationsChange?.(id, type, ids)}
+            onClick={() => {
+              if (selectedIds.size > 0) {
+                onToggleSelect(id);
+              } else {
+                navigate(`/entities/${id}`);
+              }
+            }}
           />
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

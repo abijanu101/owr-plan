@@ -120,7 +120,7 @@ function ActivitiesSection({ activities, onSchedule }) {
 
 // ─── MembersGroupsSection ─────────────────────────────────────
 function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
-  const isGroup = entity.type === 'group';
+  const isGroup = entity.type === 'group' || entity.kind === 'group';
   const listTitle = isGroup ? 'Members' : 'Groups';
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
 
@@ -161,6 +161,7 @@ function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
               selectedIds={selectedIds}
               onChange={handleOverlayToggle}
               bubbleColor={entity.color}
+              filterType={isGroup ? 'people' : 'groups'}
             />
             <button
               onClick={() => setOverlayOpen(true)}
@@ -173,12 +174,13 @@ function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
         )}
       </CollapsibleSection>
 
+      {console.log('EntityDetails overlay filterType:', isGroup ? 'people' : 'groups')}
       <SelectionOverlayFiltered
         isOpen={overlayOpen}
         onClose={() => setOverlayOpen(false)}
         selectedIds={selectedIds}
         onToggle={handleOverlayToggle}
-        People={isGroup}
+        filterType={isGroup ? 'people' : 'groups'}
         entities={Object.values(allEntities)}
       />
     </>

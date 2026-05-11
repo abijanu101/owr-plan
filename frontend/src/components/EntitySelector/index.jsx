@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import EntityChip from './EntityChip';
-import SelectionOverlay from './SelectionOverlay';
+import SelectionOverlay from './SelectionOverlayFiltered';
 import { useAuth } from '../../context/AuthContext';
 import { listEntities } from '../../api/entitiesApi';
 
@@ -9,9 +9,11 @@ export default function EntitySelector({
     onChange,
     variant = 'standalone',
     maxVisible = 4,
+    filterType = 'all',
     individualsOnly = false,
     bubbleColor = 'var(--color-primary)'
 }) {
+    console.log('EntitySelector filterType:', filterType);
     const { user } = useAuth();
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
     const [entities, setEntities] = useState([]);
@@ -110,7 +112,7 @@ export default function EntitySelector({
                     ${variant === 'table'
                         ? 'p-0 py-0 border border-transparent hover:bg-white/5 rounded-xl'
                         : isInline
-                            ? 'flex-wrap gap-1.5'
+                            ? 'flex-wrap gap-1.5 bg-black/10 rounded-xl p-1.5 -m-1.5 transition-all hover:bg-black/20'
                             : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
                 `}
             >
@@ -130,6 +132,7 @@ export default function EntitySelector({
                                 isSelected={true}
                                 isGroup={entity.type === 'group'}
                                 small={isInline}
+                                disableHover={isInline}
                             />
                         ))}
                         {remainingCount > 0 && (
@@ -158,6 +161,7 @@ export default function EntitySelector({
                 onToggle={handleToggle}
                 entities={entities}
                 individualsOnly={individualsOnly}
+                filterType={filterType}
             />
         </>
     );

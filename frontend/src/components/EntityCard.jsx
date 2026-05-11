@@ -63,11 +63,11 @@ function AvatarStack({ items, color }) {
 }
 
 // ─── EntityCard ───────────────────────────────────────────────
-export default function EntityCard({ item, onDelete, onDuplicate }) {
-  const navigate = useNavigate();
+export default function EntityCard({ item, isSelected, onSelect, onClick, onRelationsChange }) {
   const [isHovered, setIsHovered] = useState(false);
   const color    = item.color || '#f97766';
   const isGroup  = item.kind === 'group' || item.type === 'group';
+  console.log('EntityCard isGroup:', isGroup, 'item name:', item.name);
 
   // Resolve face filename — handles full paths or plain filenames
   const faceFile = (item.faceIcon || item.face || '').split('/').pop() || undefined;
@@ -79,7 +79,7 @@ export default function EntityCard({ item, onDelete, onDuplicate }) {
   return (
     <div
       className="entity-card"
-      onClick={() => navigate(`/entities/${item.id || item._id}`)}
+      onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -94,9 +94,60 @@ export default function EntityCard({ item, onDelete, onDuplicate }) {
         gap:           16,
         position:      'relative',
         backgroundColor: isHovered ? `${color}1A` : `${color}0D`,
-        transition:    'background-color 0.3s ease, transform 0.2s ease',
+        boxShadow:       isHovered ? `0 10px 40px ${color}35` : `0 4px 20px rgba(0,0,0,0.2)`,
+        transform:       isHovered ? 'translateY(-5px) scale(1.01)' : 'translateY(0) scale(1)',
+        transition:      'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
       }}
     >
+      {/* Selection Checkbox */}
+      {onSelect && (
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect();
+          }}
+          style={{ 
+            position: 'absolute', 
+            top: '10px', 
+            right: '10px', 
+            zIndex: 40,
+            cursor: 'pointer',
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          <div style={{
+            width: '20px',
+            height: '20px',
+            borderRadius: '6px',
+            border: `2px solid ${isSelected ? color : `${color}60`}`,
+            background: isSelected ? color : 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxShadow: isSelected ? `0 0 10px ${color}40` : 'none',
+          }}>
+            {isSelected && (
+              <svg 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="white" 
+                strokeWidth="4" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                style={{ width: '14px', height: '14px' }}
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Avatar — larger and on the left */}
       <div style={{ flexShrink: 0 }}>
         <Avatar
@@ -139,7 +190,8 @@ export default function EntityCard({ item, onDelete, onDuplicate }) {
             <EntitySelector
               variant="inline"
               selectedIds={relatedIds}
-              onChange={() => {}}
+              filterType={isGroup ? 'people' : 'groups'}
+              onChange={(newIds) => onRelationsChange?.(isGroup ? 'members' : 'groups', newIds)}
               bubbleColor={color}
             />
           </div>

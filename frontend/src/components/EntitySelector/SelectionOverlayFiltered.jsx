@@ -33,17 +33,18 @@ function useEntities() {
     return { entities, loading, error };
 }
 
-export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds, onToggle, People, entities = [], loading = false, error = null }) {
+export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds, onToggle, filterType = 'all', entities = [], loading = false, error = null }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedSections, setExpandedSections] = useState(['people']);
 
     // Dynamically derive sections from entities
     const baseSections = useMemo(() => {
-        if (People) {
+        console.log('SelectionOverlayFiltered mode:', filterType);
+        const sections = [];
+        
+        if (filterType === 'all' || filterType === 'people') {
             // Selecting People: show "All People" and each group's members
-            const base = [
-                { id: 'people', title: 'All People', type: 'person' },
-            ];
+            sections.push({ id: 'people', title: 'All People', type: 'person' });
 
             const groupSections = entities
                 .filter(e => e.type === 'group')
@@ -54,20 +55,23 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
                     groupId: group.id,
                     memberIds: group.members || []
                 }));
-
-            return [...base, ...groupSections];
-        } else {
-            // Selecting Groups: just show "All Groups"
-            return [
-                { id: 'groups', title: 'All Groups', type: 'group' }
-            ];
+            
+            sections.push(...groupSections);
         }
-    }, [entities, People]);
+        
+        if (filterType === 'all' || filterType === 'groups') {
+            // Selecting Groups: just show "All Groups"
+            sections.push({ id: 'groups', title: 'All Groups', type: 'group' });
+        }
+        
+        console.log('Generated sections:', sections.map(s => s.id));
+        return sections;
+    }, [entities, filterType]);
 
-    // Update expanded sections when People changes
+    // Update expanded sections when filterType changes
     useEffect(() => {
-        setExpandedSections(People ? ['people'] : ['groups']);
-    }, [People]);
+        setExpandedSections(filterType === 'groups' ? ['groups'] : ['people']);
+    }, [filterType]);
 
     const sections = baseSections;
 
@@ -127,7 +131,7 @@ export default function SelectionOverlayFiltered({ isOpen, onClose, selectedIds,
                 {/* Header Area */}
                 <div className="pt-6 pb-2 flex flex-col items-center">
                     <h2 className="text-[28px] sm:text-[42px] font-normal text-[#DC8379] tracking-normal text-center mb-2" style={{ fontFamily: 'cursive' }}>
-                        Select {People ? 'People' : 'Groups'}
+                        Select {filterType === 'people' ? 'People' : filterType === 'groups' ? 'Groups' : 'Entities'}
                     </h2>
 
                     {/* Search Bar */}

@@ -4,7 +4,7 @@ import Tabs from '../components/Tabs';
 import Toolbar from '../components/Toolbar';
 import EntityList from '../components/EntityList';
 import EntityModal from '../components/EntityModal';
-import { listEntities, deleteEntities, duplicateEntities } from '../api/entitiesApi';
+import { listEntities, deleteEntities, duplicateEntities, updateEntity } from '../api/entitiesApi';
 
 const SORT = [
   { value: 'recent', label: 'Recently added' },
@@ -82,17 +82,26 @@ export default function EntitiesPage() {
 
   // ── Actions ──
   const onDelete = async (id) => {
-    const ids = id ? [id] : [...selected];
+    const ids = id ? [String(id)] : [...selected];
     await deleteEntities(ids);
-    setItems(p => p.filter(i => !ids.includes(i.id) && !ids.includes(i._id)));
+    setItems(p => p.filter(i => !ids.includes(String(i.id || i._id))));
     if (!id) setSelected(new Set());
   };
 
   const onDuplicate = async (id) => {
-    const ids  = id ? [id] : [...selected];
+    const ids  = id ? [String(id)] : [...selected];
     const dupes = await duplicateEntities(ids);
     setItems(p => [...dupes, ...p]);
     if (!id) setSelected(new Set());
+  };
+
+  const updateRelations = async (id, type, ids) => {
+    try {
+      const updated = await updateEntity(id, { [type]: ids });
+      setItems(p => p.map(i => (i.id === id || i._id === id) ? { ...i, ...updated } : i));
+    } catch (err) {
+      console.error('Failed to update relations:', err);
+    }
   };
 
   // ── Label helpers ──
@@ -138,6 +147,7 @@ export default function EntitiesPage() {
           items={visible}
           selectedIds={selected}
           onToggleSelect={toggleSelect}
+          onRelationsChange={updateRelations}
           emptyLabel={emptyLabel}
           onDelete={onDelete}
           onDuplicate={onDuplicate}

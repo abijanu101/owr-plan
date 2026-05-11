@@ -18,7 +18,8 @@ export default function EntityChip({
     isSelected = false, 
     isGroup = false,
     onClick,
-    small = false
+    small = false,
+    disableHover = false
 }) {
     // Inner chip styles
     const chipBaseClasses = `relative flex items-center ${small ? 'gap-0.5' : 'gap-1'} ${small ? 'px-1.5 py-0' : 'px-3 py-1'} rounded-full transition-all duration-300 ${small ? 'text-[9px]' : 'text-xs'} font-bold shadow-sm select-none overflow-hidden`;
@@ -64,7 +65,7 @@ export default function EntityChip({
     );
 
     // Outermost wrapper class for scale and interaction
-    const wrapperClasses = `group inline-block transition-all duration-300 cursor-pointer hover:scale-105 hover:brightness-110 active:scale-95 rounded-full`;
+    const wrapperClasses = `group inline-block transition-all duration-300 cursor-pointer ${disableHover ? '' : 'hover:scale-105 hover:brightness-110 active:scale-95'} rounded-full`;
 
     // Ensure both types have the same footprint
     return (
