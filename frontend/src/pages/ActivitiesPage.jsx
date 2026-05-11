@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import Toolbar from '../components/Toolbar';
 import ActivityList from '../components/ActivityList';
+import Tabs from '../components/Tabs';
 import Toast from '../components/UI/Toast';
 import {
   listActivities,
@@ -130,20 +131,26 @@ export default function ActivitiesPage() {
   return (
     <div className="stage">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 960, margin: '0 auto', padding: '20px' }}>
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder="Search Activity"
-          onCreate={openCreate}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 24 }}>
+          <Tabs
+            tabs={FILTER}
+            value={filterKey}
+            onChange={setFilterKey}
+            variant="tab"
+          />
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search Activity"
+            onCreate={openCreate}
+            connected
+          />
+        </div>
 
         <Toolbar
           sortOptions={SORT}
           sortValue={sortKey}
           onSortChange={setSortKey}
-          filterOptions={FILTER}
-          filterValue={filterKey}
-          onFilterChange={setFilterKey}
           selectedCount={selected.size}
           onDuplicate={onDuplicate}
           onDelete={onDelete}

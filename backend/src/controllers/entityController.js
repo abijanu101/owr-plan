@@ -43,6 +43,8 @@ const createEntity = async (req, res) => {
       faceIcon:    incoming.faceIcon,
       accessories: Array.isArray(incoming.accessories) ? incoming.accessories : [],
       theme:       incoming.theme ?? 'dark',
+      groups:      incoming.groups,
+      members:     incoming.members,
     }, false);
 
     const entity = await Entity.create({ userId: req.user._id, ...coerced });

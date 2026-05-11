@@ -51,7 +51,7 @@ export default function EntityChip({
             <span 
                 className="tracking-wide relative z-10" 
                 style={{ 
-                    maxWidth: small ? '60px' : '120px',
+                    maxWidth: small ? '45px' : '120px',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',

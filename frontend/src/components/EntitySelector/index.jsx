@@ -19,8 +19,8 @@ export default function EntitySelector({
     const [entities, setEntities] = useState([]);
     const [loadingEntities, setLoadingEntities] = useState(false);
 
-    // If variant is inline, we only show 2 entities max
-    const effectiveMaxVisible = variant === 'inline' ? 2 : maxVisible;
+    // If variant is inline, we only show 1 entity max to keep it very compact
+    const effectiveMaxVisible = variant === 'inline' ? 1 : maxVisible;
 
     useEffect(() => {
         if (!user?._id) return;
@@ -112,7 +112,7 @@ export default function EntitySelector({
                     ${variant === 'table'
                         ? 'p-0 py-0 border border-transparent hover:bg-white/5 rounded-xl'
                         : isInline
-                            ? 'flex-wrap gap-1.5 bg-black/10 rounded-xl p-1.5 -m-1.5 transition-all hover:bg-black/20'
+                            ? 'flex-nowrap gap-1 bg-black/10 rounded-xl p-1 -m-1 transition-all hover:bg-black/20 w-fit'
                             : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
                 `}
             >

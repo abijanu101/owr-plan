@@ -18,6 +18,21 @@ const timeStringToDate = (timeStr, baseDate = new Date()) => {
 
 const transformActivity = (activity) => {
   const type = activity.activityType || 'non-recurring';
+  
+  const mapParticipants = (participants) => {
+    return (participants || []).map(p => {
+      if (p && typeof p === 'object' && (p._id || p.id)) {
+        return {
+          id: (p._id || p.id).toString(),
+          name: p.name || 'Unknown',
+          color: p.color,
+          faceIcon: p.faceIcon,
+          type: p.type
+        };
+      }
+      return p ? p.toString() : p;
+    });
+  };
 
   // ── Non-recurring ───────────────────────────────────────────────────────
   if (type === 'non-recurring') {
@@ -33,7 +48,7 @@ const transformActivity = (activity) => {
       rangeEnd: activity.rangeEnd,
       timeRange: start && end ? `${fmtTime(start)} – ${fmtTime(end)}` : '',
       dateLabel: start ? fmt(start) : '',
-      participants: activity.participants?.map(p => p.name || p.toString()) || [],
+      participants: mapParticipants(activity.participants),
       createdAt: activity.createdAt ? new Date(activity.createdAt).getTime() : Date.now(),
     };
   }
@@ -66,7 +81,7 @@ const transformActivity = (activity) => {
     scheduleStr,
     expiryStr,
     timeRange: `${activity.recurringStartTime || ''} – ${activity.recurringEndTime || ''}`,
-    participants: activity.participants?.map(p => p.name || p.toString()) || [],
+    participants: mapParticipants(activity.participants),
     createdAt: activity.createdAt ? new Date(activity.createdAt).getTime() : Date.now(),
   };
 };

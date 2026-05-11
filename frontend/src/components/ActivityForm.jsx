@@ -41,7 +41,7 @@ export default function ActivityForm({ initial, onSubmit }) {
       <div>
         <label className="label">Participants (comma separated)</label>
         <input className="input"
-          value={form.participants.join(', ')}
+          value={form.participants.map(p => typeof p === 'object' ? p.name : p).join(', ')}
           onChange={(e) => update({
             participants: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
           })}

@@ -5,22 +5,23 @@
 .entity-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 12px;
   width: 100%;
+  margin: 0 auto;
 }
 
 /* ========== ENTITY CARD ========== */
 .entity-card {
   background: var(--bg-raised);
-  border: 2px solid var(--border-subtle);
-  border-radius: 16px;
-  padding: 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 12px 14px;
   cursor: pointer;
   transition: all 0.25s ease;
   display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  min-height: 120px;
+  align-items: center;
+  gap: 12px;
+  min-height: 80px;
   height: 100%;
 }
 
@@ -145,15 +146,16 @@
 }
 
 /* ========== RESPONSIVE ========== */
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .entity-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .entity-grid {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 }
 
@@ -218,6 +220,46 @@
   color: var(--color-primary);
   border-color: var(--color-primary);
   background: var(--bg-accent);
+}
+
+/* Tabbed Menu Styles */
+.tab-item {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-radius: 12px 12px 0 0;
+  padding: 10px 24px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  position: relative;
+  opacity: 0.7;
+}
+
+.tab-item:hover {
+  color: var(--text-neutral);
+  opacity: 1;
+}
+
+.tab-item[data-active="true"] {
+  color: var(--color-primary);
+  background: rgba(249, 119, 102, 0.08);
+  opacity: 1;
+}
+
+.tab-item[data-active="true"]::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: var(--color-primary);
+  border-radius: 3px 3px 0 0;
 }
 
 /* Header wave area below the navbar */
@@ -607,4 +649,20 @@
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--text-muted) transparent;
+}
+
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding: 24px;
+  }
 }

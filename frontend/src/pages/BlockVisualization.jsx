@@ -190,11 +190,38 @@ export default function BlockVisualization() {
     return (
         <div className="bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 md:pt-0 relative min-h-screen overflow-x-hidden">
             <div className="max-w-5xl mx-auto pt-8 sm:pt-12 flex flex-col gap-8">
+                {/* Title & Help Icon */}
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-3xl text-[#f97766] tracking-wide" style={{ fontFamily: 'cursive' }}>
+                        Block Visualization
+                    </h2>
+                    <div
+                        onClick={() => setIsHelpOpen(true)}
+                        className="w-8 h-8 rounded-full border border-[#f97766]/20 flex items-center justify-center text-[#f97766]/40 hover:text-[#f97766]/60 transition-colors cursor-pointer group/help relative"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12" y1="17" y2="17.01" />
+                        </svg>
+                        <div className="absolute top-full mt-2 right-0 bg-[#f97766] text-[#200412] text-[10px] px-2 py-1 rounded opacity-0 group-hover/help:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold uppercase tracking-wider">
+                            Need Help?
+                        </div>
+                    </div>
+                </div>
+
+                {/* Top Line */}
+                <div className="w-full h-px bg-[#f97766]/10 mb-10"></div>
 
                 {/* Search Bar container styled to match the visualization image */}
-                <div className="relative w-full bg-[#200412] rounded-[1.5rem] border border-[#f97766]/10 hover:border-[#f97766]/30 transition-all shadow-lg overflow-hidden group">
-                    {/* EntitySelector is embedded here */}
-                    <div className="relative z-10 p-1 sm:p-2">
+                <div style={{
+                    position: 'relative',
+                    width: '100%',
+                    background: 'var(--bg-raised)',
+                    borderRadius: '24px',
+                    border: '1.5px solid rgba(249, 111, 102, 0.2)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                    overflow: 'hidden'
+                }}>
+                    <div style={{ position: 'relative', zIndex: 10, padding: '8px' }}>
                         <EntitySelector
                             selectedIds={selectedEntities}
                             onChange={setSelectedEntities}
@@ -284,27 +311,11 @@ export default function BlockVisualization() {
                         </div>
                     </div>
                 ) : (
-                    <div className="mt-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-                        {/* Title & Help Icon */}
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-3xl text-[#f97766] tracking-wide" style={{ fontFamily: 'cursive' }}>
-                                Block Visualization
-                            </h2>
-                            <div
-                                onClick={() => setIsHelpOpen(true)}
-                                className="w-8 h-8 rounded-full border border-[#f97766]/20 flex items-center justify-center text-[#f97766]/40 hover:text-[#f97766]/60 transition-colors cursor-pointer group/help relative"
-                            >
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12" y1="17" y2="17.01" />
-                                </svg>
-                                <div className="absolute top-full mt-2 right-0 bg-[#f97766] text-[#200412] text-[10px] px-2 py-1 rounded opacity-0 group-hover/help:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold uppercase tracking-wider">
-                                    Need Help?
-                                </div>
-                            </div>
+                    <div className="flex flex-col gap-16 mt-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+                        {/* Faded Dummy Timeline */}
+                        <div className="opacity-60">
+                            <DummyTimeline />
                         </div>
-
-                        {/* Top Line */}
-                        <div className="w-full h-px bg-[#f97766]/10 mb-10"></div>
 
                         {/* System Constraints Divider */}
                         <div className="flex items-center gap-4 mb-8">
@@ -314,11 +325,7 @@ export default function BlockVisualization() {
                         </div>
 
 
-                        <br />
-                        {/* Faded Dummy Timeline */}
-                        <div className="opacity-60">
-                            <DummyTimeline />
-                        </div>
+
                     </div>
                 )}
 

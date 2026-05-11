@@ -55,8 +55,8 @@ const entitySchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-// UNIQUE (userId + name)
-entitySchema.index({ userId: 1, name: 1 }, { unique: true });
+// Index for faster lookups by userId
+entitySchema.index({ userId: 1, name: 1 });
 
 module.exports = mongoose.model("Entity", entitySchema);
 

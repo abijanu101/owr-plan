@@ -84,11 +84,11 @@ export default function EntityCard({ item, isSelected, onSelect, onClick, onRela
       onMouseLeave={() => setIsHovered(false)}
       style={{
         borderColor:   `${color}40`,
-        borderRadius:  '20px',
-        paddingLeft:   '16px',
-        paddingRight:  '16px',
-        paddingTop:    '14px',
-        paddingBottom: '14px',
+        borderRadius:  '14px',
+        paddingLeft:   '12px',
+        paddingRight:  '12px',
+        paddingTop:    '10px',
+        paddingBottom: '10px',
         display:       'flex',
         alignItems:    'center',
         gap:           16,

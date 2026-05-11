@@ -1,4 +1,5 @@
 import { normalizeDates } from '../utils/dateUtils';
+import { getActivitiesByEntity, updateActivity } from './activitiesApi';
 
 const normalize = (data) => {
     if (Array.isArray(data)) {
@@ -86,10 +87,55 @@ export const createEntity = async (data) => {
 
 export const duplicateEntities = async (ids) => {
     try {
-        // Placeholder for duplication logic
-        return [];
+        const results = await Promise.all(ids.map(async (id) => {
+            // 1. Get original
+            const original = await getEntity(id);
+            const { id: oldId, _id, createdAt, updatedAt, ...rest } = original;
+
+            // 2. Prepare data for clone (mapping populated arrays back to IDs)
+            const clonedData = {
+                ...rest,
+                name: `${original.name} Copy`,
+                members: (original.members || []).map(m => m.id || m._id || m),
+                groups: (original.groups || []).map(g => g.id || g._id || g)
+            };
+
+            // 3. Create new entity
+            const cloned = await createEntity(clonedData);
+            const newId = cloned.id;
+
+            // 4. Sync Bidirectional Entity Relations
+            // Update groups this person belongs to
+            if (clonedData.groups && clonedData.groups.length > 0) {
+                await Promise.all(clonedData.groups.map(async (groupId) => {
+                    const group = await getEntity(groupId);
+                    const newMembers = [...new Set([...(group.members || []).map(m => m.id || m._id || m), newId])];
+                    await updateEntity(groupId, { members: newMembers });
+                }));
+            }
+            // Update members of this group
+            if (clonedData.members && clonedData.members.length > 0) {
+                await Promise.all(clonedData.members.map(async (memberId) => {
+                    const member = await getEntity(memberId);
+                    const newGroups = [...new Set([...(member.groups || []).map(g => g.id || g._id || g), newId])];
+                    await updateEntity(memberId, { groups: newGroups });
+                }));
+            }
+
+            // 5. Sync Activity Involvement
+            const activities = await getActivitiesByEntity(id);
+            await Promise.all(activities.map(async (act) => {
+                const actId = act.id || act._id;
+                // Add new entity to activity's participants
+                const newParticipants = [...new Set([...(act.participants || []).map(p => p.id || p._id || p), newId])];
+                await updateActivity(actId, { participants: newParticipants });
+            }));
+
+            return cloned;
+        }));
+        return results;
     } catch (err) {
         console.error('Failed to duplicate entities:', err);
-        return [];
+        throw err;
     }
 };

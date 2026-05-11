@@ -4,6 +4,7 @@ import Tabs from '../components/Tabs';
 import Toolbar from '../components/Toolbar';
 import EntityList from '../components/EntityList';
 import EntityModal from '../components/EntityModal';
+import Toast from '../components/UI/Toast';
 import { listEntities, deleteEntities, duplicateEntities, updateEntity } from '../api/entitiesApi';
 
 const SORT = [
@@ -26,7 +27,6 @@ export default function EntitiesPage() {
   const [selected, setSelected] = useState(new Set());
   const [editor, setEditor] = useState({ open: false, draft: null });
   const [toastConfig, setToastConfig] = useState(null);
-
   // ── Fetch ──
   useEffect(() => {
     setSelected(new Set());
@@ -82,9 +82,11 @@ export default function EntitiesPage() {
   };
 
   // ── Actions ──
-  const onDelete = async (id) => {
+  const onDelete = (id) => {
     const ids = id ? [String(id)] : [...selected];
-    await deleteEntities(ids);
+    const itemsToDelete = items.filter(i => ids.includes(String(i.id || i._id)));
+
+    // Optimistic update: remove from UI immediately
     setItems(p => p.filter(i => !ids.includes(String(i.id || i._id))));
     if (!id) setSelected(new Set());
 
@@ -98,10 +100,12 @@ export default function EntitiesPage() {
         label: 'Undo',
         onClick: () => {
           isUndone = true;
+          // Restore items to state
           setItems(p => [...itemsToDelete, ...p]);
         }
       },
       onClose: () => {
+        // Only call backend if not undone
         if (!isUndone) {
           deleteEntities(ids).catch(err => console.error("Delete failed:", err));
         }
@@ -138,20 +142,21 @@ export default function EntitiesPage() {
 
   return (
     <div className="stage">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 960, margin: '0 auto', padding: '20px' }}>
+      <div className="page-container">
 
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={searchPlaceholder}
-          onCreate={openCreate}
-        />
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginBottom: 24 }}>
           <Tabs
             tabs={TABS}
             value={tab}
             onChange={(newTab) => { setTab(newTab); setSearch(''); }}
+            variant="tab"
+          />
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={`Search ${tab === 'all' ? 'entities' : tab}...`}
+            onCreate={openCreate}
+            connected
           />
         </div>
 

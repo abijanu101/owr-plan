@@ -16,7 +16,7 @@ export default function ActivityRow({ activity, selected, onToggleSelect }) {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
         <DayPicker value={activity.days} readOnly />
         <div className="text-muted" style={{ fontSize: 13 }}>
-          ({activity.participants.join(', ')})
+          ({activity.participants.map(p => typeof p === 'object' ? p.name : p).join(', ')})
         </div>
       </div>
     </Pill>
