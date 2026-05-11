@@ -31,11 +31,12 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                 setName(initialData.name || '');
                 setAmount(initialData.amount || '');
                 setIcon(initialData.icon || 'food');
-                if (initialData.date) {
-                    const d = new Date(initialData.date);
+                const dateToUse = initialData.date || initialData.selectedDateTime?.date;
+                if (dateToUse) {
+                    const d = new Date(dateToUse);
                     setSelectedDateTime({
                         date: d,
-                        time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                        time: initialData.selectedDateTime?.time || d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     });
                 }
                 setSelectedEntities(initialData.people || initialData.selectedEntities || []);
@@ -161,17 +162,9 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                     </div>
                 </div>
 
-                <div className="flex items-center gap-4 mb-6">
-                    <button
-                        onClick={handleAddTransaction}
-                        className="w-10 h-10 rounded-full border border-[#f97766]/40 flex items-center justify-center hover:bg-[#f97766]/10 transition-colors"
-                    >
-                        <span className="text-[#f97766] text-3xl font-light leading-none mb-1.5">+</span>
-                    </button>
-                    <h3 className="text-xl sm:text-2xl text-[#f97766] tracking-wide" style={{ fontFamily: 'cursive' }}>
-                        Add Transaction
-                    </h3>
-                </div>
+                <h3 className="text-xl sm:text-2xl text-[#f97766] tracking-wide mb-6" style={{ fontFamily: 'cursive' }}>
+                    Transactions
+                </h3>
 
                 {/* Bottom Area: Transactions + Entity Selector */}
                 <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-8 items-start">
@@ -185,7 +178,7 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                             <div className="bg-[#6b3c4f] text-white/90 px-4 py-3 rounded-lg text-sm sm:text-base font-medium">Amount</div>
                         </div> */}
                         {/* Rows */}
-                        <div className="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1">
+                        <div className={`flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 transition-opacity duration-300 ${selectedEntities.length === 0 ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
                             {transactions.map((t) => (
                                 <div key={t.id} className="grid grid-cols-3 gap-3">
                                     <select
@@ -222,6 +215,29 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                                     />
                                 </div>
                             ))}
+                        </div>
+
+                        {/* Guidance Message */}
+                        {selectedEntities.length === 0 && (
+                            <div className="mt-4 p-4 rounded-xl bg-[#f97766]/5 border border-[#f97766]/20">
+                                <p className="text-[#f97766] text-sm font-medium flex items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12" y1="16" y2="16.01"/></svg>
+                                    Select people from the "Add People" section first to start adding transactions.
+                                </p>
+                            </div>
+                        )}
+                        
+                        {/* Add Transaction Button */}
+                        <div className={`flex items-center gap-4 mt-4 transition-all ${selectedEntities.length === 0 ? 'opacity-30 pointer-events-none grayscale' : 'opacity-100'}`}>
+                            <button
+                                onClick={handleAddTransaction}
+                                className="w-8 h-8 rounded-full border border-[#f97766]/40 flex items-center justify-center hover:bg-[#f97766]/10 transition-colors"
+                            >
+                                <span className="text-[#f97766] text-2xl font-light leading-none mb-1">+</span>
+                            </button>
+                            <span className="text-[#f97766]/80 text-sm font-medium cursor-pointer hover:text-[#f97766] transition-colors" onClick={handleAddTransaction}>
+                                Add Row
+                            </span>
                         </div>
                     </div>
 

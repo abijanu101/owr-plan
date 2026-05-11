@@ -33,7 +33,9 @@ const getLedgerById = async (req, res) => {
 const getUserLedgers = async (req, res) => {
   try {
     const userId = req.user?._id || req.params.userId;
-    const ledgers = await Ledger.find({ userId }).sort({ createdAt: -1 });
+    const ledgers = await Ledger.find({ userId })
+      .populate('people')
+      .sort({ createdAt: -1 });
     res.status(200).json({
       success: true,
       data: { ledgers }
@@ -102,10 +104,56 @@ const generateSettlementTransactions = async (req, res) => {
     return res.status(400).json({ success: false, message: 'No people provided' });
   }
 
-  // 1. Calculate Settlements
+  // 1. Validation: Ensure total payments to vendors match the total amount
+  // and net money spent by all users equals the total amount.
+  const totalAmount = Number(amount);
+  let totalVendorPayment = 0;
+  let totalPaidByUsers = 0;
+  let totalReceivedByUsers = 0;
+
+  const peopleStr = people.map(p => String(p));
+
+  for (let transaction of transactions) {
+    const tAmount = Number(transaction.amount);
+    const fromStr = String(transaction.from);
+    const toStr = String(transaction.to);
+
+    if (transaction.to === 'External Vendor') {
+      totalVendorPayment += tAmount;
+    }
+    
+    if (peopleStr.includes(fromStr)) {
+      totalPaidByUsers += tAmount;
+    }
+    
+    if (peopleStr.includes(toStr)) {
+      totalReceivedByUsers += tAmount;
+    }
+  }
+
+  // Use a small epsilon for float comparison if necessary, but here we assume 2 decimal precision
+  const netUserSpending = Math.round((totalPaidByUsers - totalReceivedByUsers) * 100) / 100;
+  const roundedVendorPayment = Math.round(totalVendorPayment * 100) / 100;
+  const roundedAmount = Math.round(totalAmount * 100) / 100;
+
+  if (roundedVendorPayment !== roundedAmount) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Total vendor payments ($${roundedVendorPayment}) do not match the total amount ($${roundedAmount})` 
+    });
+  }
+
+  if (netUserSpending !== roundedAmount) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Net money spent by users ($${netUserSpending}) does not match the total amount ($${roundedAmount})` 
+    });
+  }
+
+  // 2. Calculate Settlements
   const sortedPeople = [...people].sort();
   let peopleCount = sortedPeople.length;
-  let equalshare = Number(amount) / peopleCount;
+  let equalshare = roundedAmount / peopleCount;
 
   let personMap = new Map();
   for (let i = 0; i < peopleCount; i++) {

@@ -192,6 +192,7 @@ export default function AddExpensePage() {
                 isOpen={isAddExpenseOpen}
                 onClose={() => setIsAddExpenseOpen(false)}
                 onConfirm={handleConfirmExpense}
+                initialData={currentExpense}
             />
 
             {/* Orbit Animation Overlay */}

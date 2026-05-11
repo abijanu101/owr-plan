@@ -38,10 +38,11 @@ export default function Ledger() {
         }
     };
 
-    const getParticipantsSummary = (peopleIds) => {
-        if (!peopleIds || peopleIds.length === 0) return 'No participants';
-        const names = peopleIds.map(id => {
-            const entity = entities.find(e => String(e._id || e.id) === String(id));
+    const getParticipantsSummary = (people) => {
+        if (!people || people.length === 0) return 'No participants';
+        const names = people.map(p => {
+            if (typeof p === 'object' && p.name) return p.name;
+            const entity = entities.find(e => String(e._id || e.id) === String(p));
             return entity ? entity.name : '...';
         }).filter(name => name !== '...');
 

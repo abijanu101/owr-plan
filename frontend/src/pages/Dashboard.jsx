@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { listActivities } from '../api/activitiesApi';
 import { listEntities } from '../api/entitiesApi';
+import { listMyLedgers } from '../api/ledgerApi';
 import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../components/avatar';
 
@@ -10,17 +11,20 @@ export default function Dashboard() {
     const navigate = useNavigate();
     const [activities, setActivities] = useState([]);
     const [entities, setEntities] = useState([]);
+    const [ledgers, setLedgers] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [acts, ents] = await Promise.all([
+                const [acts, ents, leds] = await Promise.all([
                     listActivities(),
-                    listEntities('')
+                    listEntities(''),
+                    listMyLedgers()
                 ]);
                 setActivities(acts || []);
                 setEntities(ents || []);
+                setLedgers(leds || []);
             } catch (err) {
                 console.error("Dashboard fetch error:", err);
             } finally {
@@ -31,6 +35,16 @@ export default function Dashboard() {
     }, []);
 
     const recentActivities = activities.slice(0, 4);
+    const recentLedgers = ledgers.slice(0, 4);
+
+    const getParticipantsSummary = (people) => {
+        if (!people || people.length === 0) return 'No participants';
+        const names = people.map(p => typeof p === 'object' ? p.name : '...').filter(n => n !== '...');
+        if (names.length === 0) return 'Unknown participants';
+        if (names.length === 1) return names[0];
+        if (names.length === 2) return `${names[0]}, ${names[1]}`;
+        return `${names[0]}, ${names[1]} +${names.length - 2}`;
+    };
 
     return (
         <div className="p-4 sm:p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-32">
@@ -175,21 +189,55 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                {/* Recent Ledgers (Placeholder) */}
+                {/* Recent Ledgers */}
                 <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col h-full">
-                    <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#f97766]/5 to-transparent pointer-events-none" />
                     <div className="relative z-10 flex items-center justify-between mb-6">
-                        <h2 className="text-2xl text-blue-400 font-bold" style={{ fontFamily: 'cursive' }}>Recent Ledgers</h2>
-                        <span className="text-blue-400/50 text-sm font-bold">Coming Soon</span>
+                        <h2 className="text-2xl text-[#f97766] font-bold" style={{ fontFamily: 'cursive' }}>Recent Ledgers</h2>
+                        <Link to="/ledgers" className="text-[#DC8379] text-sm font-bold hover:text-[#f97766] transition-colors">View All →</Link>
                     </div>
                     
-                    <div className="flex-1 flex flex-col items-center justify-center relative z-10 text-center py-8">
-                        <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-400 mb-4">
-                            <LedgerIcon />
-                        </div>
-                        <p className="text-white/40 font-medium max-w-[200px] text-sm">
-                            Your collection of financial ledgers will appear here.
-                        </p>
+                    <div className="space-y-3 relative z-10 flex-1">
+                        {loading ? (
+                            <div className="animate-pulse space-y-3">
+                                {[1,2,3].map(i => <div key={i} className="h-16 bg-white/5 rounded-2xl"></div>)}
+                            </div>
+                        ) : recentLedgers.length > 0 ? (
+                            recentLedgers.map(ledger => (
+                                <div 
+                                    key={ledger._id || ledger.id} 
+                                    className="flex items-center justify-between p-3 rounded-2xl bg-black/20 border border-white/5 hover:bg-white/5 hover:border-[#f97766]/30 transition-all group/item cursor-pointer" 
+                                    onClick={() => navigate(`/ledgers/${ledger._id || ledger.id}`)}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-full bg-[#f97766]/10 flex items-center justify-center p-1 group-hover/item:scale-110 transition-transform">
+                                            <img src={`/${ledger.icon || 'food'}.png`} alt={ledger.name} className="w-full h-full object-contain" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-white/90 text-sm group-hover/item:text-[#f97766] transition-colors">{ledger.name}</h3>
+                                            <p className="text-white/40 text-xs line-clamp-1">
+                                                {getParticipantsSummary(ledger.people)}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className="text-[#f97766] font-bold text-sm">${ledger.amount || 0}</div>
+                                        <div className={`text-[10px] uppercase font-bold ${ledger.status === 'settled' ? 'text-green-400/50' : 'text-[#f97766]/30'}`}>
+                                            {ledger.status === 'settled' ? 'Settled' : 'Pending'}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
+                                <div className="w-16 h-16 rounded-2xl bg-[#f97766]/10 flex items-center justify-center text-[#f97766] mb-4">
+                                    <LedgerIcon />
+                                </div>
+                                <p className="text-white/40 font-medium max-w-[200px] text-sm">
+                                    No ledgers yet. Start tracking your expenses!
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
