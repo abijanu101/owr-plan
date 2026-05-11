@@ -70,7 +70,7 @@ export default function StructuredPlan() {
         <div className="bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 md:pt-0 relative overflow-x-hidden min-h-screen pb-32 lg:pb-8">
             <div className="max-w-[1200px] mx-auto pt-4 sm:pt-6">
 
-                <div className="flex flex-col gap-4 mb-4 lg:mb-6 relative max-w-5xl mx-auto lg:mx-0">
+                <div className="flex flex-col gap-4 mb-4 lg:mb-6 relative w-full mx-auto lg:mx-0">
                     <div className="flex items-center w-full relative justify-center lg:justify-between">
                         <h1 className="text-3xl sm:text-4xl text-[#f97766] font-normal tracking-wide" style={{ fontFamily: 'cursive' }}>
                             Define Constraints

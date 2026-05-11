@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { listMyLedgers, deleteLedger } from '../api/ledgerApi';
 import { listEntities } from '../api/entitiesApi';
+import Toast from '../components/UI/Toast';
 
 export default function Ledger() {
     const navigate = useNavigate();
     const [ledgers, setLedgers] = useState([]);
     const [entities, setEntities] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [toastConfig, setToastConfig] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,12 +30,40 @@ export default function Ledger() {
         fetchData();
     }, []);
 
-    const handleDeleteLedger = async (e, id) => {
+    const handleDeleteLedger = (e, id) => {
         e.stopPropagation();
-        const success = await deleteLedger(id);
-        if (success) {
-            setLedgers(ledgers.filter(ledger => (ledger._id || ledger.id) !== id));
-        }
+        
+        const index = ledgers.findIndex(l => (l._id || l.id) === id);
+        if (index === -1) return;
+        
+        const ledgerToDelete = ledgers[index];
+        setLedgers(prev => prev.filter(l => (l._id || l.id) !== id));
+
+        let isUndone = false;
+        
+        setToastConfig({
+            message: `Expense deleted`,
+            type: 'warning',
+            duration: 5000,
+            action: {
+                label: 'Undo',
+                onClick: () => {
+                    isUndone = true;
+                    setLedgers(prev => {
+                        const newLedgers = [...prev];
+                        newLedgers.splice(index, 0, ledgerToDelete);
+                        return newLedgers;
+                    });
+                    setToastConfig(null);
+                }
+            },
+            onClose: () => {
+                if (!isUndone) {
+                    deleteLedger(id).catch(err => console.error("Failed to delete ledger", err));
+                }
+                setToastConfig(null);
+            }
+        });
     };
 
     const getParticipantsSummary = (people) => {
@@ -160,6 +190,7 @@ export default function Ledger() {
                 )}
 
             </div>
+            {toastConfig && <Toast {...toastConfig} />}
         </div>
     );
 }

@@ -248,7 +248,7 @@ export default function GlobalConstraintRow({ constraint, onChange, onRemove, is
 
     // Desktop Table Row
     return (
-        <div className={`flex items-center border-b border-[#DC8379]/10 group transition-all duration-300 min-h-[44px] ${constraint.disabled ? 'opacity-40 grayscale-[0.5]' : 'opacity-100 grayscale-0'}`}>
+        <div className={`flex items-center border-b border-[#DC8379]/10 group transition-all duration-300 min-h-[44px] relative hover:z-50 ${constraint.disabled ? 'opacity-40 grayscale-[0.5]' : 'opacity-100 grayscale-0'}`}>
             {/* Remove Button */}
             <div className="w-12 shrink-0 flex justify-center">
                 {constraint.isSystem && (constraint.type === 'start after' || constraint.type === 'end before') ? (

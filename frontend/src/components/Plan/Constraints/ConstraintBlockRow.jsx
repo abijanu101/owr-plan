@@ -196,7 +196,7 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
     return (
         <div className="flex flex-col border-b-2 border-[#DC8379]/10 group/block">
             {/* Parent Row */}
-            <div className="flex items-center border-b border-[#DC8379]/10 group transition-colors">
+            <div className="flex items-center border-b border-[#DC8379]/10 group transition-colors relative hover:z-50">
                 <div className="w-12 shrink-0 flex justify-center">
                     <button onClick={onRemove} className="w-5 h-5 rounded-full bg-[#DC8379]/20 text-[#DC8379] hover:bg-[#DC8379] hover:text-[#1A0B16] flex items-center justify-center font-bold text-xs opacity-50 group-hover:opacity-100 transition-all cursor-pointer shadow-sm">×</button>
                 </div>
@@ -229,7 +229,7 @@ export default function ConstraintBlockRow({ block, onChange, onRemove, isMobile
                     {block.children.map((child, i) => {
                         const schema = CONSTRAINT_SCHEMA[child.type];
                         return (
-                            <div key={child.id} className="flex items-center border-b border-[#DC8379]/5 transition-colors group/child">
+                            <div key={child.id} className="flex items-center border-b border-[#DC8379]/5 transition-colors group/child relative hover:z-50">
                                 <div className="w-12 shrink-0 flex justify-center">
                                     <button onClick={() => removeChild(child.id)} className="w-5 h-5 rounded-full bg-[#DC8379]/10 text-[#DC8379] hover:bg-[#DC8379] hover:text-[#1A0B16] flex items-center justify-center font-bold text-xs opacity-0 group-hover/block:opacity-40 hover:opacity-100 transition-all cursor-pointer">×</button>
                                 </div>
