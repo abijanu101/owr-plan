@@ -107,7 +107,7 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
                     <TableHeader />
                     <div className="flex flex-col">
                         {systemConstraints.map((c, i) => (
-                            <div key={c.id} className="relative hover:z-[200]" style={{ zIndex: 100 - i }}>
+                            <div key={c.id} className="relative hover:!z-[200]" style={{ zIndex: 100 - i }}>
                                 {renderRow(c)}
                             </div>
                         ))}
@@ -122,7 +122,7 @@ export default function ConstraintTable({ constraints = [], onChange, isMobile }
                     <TableHeader />
                     <div className="flex flex-col">
                         {customConstraints.map((c, i) => (
-                            <div key={c.id} className="relative hover:z-[200]" style={{ zIndex: 50 - i }}>
+                            <div key={c.id} className="relative hover:!z-[200]" style={{ zIndex: 50 - i }}>
                                 {renderRow(c)}
                             </div>
                         ))}
