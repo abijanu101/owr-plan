@@ -274,7 +274,7 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <div className="text-[#f97766] font-bold text-sm">${ledger.amount || 0}</div>
+                                        <div className="text-[#f97766] font-bold text-sm">${Math.round(ledger.amount || 0)}</div>
                                         <div className={`text-[10px] uppercase font-bold ${ledger.status === 'settled' ? 'text-green-400/50' : 'text-[#f97766]/30'}`}>
                                             {ledger.status === 'settled' ? 'Settled' : 'Pending'}
                                         </div>

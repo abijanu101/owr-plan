@@ -139,14 +139,14 @@ const generateSettlementTransactions = async (req, res) => {
   if (roundedVendorPayment !== roundedAmount) {
     return res.status(400).json({ 
       success: false, 
-      message: `Total vendor payments ($${roundedVendorPayment}) do not match the total amount ($${roundedAmount})` 
+      message: `Invalid transactions, try again. Total vendor payments ($${roundedVendorPayment}) do not match the total amount ($${roundedAmount})` 
     });
   }
 
   if (netUserSpending !== roundedAmount) {
     return res.status(400).json({ 
       success: false, 
-      message: `Net money spent by users ($${netUserSpending}) does not match the total amount ($${roundedAmount})` 
+      message: `Invalid transactions, try again. Net money spent by users ($${netUserSpending}) does not match the total amount ($${roundedAmount})` 
     });
   }
 

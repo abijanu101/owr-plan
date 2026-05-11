@@ -137,7 +137,7 @@ export default function Ledger() {
 
                                         {/* Condensed Info (Visible before hover) */}
                                         <div className={`text-[#f97766]/50 text-xs mt-1 transition-all duration-500 group-hover:opacity-0 group-hover:h-0 overflow-hidden text-center w-full ${ledger.status === 'settled' ? 'opacity-20' : ''}`}>
-                                            {formatDate(ledger.date)} | {getParticipantsSummary(ledger.people)} | ${ledger.amount || 0}
+                                            {formatDate(ledger.date)} | {getParticipantsSummary(ledger.people)} | ${Math.round(ledger.amount || 0)}
                                         </div>
 
                                         {/* Reveal Section */}
@@ -150,7 +150,7 @@ export default function Ledger() {
                                                 {getParticipantsSummary(ledger.people)}
                                             </span>
                                             <span className={`text-sm font-bold ${ledger.status === 'settled' ? 'text-[#743c40]' : 'text-[#f97766]'}`}>
-                                                Total: ${ledger.amount || 0}
+                                                Total: ${Math.round(ledger.amount || 0)}
                                             </span>
                                         </div>
                                     </div>

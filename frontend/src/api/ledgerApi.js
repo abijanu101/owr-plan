@@ -44,7 +44,8 @@ export const createSettledLedger = async (data) => {
             credentials: 'include'
         });
         const result = await res.json();
-        return result.success ? result.data.ledger : null;
+        if (!result.success) throw new Error(result.message || 'Failed to create ledger');
+        return result.data.ledger;
     } catch (err) {
         console.error('Failed to create settled ledger:', err);
         throw err;

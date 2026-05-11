@@ -10,6 +10,7 @@ export default function AddExpensePage() {
     const [currentExpense, setCurrentExpense] = useState(null);
     const [isAnimating, setIsAnimating] = useState(false);
     const [entities, setEntities] = useState([]);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -34,6 +35,7 @@ export default function AddExpensePage() {
     const handleConfirmExpense = (newExpense) => {
         setCurrentExpense(newExpense);
         setIsAddExpenseOpen(false);
+        setError(null); // Clear error when new data is confirmed
     };
 
     return (
@@ -74,7 +76,7 @@ export default function AddExpensePage() {
 
                                 <div className="bg-[#200412] rounded-xl p-6 mb-8 text-center border border-[#f97766]/20">
                                     <p className="text-[#f97766]/80 text-sm mb-2">Overall Net Expense</p>
-                                    <p className="text-4xl text-[#f97766] font-bold">${currentExpense.amount || 0}</p>
+                                    <p className="text-4xl text-[#f97766] font-bold">${Math.round(currentExpense.amount || 0)}</p>
                                 </div>
 
                                 <div className="space-y-4">
@@ -88,7 +90,7 @@ export default function AddExpensePage() {
                                                 </svg>
                                                 <span className="text-[#f97766] font-medium">{getEntityName(t.to)}</span>
                                             </div>
-                                            <span className="text-[#f97766]/90 font-bold">${t.amount || 0}</span>
+                                            <span className="text-[#f97766]/90 font-bold">${Math.round(t.amount || 0)}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -129,7 +131,7 @@ export default function AddExpensePage() {
 
                                 <div>
                                     <p className="text-[#f97766]/60 text-sm mb-1">Total Amount</p>
-                                    <p className="text-2xl text-[#f97766] font-bold">${currentExpense.amount}</p>
+                                    <p className="text-2xl text-[#f97766] font-bold">${Math.round(currentExpense.amount)}</p>
                                 </div>
 
                                 {currentExpense.selectedDateTime && (
@@ -152,6 +154,7 @@ export default function AddExpensePage() {
                                     </button>
                                     <button 
                                         onClick={async () => {
+                                            setError(null);
                                             try {
                                                 const ledgerData = {
                                                     name: currentExpense.name,
@@ -172,7 +175,7 @@ export default function AddExpensePage() {
                                                 }
                                             } catch (err) {
                                                 console.error("Failed to save ledger:", err);
-                                                alert("Failed to save ledger to database.");
+                                                setError(err.message || "Failed to save ledger to database.");
                                             }
                                         }}
                                         className="w-2/3 py-4 rounded-xl bg-[#f97766] hover:bg-[#e86655] text-[#200412] font-bold transition-colors shadow-lg shadow-[#f97766]/20"
@@ -180,6 +183,15 @@ export default function AddExpensePage() {
                                         Add to Ledger
                                     </button>
                                 </div>
+
+                                {error && (
+                                    <div className="mt-4 p-4 rounded-xl bg-[#f97766]/5 border border-[#f97766]/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                                        <p className="text-[#f97766] text-sm font-medium flex items-center gap-2">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12" y1="16" y2="16.01"/></svg>
+                                            {error}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

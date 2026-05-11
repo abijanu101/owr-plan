@@ -180,7 +180,26 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                         {/* Rows */}
                         <div className={`flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1 transition-opacity duration-300 ${selectedEntities.length === 0 ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
                             {transactions.map((t) => (
-                                <div key={t.id} className="grid grid-cols-3 gap-3">
+                                <div key={t.id} className="grid grid-cols-[1fr_auto_1.4fr_110px] gap-3 items-center">
+                                    <select
+                                        value={t.from}
+                                        onChange={(e) => handleTransactionChange(t.id, 'from', e.target.value)}
+                                        className="bg-white/5 text-[#f97766] px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base appearance-none cursor-pointer"
+                                    >
+                                        <option value="" className="bg-[#200412]">From</option>
+                                        {participants.map(p => (
+                                            <option key={p._id || p.id} value={String(p._id || p.id)} className="bg-[#200412]">
+                                                {p.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    
+                                    <div className="flex items-center justify-center text-[#f97766]/30">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        </svg>
+                                    </div>
+
                                     <select
                                         value={t.to}
                                         onChange={(e) => handleTransactionChange(t.id, 'to', e.target.value)}
@@ -188,18 +207,6 @@ export default function AddExpense({ isOpen, onClose, onConfirm, initialData }) 
                                     >
                                         <option value="" className="bg-[#200412]">To</option>
                                         <option value="External Vendor" className="bg-[#200412]">External Vendor</option>
-                                        {participants.map(p => (
-                                            <option key={p._id || p.id} value={String(p._id || p.id)} className="bg-[#200412]">
-                                                {p.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <select
-                                        value={t.from}
-                                        onChange={(e) => handleTransactionChange(t.id, 'from', e.target.value)}
-                                        className="bg-white/5 text-[#f97766] px-4 py-4 rounded-lg w-full outline-none focus:ring-2 focus:ring-[#f97766]/50 transition-all text-sm sm:text-base appearance-none cursor-pointer"
-                                    >
-                                        <option value="" className="bg-[#200412]">From</option>
                                         {participants.map(p => (
                                             <option key={p._id || p.id} value={String(p._id || p.id)} className="bg-[#200412]">
                                                 {p.name}

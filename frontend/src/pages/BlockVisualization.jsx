@@ -7,6 +7,7 @@ import { generatePlan } from '../api/planApi';
 import { usePlan } from '../context/PlanContext';
 import DateTimeRangePicker from '../components/Pickers/DateTimeRangePicker';
 import TimelineRow, { parseTimeToMinutes, getSlotConfig } from '../components/TimelineRow';
+import DummyTimeline from '../components/DummyTimeline';
 
 // --- REMOVED DUMMY DATA ---
 
@@ -18,12 +19,12 @@ export default function BlockVisualization() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [entities, setEntities] = useState([]);
-    
+
     // Parse initial state from EntityDetails or PlanResults if available
     const initialState = location.state || {};
-    
+
     const [selectedEntities, setSelectedEntities] = useState(initialState.selectedEntities || []);
-    
+
     // Calculate initial duration index based on passed duration
     // DURATIONS = ['12 hr', '24 hr', '1 week', '1 month']
     const initDurationIdx = () => {
@@ -37,16 +38,16 @@ export default function BlockVisualization() {
     };
 
     const [durationIdx, setDurationIdx] = useState(initDurationIdx());
-    
+
     const initOffsetSlots = () => {
         if (!initialState.baseTime) return 0;
         let startMins = parseTimeToMinutes(initialState.baseTime);
         const config = getSlotConfig(DURATIONS[initDurationIdx()]);
         let baseStart = DURATIONS[initDurationIdx()] === '12 hr' ? 480 : 0;
-        
+
         const diffMins = startMins - baseStart;
         const exactOffset = diffMins / config.slotMins;
-        
+
         // Center the time in the view
         return Math.max(0, Math.floor(exactOffset - config.count / 2.5));
     };
@@ -75,15 +76,15 @@ export default function BlockVisualization() {
             let [h, m] = timePart.split(':').map(Number);
             if (period === 'PM' && h < 12) h += 12;
             if (period === 'AM' && h === 12) h = 0;
-            
+
             const d = new Date(baseDate);
             d.setHours(h, m + (offsetHours * 60));
-            
+
             let nh = d.getHours();
             const nm = d.getMinutes();
             const np = nh >= 12 ? 'PM' : 'AM';
             const displayH = nh % 12 || 12;
-            
+
             return {
                 date: new Date(d.getFullYear(), d.getMonth(), d.getDate()),
                 time: `${displayH.toString().padStart(2, '0')}:${nm.toString().padStart(2, '0')} ${np}`
@@ -129,7 +130,7 @@ export default function BlockVisualization() {
 
     const handleArrangePlan = async () => {
         if (selectedEntities.length === 0) return;
-        
+
         const newConstraints = [
             {
                 id: Date.now(),
@@ -174,10 +175,10 @@ export default function BlockVisualization() {
         let [h, m] = time.split(':').map(Number);
         if (period === 'PM' && h < 12) h += 12;
         if (period === 'AM' && h === 12) h = 0;
-        
+
         const d = new Date();
         d.setHours(h, m + (durationHours * 60));
-        
+
         let nh = d.getHours();
         const nm = d.getMinutes();
         const np = nh >= 12 ? 'PM' : 'AM';
@@ -191,18 +192,8 @@ export default function BlockVisualization() {
 
                 {/* Search Bar container styled to match the visualization image */}
                 <div className="relative w-full bg-[#200412] rounded-[1.5rem] border border-[#f97766]/10 hover:border-[#f97766]/30 transition-all shadow-lg overflow-hidden group">
-                    {/* Placeholder styling to show "Search Group or People" */}
-                    {selectedEntities.length === 0 && (
-                        <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-between px-6 sm:px-8">
-                            <span className="text-[#f97766]/80 text-lg sm:text-xl tracking-wide">Search Group or People</span>
-                            <svg className="text-[#f97766]/80" width="16" height="10" viewBox="0 0 16 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2 2L8 8L14 2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                        </div>
-                    )}
-
                     {/* EntitySelector is embedded here */}
-                    <div className={`relative z-10 ${selectedEntities.length === 0 ? 'opacity-0' : 'opacity-100'} hover:opacity-100 transition-opacity p-1 sm:p-2`}>
+                    <div className="relative z-10 p-1 sm:p-2">
                         <EntitySelector
                             selectedIds={selectedEntities}
                             onChange={setSelectedEntities}
@@ -212,19 +203,18 @@ export default function BlockVisualization() {
                 </div>
 
                 {/* Main Visualization Area */}
-                {selectedEntities.length > 0 && (
+                {selectedEntities.length > 0 ? (
                     <div className="flex flex-col gap-6 mt-4">
 
                         {/* Adjust Duration Header */}
                         <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-4 text-[#f97766]/80 group/duration cursor-default">
                             {/* Custom Range Toggle */}
-                            <button 
+                            <button
                                 onClick={() => setIsCustomRange(!isCustomRange)}
-                                className={`px-5 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${
-                                    isCustomRange 
-                                        ? 'bg-[#f97766] text-[#200412] border-[#f97766] shadow-[0_0_15px_rgba(249,119,102,0.4)]' 
-                                        : 'border-[#f97766]/30 hover:border-[#f97766]/60 hover:bg-[#f97766]/5'
-                                }`}
+                                className={`px-5 py-2 rounded-full border transition-all text-sm font-bold tracking-wide ${isCustomRange
+                                    ? 'bg-[#f97766] text-[#200412] border-[#f97766] shadow-[0_0_15px_rgba(249,119,102,0.4)]'
+                                    : 'border-[#f97766]/30 hover:border-[#f97766]/60 hover:bg-[#f97766]/5'
+                                    }`}
                             >
                                 {isCustomRange ? 'Custom Range: ON' : 'Set Custom Range'}
                             </button>
@@ -253,8 +243,8 @@ export default function BlockVisualization() {
 
                         {isCustomRange && (
                             <div className="flex justify-end mt-[-8px]">
-                                <DateTimeRangePicker 
-                                    variant="inline-text" 
+                                <DateTimeRangePicker
+                                    variant="inline-text"
                                     initialStart={customRange.start}
                                     initialEnd={customRange.end}
                                     onChange={(range) => setCustomRange(range)}
@@ -284,13 +274,21 @@ export default function BlockVisualization() {
 
                         {/* Arrange Plan Button */}
                         <div className="flex justify-end mt-12">
-                            <button 
+                            <button
                                 onClick={handleArrangePlan}
                                 className="bg-[#f97766] hover:bg-[#e86655] text-[#200412] px-8 py-3 rounded-full text-sm font-bold tracking-wide transition-colors shadow-lg cursor-pointer"
                             >
                                 Arrange plan
                             </button>
                         </div>
+                    </div>
+                ) : (
+                    <div className="mt-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+                        <div className="text-center mb-4">
+                            <p className="text-[#f97766]/40 text-sm font-medium italic tracking-wide">Select an entity above to see their schedule</p>
+                            <br />
+                        </div>
+                        <DummyTimeline />
                     </div>
                 )}
 

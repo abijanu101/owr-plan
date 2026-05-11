@@ -11,6 +11,7 @@ export default function ViewExpensePage() {
     const [entities, setEntities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -56,7 +57,7 @@ export default function ViewExpensePage() {
             }
         } catch (err) {
             console.error("Failed to update ledger:", err);
-            alert("Failed to update ledger.");
+            setError(err.message || "Failed to update ledger.");
         }
     };
 
@@ -76,7 +77,7 @@ export default function ViewExpensePage() {
     if (!ledger) return (
         <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center gap-6">
             <div className="text-[#f97766] text-xl font-medium">Ledger not found</div>
-            <button 
+            <button
                 onClick={() => navigate('/ledgers')}
                 className="px-6 py-2 rounded-full border border-[#f97766] text-[#f97766] hover:bg-[#f97766]/10 transition-colors"
             >
@@ -94,11 +95,11 @@ export default function ViewExpensePage() {
     return (
         <div className="bg-[var(--bg-primary)] p-4 sm:p-6 md:p-8 md:pt-0 relative min-h-[calc(100vh-80px)]">
             <div className="max-w-7xl mx-auto pt-8 sm:pt-12 flex flex-col lg:flex-row gap-10 items-start">
-                
+
                 {/* Left Column: Summary & Initial Transactions */}
                 <div className="w-full lg:w-[350px] flex-shrink-0 flex flex-col gap-6">
                     <div className="bg-white/5 rounded-[2rem] p-8 shadow-xl border border-[#f97766]/10 flex flex-col min-h-[600px]">
-                        
+
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center gap-3">
                                 <button
@@ -120,14 +121,14 @@ export default function ViewExpensePage() {
                         <div className="flex flex-col gap-4 mb-8">
                             <div className="flex justify-between items-center">
                                 <span className="text-[#f97766]/80 text-base">Total Amount</span>
-                                <span className="text-[#f97766] font-bold text-lg">${summaryStats.netExpenses}</span>
+                                <span className="text-[#f97766] font-bold text-lg">${Math.round(summaryStats.netExpenses)}</span>
                             </div>
                             <div className="flex justify-between items-center">
                                 <span className="text-[#f97766]/80 text-base">Remaining Due</span>
-                                <span className="text-[#f97766] font-bold text-lg">${summaryStats.netDue}</span>
+                                <span className="text-[#f97766] font-bold text-lg">${Math.round(summaryStats.netDue)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                                <span className="text-[#f97766]/80 text-base">Nº Settlements</span>
+                                <span className="text-[#f97766]/80 text-base">No. of Settlements</span>
                                 <span className="text-[#f97766] font-bold text-lg">{summaryStats.internalDebts}</span>
                             </div>
                         </div>
@@ -144,8 +145,11 @@ export default function ViewExpensePage() {
                             </div>
                         </div>
 
-                        <button 
-                            onClick={() => setIsEditOpen(true)}
+                        <button
+                            onClick={() => {
+                                setError(null);
+                                setIsEditOpen(true);
+                            }}
                             className="w-full py-3 mb-6 rounded-xl border border-[#f97766]/40 text-[#f97766] font-bold hover:bg-[#f97766]/10 transition-all flex items-center justify-center gap-2"
                         >
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,6 +159,15 @@ export default function ViewExpensePage() {
                             Edit Expense
                         </button>
 
+                        {error && (
+                            <div className="mb-6 p-4 rounded-xl bg-[#f97766]/5 border border-[#f97766]/20 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <p className="text-[#f97766] text-sm font-medium flex items-center gap-2">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" x2="12" y1="8" y2="12" /><line x1="12" x2="12" y1="16" y2="16.01" /></svg>
+                                    {error}
+                                </p>
+                            </div>
+                        )}
+
                         <div className="text-[#f97766]/60 text-sm font-medium mb-3">Initial Payments</div>
                         <div className="flex-1 overflow-y-auto pr-2 space-y-2 mb-6 max-h-[250px]">
                             {(ledger.initialTransactions || []).map((tx, idx) => (
@@ -162,11 +175,11 @@ export default function ViewExpensePage() {
                                     <div className="flex items-center gap-2">
                                         <span className="text-[#f97766] text-xs font-medium max-w-[60px] truncate">{getEntityName(tx.from)}</span>
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#f97766]/40">
-                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                            <path d="M5 12h14M12 5l7 7-7 7" />
                                         </svg>
                                         <span className="text-[#f97766] text-xs font-medium max-w-[80px] truncate">{getEntityName(tx.to)}</span>
                                     </div>
-                                    <span className="text-[#f97766] font-bold text-xs">${tx.amount}</span>
+                                    <span className="text-[#f97766] font-bold text-xs">${Math.round(tx.amount)}</span>
                                 </div>
                             ))}
                         </div>
@@ -208,7 +221,7 @@ export default function ViewExpensePage() {
 
                                         <div className="flex flex-col items-center gap-1">
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`${tx.paid ? 'text-[#4c0e36]/40' : 'text-[#f97766]/30 animate-pulse'}`}>
-                                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                                                <path d="M5 12h14M12 5l7 7-7 7" />
                                             </svg>
                                         </div>
 
@@ -227,9 +240,9 @@ export default function ViewExpensePage() {
                                     <div className="flex justify-between items-end mt-auto">
                                         <div className="flex flex-col">
                                             <span className="text-[#f97766]/60 text-[10px] uppercase font-black tracking-tighter">Amount to pay</span>
-                                            <span className={`text-3xl font-black ${tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}`}>${tx.amount}</span>
+                                            <span className={`text-3xl font-black ${tx.paid ? 'text-[#dc8379]' : 'text-[#f97766]'}`}>${Math.round(tx.amount)}</span>
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => handleTogglePaid(tx._id)}
                                             className={`w-10 h-10 rounded-xl flex items-center justify-center border transition-all ${tx.paid ? 'bg-[#4c0e36] text-[#dc8379] border-[#dc8379]/30' : 'bg-white/5 border-white/5 text-[#f97766]/30 group-hover:text-[#f97766] group-hover:border-[#f97766]/30'}`}
                                         >
@@ -248,7 +261,7 @@ export default function ViewExpensePage() {
 
             {/* Edit Modal */}
             {ledger && (
-                <AddExpense 
+                <AddExpense
                     isOpen={isEditOpen}
                     onClose={() => setIsEditOpen(false)}
                     onConfirm={handleConfirmEdit}
