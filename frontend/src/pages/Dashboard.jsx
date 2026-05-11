@@ -5,6 +5,7 @@ import { listEntities } from '../api/entitiesApi';
 import { listMyLedgers } from '../api/ledgerApi';
 import { Link, useNavigate } from 'react-router-dom';
 import Avatar from '../components/avatar';
+import TimelineRow from '../components/TimelineRow';
 
 export default function Dashboard() {
     const { user } = useAuth();
@@ -83,15 +84,67 @@ export default function Dashboard() {
                 />
             </div>
 
-            {/* Visualization Section (Placeholder) */}
-            <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-3xl p-8 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[250px]">
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 pointer-events-none" />
-                <PlanIcon className="w-16 h-16 text-purple-400/50 mb-4" />
-                <h2 className="text-2xl text-purple-400 font-bold mb-2 text-center" style={{ fontFamily: 'cursive' }}>Today's Visualizer</h2>
-                <p className="text-white/40 text-center max-w-md">
-                    Visualizer for the current day will be displayed here.<br/>
-                    It will feature the most frequently visualized entities, with the "Self" entity fixed at the top.
-                </p>
+            {/* Visualization Section */}
+            <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-3xl p-8 shadow-xl relative overflow-hidden flex flex-col min-h-[300px]">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#f97766]/5 to-purple-500/5 pointer-events-none" />
+                
+                <div className="relative z-10 flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-[#f97766]/10 flex items-center justify-center text-[#f97766]">
+                            <SparkleIcon />
+                        </div>
+                        <h2 className="text-2xl text-[#f97766] font-bold" style={{ fontFamily: 'cursive' }}>Today's Visualizer</h2>
+                    </div>
+                    <Link to="/visualize" className="text-[#DC8379] text-sm font-bold hover:text-[#f97766] transition-colors flex items-center gap-2">
+                        Advanced View
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                    </Link>
+                </div>
+
+                <div className="relative z-10">
+                    {loading ? (
+                        <div className="space-y-6">
+                            {[1, 2].map(i => (
+                                <div key={i} className="flex items-center gap-6 animate-pulse">
+                                    <div className="w-16 h-16 rounded-2xl bg-white/5"></div>
+                                    <div className="flex-1 h-12 bg-white/5 rounded-full"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : entities.length > 0 ? (
+                        <div className="space-y-10">
+                            {entities
+                                .filter(ent => ent.type !== 'group')
+                                .slice(0, 2)
+                                .map(ent => (
+                                <TimelineRow 
+                                    key={ent.id} 
+                                    entity={ent} 
+                                    durationStr="12 hr" 
+                                    offsetSlots={0} 
+                                    navigate={navigate}
+                                    compact
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4 text-white/20">
+                                <PlanIcon className="w-10 h-10" />
+                            </div>
+                            <h3 className="text-white/60 font-bold mb-1">No timelines to show</h3>
+                            <p className="text-white/30 text-sm max-w-xs">
+                                Create entities and add activities to see your schedule visualized here.
+                            </p>
+                            <button 
+                                onClick={() => navigate('/entities')}
+                                className="mt-6 px-6 py-2 bg-[#f97766]/10 hover:bg-[#f97766]/20 text-[#f97766] rounded-full text-sm font-bold transition-all border border-[#f97766]/20"
+                            >
+                                Manage Entities
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
