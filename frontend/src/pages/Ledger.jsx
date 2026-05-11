@@ -30,11 +30,9 @@ export default function Ledger() {
 
     const handleDeleteLedger = async (e, id) => {
         e.stopPropagation();
-        if (window.confirm('Are you sure you want to delete this ledger?')) {
-            const success = await deleteLedger(id);
-            if (success) {
-                setLedgers(ledgers.filter(ledger => (ledger._id || ledger.id) !== id));
-            }
+        const success = await deleteLedger(id);
+        if (success) {
+            setLedgers(ledgers.filter(ledger => (ledger._id || ledger.id) !== id));
         }
     };
 

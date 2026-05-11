@@ -8,7 +8,8 @@ export default function EntitySelector({
     selectedIds = [],
     onChange,
     variant = 'standalone',
-    maxVisible = 4
+    maxVisible = 4,
+    individualsOnly = false
 }) {
     const { user } = useAuth();
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
@@ -47,13 +48,51 @@ export default function EntitySelector({
 
     const handleToggle = (idOrArray) => {
         if (Array.isArray(idOrArray)) {
-            onChange?.(idOrArray);
+            let finalIds = idOrArray;
+            if (individualsOnly) {
+                // If individualsOnly, we should ensure no groups are in the array
+                // and if they were meant to be shortcuts, they should have been resolved by the caller
+                // but we'll safety filter here just in case.
+                finalIds = idOrArray.filter(id => {
+                    const ent = entities.find(e => e.id === id);
+                    return ent?.type !== 'group';
+                });
+            }
+            onChange?.(finalIds);
             return;
         }
+
+        const entity = entities.find(e => e.id === idOrArray);
+        
+        if (individualsOnly && entity?.type === 'group') {
+            const memberIds = entity.members || [];
+            if (memberIds.length === 0) return;
+
+            // Check if all members are currently selected
+            const allSelected = memberIds.every(mid => selectedIds.includes(mid));
+            
+            let newIds;
+            if (allSelected) {
+                // Remove all members
+                newIds = selectedIds.filter(id => !memberIds.includes(id));
+            } else {
+                // Add all members (avoid duplicates)
+                newIds = [...new Set([...selectedIds, ...memberIds])];
+            }
+            onChange?.(newIds);
+            return;
+        }
+
         const newIds = selectedIds.includes(idOrArray)
             ? selectedIds.filter(i => i !== idOrArray)
             : [...selectedIds, idOrArray];
-        onChange?.(newIds);
+        
+        // Final filter for individualsOnly
+        const filteredIds = individualsOnly 
+            ? newIds.filter(id => entities.find(e => e.id === id)?.type !== 'group')
+            : newIds;
+
+        onChange?.(filteredIds);
     };
 
     const selectedEntities = entities.filter(e => selectedIds.includes(e.id));
@@ -101,6 +140,7 @@ export default function EntitySelector({
                 selectedIds={selectedIds}
                 onToggle={handleToggle}
                 entities={entities}
+                individualsOnly={individualsOnly}
             />
         </>
     );

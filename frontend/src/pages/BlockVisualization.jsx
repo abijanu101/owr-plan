@@ -19,6 +19,7 @@ export default function BlockVisualization() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const [entities, setEntities] = useState([]);
+    const [isHelpOpen, setIsHelpOpen] = useState(false);
 
     // Parse initial state from EntityDetails or PlanResults if available
     const initialState = location.state || {};
@@ -284,15 +285,95 @@ export default function BlockVisualization() {
                     </div>
                 ) : (
                     <div className="mt-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-                        <div className="text-center mb-4">
-                            <p className="text-[#f97766]/40 text-sm font-medium italic tracking-wide">Select an entity above to see their schedule</p>
-                            <br />
+                        {/* Title & Help Icon */}
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-3xl text-[#f97766] tracking-wide" style={{ fontFamily: 'cursive' }}>
+                                Block Visualization
+                            </h2>
+                            <div
+                                onClick={() => setIsHelpOpen(true)}
+                                className="w-8 h-8 rounded-full border border-[#f97766]/20 flex items-center justify-center text-[#f97766]/40 hover:text-[#f97766]/60 transition-colors cursor-pointer group/help relative"
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12" y1="17" y2="17.01" />
+                                </svg>
+                                <div className="absolute top-full mt-2 right-0 bg-[#f97766] text-[#200412] text-[10px] px-2 py-1 rounded opacity-0 group-hover/help:opacity-100 transition-opacity whitespace-nowrap pointer-events-none font-bold uppercase tracking-wider">
+                                    Need Help?
+                                </div>
+                            </div>
                         </div>
-                        <DummyTimeline />
+
+                        {/* Top Line */}
+                        <div className="w-full h-px bg-[#f97766]/10 mb-10"></div>
+
+                        {/* System Constraints Divider */}
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="flex-1 h-px bg-[#f97766]/10"></div>
+                            <span className="text-[10px] uppercase font-bold tracking-[0.3em] text-[#f97766]/80">Select entities to view schedule</span>
+                            <div className="flex-1 h-px bg-[#f97766]/10"></div>
+                        </div>
+
+
+                        <br />
+                        {/* Faded Dummy Timeline */}
+                        <div className="opacity-60">
+                            <DummyTimeline />
+                        </div>
                     </div>
                 )}
 
             </div>
+
+            {/* Help Modal */}
+            {isHelpOpen && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300"
+                        onClick={() => setIsHelpOpen(false)}
+                    ></div>
+                    <div className="relative bg-[#200412] border border-[#f97766]/20 rounded-[2.5rem] p-8 sm:p-10 max-w-lg w-full shadow-2xl animate-in zoom-in-95 duration-300 border-t-[#f97766]/40">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-full bg-[#f97766]/10 flex items-center justify-center text-[#f97766]">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" x2="12" y1="17" y2="17.01" />
+                                </svg>
+                            </div>
+                            <h3 className="text-3xl text-[#f97766] font-normal" style={{ fontFamily: 'cursive' }}>How it works</h3>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="group/step">
+                                <h4 className="text-[#f97766] font-bold text-xs uppercase tracking-[0.2em] mb-2 opacity-60 group-hover/step:opacity-100 transition-opacity">01. Adding People</h4>
+                                <p className="text-[#f97766]/50 text-sm leading-relaxed">Search and select individuals or groups in the top bar.</p>
+                            </div>
+                            <div className="group/step">
+                                <h4 className="text-[#f97766] font-bold text-sm uppercase tracking-[0.2em] mb-2 opacity-60 group-hover/step:opacity-100 transition-opacity">02. Time & Duration</h4>
+                                <p className="text-[#f97766]/50 text-sm leading-relaxed">Use the arrows to scale your view (12h to 1 month), or enable <span className="text-[#f97766]/80 font-bold italic">Custom Range</span> to define a specific window for your plan.</p>
+                            </div>
+                            <div className="group/step">
+                                <h4 className="text-[#f97766] font-bold text-sm uppercase tracking-[0.2em] mb-2 opacity-60 group-hover/step:opacity-100 transition-opacity">03. Arrange Plan</h4>
+                                <p className="text-[#f97766]/50 text-sm leading-relaxed">Once satisfied with the constraints, click "Arrange plan" to let the system generate an optimized schedule for everyone.</p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => setIsHelpOpen(false)}
+                            className="mt-10 w-full bg-[#f97766] hover:bg-[#e86655] text-[#200412] py-4 rounded-2xl font-bold transition-all shadow-lg hover:shadow-[0_0_20px_rgba(249,119,102,0.3)] active:scale-[0.98]"
+                        >
+                            Got it, let's go!
+                        </button>
+
+                        <button
+                            onClick={() => setIsHelpOpen(false)}
+                            className="absolute top-6 right-6 text-[#f97766]/30 hover:text-[#f97766] transition-colors"
+                        >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -6,7 +6,7 @@ const DummyTimeline = () => {
     const tickMarks = ['8 AM', '9:30 AM', '11 AM', '12:30 PM', '2 PM', '3:30 PM', '5 PM', '6:30 PM', '8 PM'];
 
     return (
-        <div className="flex items-center gap-6 mt-12 group/row ">
+        <div className="flex items-center gap-6 mt-4 group/row ">
             {/* Dummy Avatar Section */}
             <div className="flex flex-col items-center gap-2 w-16 shrink-0 mt-[-16px]">
                 <Avatar
