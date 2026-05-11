@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import EntitySelector from './EntitySelector';
 
 const ClockIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -22,29 +23,6 @@ const ExpiryIcon = () => (
   </svg>
 );
 
-function ParticipantChips({ participants, color }) {
-  const shown = participants.slice(0, 3);
-  const rest  = participants.length - 3;
-  return (
-    <div className="flex flex-wrap gap-1.5 mt-3">
-      {shown.map((p, i) => {
-        const name = typeof p === 'object' ? (p.name || 'Unknown') : String(p);
-        return (
-          <span key={i} className="text-[11px] font-semibold px-3 py-0.5 rounded-full border"
-            style={{ color, borderColor: `${color}50`, background: `${color}15` }}>
-            {name}
-          </span>
-        );
-      })}
-      {rest > 0 && (
-        <span className="text-[11px] font-semibold px-3 py-0.5 rounded-full border"
-          style={{ color, borderColor: `${color}50`, background: `${color}15` }}>
-          +{rest}
-        </span>
-      )}
-    </div>
-  );
-}
 
 // ─── Non-Recurring Card ───────────────────────────────────────────────────────
 function NonRecurringCard({ activity, color, onClick }) {
@@ -92,7 +70,14 @@ function NonRecurringCard({ activity, color, onClick }) {
         )}
 
         {activity.participants?.length > 0 && (
-          <ParticipantChips participants={activity.participants} color={color} />
+          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+            <EntitySelector
+              variant="inline"
+              selectedIds={(activity.participants || []).map(p => typeof p === 'object' ? String(p._id || p.id) : String(p))}
+              onChange={() => {}}
+              bubbleColor={color}
+            />
+          </div>
         )}
       </div>
     </div>
@@ -170,7 +155,14 @@ function RecurringCard({ activity, color, onClick }) {
         </div>
 
         {activity.participants?.length > 0 && (
-          <ParticipantChips participants={activity.participants} color={color} />
+          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+            <EntitySelector
+              variant="inline"
+              selectedIds={(activity.participants || []).map(p => typeof p === 'object' ? String(p._id || p.id) : String(p))}
+              onChange={() => {}}
+              bubbleColor={color}
+            />
+          </div>
         )}
       </div>
     </div>

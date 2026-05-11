@@ -9,12 +9,16 @@ export default function EntitySelector({
     onChange,
     variant = 'standalone',
     maxVisible = 4,
-    individualsOnly = false
+    individualsOnly = false,
+    bubbleColor = 'var(--color-primary)'
 }) {
     const { user } = useAuth();
     const [isOverlayOpen, setIsOverlayOpen] = useState(false);
     const [entities, setEntities] = useState([]);
     const [loadingEntities, setLoadingEntities] = useState(false);
+
+    // If variant is inline, we only show 2 entities max
+    const effectiveMaxVisible = variant === 'inline' ? 2 : maxVisible;
 
     useEffect(() => {
         if (!user?._id) return;
@@ -22,9 +26,7 @@ export default function EntitySelector({
             setLoadingEntities(true);
             try {
                 const data = await listEntities('all');
-                
-                // Backend returns a plain array of entities
-                // Force all ids to strings to avoid ObjectId vs string comparison bugs
+
                 if (Array.isArray(data)) {
                     setEntities(data.map(e => ({
                         id: String(e._id || e.id || ''),
@@ -44,8 +46,6 @@ export default function EntitySelector({
         fetchEntities();
     }, [user?._id]);
 
-
-
     const handleToggle = (idOrArray) => {
         if (Array.isArray(idOrArray)) {
             let finalIds = idOrArray;
@@ -63,14 +63,14 @@ export default function EntitySelector({
         }
 
         const entity = entities.find(e => e.id === idOrArray);
-        
+
         if (individualsOnly && entity?.type === 'group') {
             const memberIds = entity.members || [];
             if (memberIds.length === 0) return;
 
             // Check if all members are currently selected
             const allSelected = memberIds.every(mid => selectedIds.includes(mid));
-            
+
             let newIds;
             if (allSelected) {
                 // Remove all members
@@ -86,9 +86,9 @@ export default function EntitySelector({
         const newIds = selectedIds.includes(idOrArray)
             ? selectedIds.filter(i => i !== idOrArray)
             : [...selectedIds, idOrArray];
-        
+
         // Final filter for individualsOnly
-        const filteredIds = individualsOnly 
+        const filteredIds = individualsOnly
             ? newIds.filter(id => entities.find(e => e.id === id)?.type !== 'group')
             : newIds;
 
@@ -96,8 +96,10 @@ export default function EntitySelector({
     };
 
     const selectedEntities = entities.filter(e => selectedIds.includes(e.id));
-    const visibleEntities = selectedEntities.slice(0, maxVisible);
-    const remainingCount = Math.max(0, selectedEntities.length - maxVisible);
+    const visibleEntities = selectedEntities.slice(0, effectiveMaxVisible);
+    const remainingCount = Math.max(0, selectedEntities.length - effectiveMaxVisible);
+
+    const isInline = variant === 'inline';
 
     return (
         <>
@@ -107,15 +109,19 @@ export default function EntitySelector({
                     cursor-pointer transition-all duration-300 flex items-center
                     ${variant === 'table'
                         ? 'p-0 py-0 border border-transparent hover:bg-white/5 rounded-xl'
-                        : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
+                        : isInline
+                            ? 'flex-wrap gap-1.5'
+                            : 'w-full bg-[var(--bg-raised)] rounded-[2rem] p-4 sm:p-5 border border-[var(--border-subtle)] shadow-xl hover:bg-black/30 min-h-[80px]'}
                 `}
             >
                 {selectedEntities.length === 0 ? (
-                    <div className="w-full text-center text-[#DC8379]/40 italic font-normal tracking-wide py-2 text-[16px] sm:text-[18px]" style={{ fontFamily: 'cursive' }}>
-                        Click to choose entities
-                    </div>
+                    !isInline && (
+                        <div className="w-full text-center text-[#DC8379]/40 italic font-normal tracking-wide py-2 text-[16px] sm:text-[18px]" style={{ fontFamily: 'cursive' }}>
+                            Click to choose entities
+                        </div>
+                    )
                 ) : (
-                    <div className="flex flex-wrap gap-2 w-full">
+                    <div className={`flex ${isInline ? 'flex-nowrap overflow-hidden' : 'flex-wrap w-full'} gap-1.5 items-center`}>
                         {visibleEntities.map(entity => (
                             <EntityChip
                                 key={entity.id}
@@ -123,14 +129,25 @@ export default function EntitySelector({
                                 color={entity.color}
                                 isSelected={true}
                                 isGroup={entity.type === 'group'}
+                                small={isInline}
                             />
                         ))}
                         {remainingCount > 0 && (
-                            <span className="text-muted font-bold text-xs pl-1 self-center">
-                                +{remainingCount} others
+                            <span
+                                className={`font-semibold rounded-full border flex items-center justify-center flex-shrink-0 ${isInline ? 'text-[9px] px-1.5 py-0' : 'text-muted text-xs px-3 py-1'}`}
+                                style={{
+                                    color: bubbleColor,
+                                    borderColor: `${bubbleColor}50`,
+                                    background: isInline ? `${bubbleColor}15` : 'transparent'
+                                }}
+                            >
+                                +{remainingCount}
                             </span>
                         )}
                     </div>
+                )}
+                {isInline && selectedEntities.length === 0 && (
+                    <span className="text-[11px] text-muted italic">No entities</span>
                 )}
             </div>
 

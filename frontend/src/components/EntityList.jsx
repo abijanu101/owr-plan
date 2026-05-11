@@ -1,30 +1,69 @@
-import React from 'react';
+// components/EntityList.jsx
 import EntityCard from './EntityCard';
 
-export default function EntityList({ title, items = [], onAdd, onRemove }) {
-  return (
-    <div className="w-full mt-6">
-      {/* Custom hr-like border styling seen in image */}
-      <div className="w-full h-[2px] bg-[var(--text-neutral)] mb-4 opacity-50 rounded-full" />
-      
-      <h2 className="text-2xl mb-4 text-[var(--text-neutral)] capitalize">{title}</h2>
-      
-      <div className="flex flex-wrap items-center">
-        {items.map(item => (
-          <EntityCard key={item._id} item={item} onRemove={onRemove} />
-        ))}
-        
-        {/* Add Button */}
-        {onAdd && (
-          <button 
-            onClick={onAdd}
-            className="w-8 h-8 rounded-full border-2 border-[var(--text-neutral)] text-[var(--text-neutral)] flex items-center justify-center text-xl hover:bg-[var(--text-muted)] hover:text-white transition-colors mb-2 ml-1"
-            title={`Add ${title}`}
-          >
-            +
-          </button>
-        )}
+export default function EntityList({ items, selectedIds, onToggleSelect, emptyLabel, onDelete, onDuplicate }) {
+  if (!items || items.length === 0) {
+    return (
+      <div className="entity-list-empty">
+        <div className="empty-icon">📭</div>
+        <p className="empty-text">{emptyLabel || 'No items found'}</p>
       </div>
+    );
+  }
+
+  return (
+    <div className="entity-grid">
+      {items.map((entity) => (
+        <div key={entity.id} style={{ position: 'relative' }}>
+          {/* Checkbox - TOP LEFT */}
+          <div 
+            style={{ 
+              position: 'absolute', 
+              top: '12px', 
+              left: '12px', 
+              zIndex: 20,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="checkbox"
+              checked={selectedIds.has(entity.id)}
+              onChange={() => onToggleSelect(entity.id)}
+              style={{
+                width: '22px',
+                height: '22px',
+                cursor: 'pointer',
+                accentColor: '#f97766',
+                backgroundColor: selectedIds.has(entity.id) ? '#f97766' : 'transparent',
+                border: '2px solid #f97766',
+                borderRadius: '4px',
+                outline: 'none',
+                appearance: 'none',
+                WebkitAppearance: 'none',
+                position: 'relative',
+              }}
+            />
+            {selectedIds.has(entity.id) && (
+              <span style={{
+                position: 'absolute',
+                top: '1px',
+                left: '5px',
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                pointerEvents: 'none',
+              }}>
+                ✓
+              </span>
+            )}
+          </div>
+          <EntityCard
+            item={entity}
+            onDelete={onDelete}
+            onDuplicate={onDuplicate}
+          />
+        </div>
+      ))}
     </div>
   );
 }

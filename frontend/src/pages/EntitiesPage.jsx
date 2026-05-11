@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import SearchBar from '../components/SearchBar';
 import Tabs from '../components/Tabs';
 import Toolbar from '../components/Toolbar';
-import EntityList from '../components/EntityList1';
+import EntityList from '../components/EntityList';
 import EntityModal from '../components/EntityModal';
 import { listEntities, deleteEntities, duplicateEntities } from '../api/entitiesApi';
 

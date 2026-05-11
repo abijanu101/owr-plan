@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Avatar from '../components/avatar';
 import EntityModal from '../components/EntityModal';
 import EntityChip from '../components/EntitySelector/EntityChip';
+import EntitySelector from '../components/EntitySelector';
 import SelectionOverlayFiltered from '../components/EntitySelector/SelectionOverlayFiltered';
 import Modal from '../components/Modal';
 import ActivityCard from '../components/ActivityCard';
@@ -118,7 +119,7 @@ function ActivitiesSection({ activities, onSchedule }) {
 }
 
 // ─── MembersGroupsSection ─────────────────────────────────────
-function MembersGroupsSection({ entity, onRelationsChange }) {
+function MembersGroupsSection({ entity, allEntities, onRelationsChange }) {
   const isGroup = entity.type === 'group';
   const listTitle = isGroup ? 'Members' : 'Groups';
   const currentItems = isGroup ? (entity.members || []) : (entity.groups || []);
@@ -138,6 +139,8 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
     handleOverlayToggle(next);
   };
 
+  const previewItems = currentItems.slice(0, PREVIEW_COUNT);
+  const extraCount = currentItems.length - PREVIEW_COUNT;
   return (
     <>
       <CollapsibleSection title={listTitle} defaultOpen={true}>
@@ -153,16 +156,12 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
           </div>
         ) : (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
-            {currentItems.map(item => (
-              <EntityChip
-                key={item._id}
-                name={item.name}
-                color={item.color}
-                isSelected={true}
-                isGroup={!isGroup}
-                onClick={() => handleChipClick(String(item._id))}
-              />
-            ))}
+            <EntitySelector
+              variant="inline"
+              selectedIds={selectedIds}
+              onChange={handleOverlayToggle}
+              bubbleColor={entity.color}
+            />
             <button
               onClick={() => setOverlayOpen(true)}
               title={`Edit ${listTitle}`}
@@ -180,6 +179,7 @@ function MembersGroupsSection({ entity, onRelationsChange }) {
         selectedIds={selectedIds}
         onToggle={handleOverlayToggle}
         People={isGroup}
+        entities={Object.values(allEntities)}
       />
     </>
   );
@@ -205,30 +205,30 @@ function ViewAvailabilitySection({ entity, navigate }) {
       <button
         onClick={handleVisualize}
         style={{
-          display:       'inline-flex',
-          alignItems:    'center',
-          gap:           8,
-          padding:       '10px 24px',
-          borderRadius:  12,
-          background:    'transparent',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '10px 24px',
+          borderRadius: 12,
+          background: 'transparent',
           // same colour as the section headings — not the entity's dynamic color
-          border:        '2px solid var(--color-primary)',
-          color:         'var(--color-primary)',
-          cursor:        'pointer',
-          fontFamily:    'inherit',
-          fontWeight:    700,
-          fontSize:      14,
+          border: '2px solid var(--color-primary)',
+          color: 'var(--color-primary)',
+          cursor: 'pointer',
+          fontFamily: 'inherit',
+          fontWeight: 700,
+          fontSize: 14,
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
-          transition:    'all 0.2s ease',
+          transition: 'all 0.2s ease',
         }}
         onMouseEnter={e => {
           e.currentTarget.style.background = 'color-mix(in srgb, var(--color-primary) 10%, transparent)';
-          e.currentTarget.style.boxShadow  = '0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent)';
+          e.currentTarget.style.boxShadow = '0 4px 14px color-mix(in srgb, var(--color-primary) 25%, transparent)';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'transparent';
-          e.currentTarget.style.boxShadow  = 'none';
+          e.currentTarget.style.boxShadow = 'none';
         }}
       >
         <svg style={{ width: 16, height: 16, flexShrink: 0 }} fill="currentColor" viewBox="0 0 24 24">
@@ -242,13 +242,13 @@ function ViewAvailabilitySection({ entity, navigate }) {
 
 // ─── Main Component ───────────────────────────────────────────
 export default function EntityDetails() {
-  const { id }   = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
 
-  const [entity,      setEntity]      = useState(null);
-  const [activities,  setActivities]  = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [isEditOpen,  setIsEditOpen]  = useState(false);
+  const [entity, setEntity] = useState(null);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [allEntities, setAllEntities] = useState({});
   const isMobile = useIsMobile(); // ← must be here with all other hooks, never after early returns
 
@@ -263,14 +263,14 @@ export default function EntityDetails() {
 
       const normalizeEntity = (e) => ({
         ...e,
-        _id:         String(e.id || e._id),
-        type:        e.type || 'person',
-        face:        (e.faceIcon || e.face || '').split('/').pop() || 'happy.svg',
+        _id: String(e.id || e._id),
+        type: e.type || 'person',
+        face: (e.faceIcon || e.face || '').split('/').pop() || 'happy.svg',
         accessories: (e.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
-        color:       e.color || '#f97766',
-        theme:       e.theme || 'dark',
-        members:     (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
-        groups:      (e.groups  || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group'  })),
+        color: e.color || '#f97766',
+        theme: e.theme || 'dark',
+        members: (e.members || []).map(m => ({ _id: String(m._id || m), name: m.name || '', color: m.color || '#f97766', type: m.type || 'person' })),
+        groups: (e.groups || []).map(g => ({ _id: String(g._id || g), name: g.name || '', color: g.color || '#f97766', type: g.type || 'group' })),
       });
 
       const allEntitiesObj = {};
@@ -304,14 +304,14 @@ export default function EntityDetails() {
 
     setEntity(prev => ({ ...prev, [field]: updatedItems }));
 
-    const token   = localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
     try {
       const res = await fetch(`/api/entities/${entity._id}`, {
-        method:  'PATCH',
+        method: 'PATCH',
         headers,
-        body:    JSON.stringify({ [field]: newIds }),
+        body: JSON.stringify({ [field]: newIds }),
       });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
     } catch (err) {
@@ -325,9 +325,9 @@ export default function EntityDetails() {
     setEntity(prev => ({
       ...prev,
       ...saved,
-      face:        (saved.faceIcon || saved.face || prev.face || '').split('/').pop() || prev.face,
+      face: (saved.faceIcon || saved.face || prev.face || '').split('/').pop() || prev.face,
       accessories: (saved.accessories || []).map(a => typeof a === 'string' ? a.split('/').pop() : a),
-      theme:       saved.theme || prev.theme || 'dark',
+      theme: saved.theme || prev.theme || 'dark',
     }));
   };
 
@@ -386,6 +386,7 @@ export default function EntityDetails() {
         <div style={{ flex: 1, minWidth: 280 }}>
           <MembersGroupsSection
             entity={entity}
+            allEntities={allEntities}
             onRelationsChange={updateRelations}
           />
 
@@ -405,14 +406,14 @@ export default function EntityDetails() {
         isOpen={isEditOpen}
         onClose={() => setIsEditOpen(false)}
         editingEntity={{
-          _id:         entity._id,
-          name:        entity.name,
-          type:        entity.type,
-          theme:       entity.theme || 'dark',
-          face:        entity.face,
-          faceIcon:    entity.face,
+          _id: entity._id,
+          name: entity.name,
+          type: entity.type,
+          theme: entity.theme || 'dark',
+          face: entity.face,
+          faceIcon: entity.face,
           accessories: entity.accessories || [],
-          color:       entity.color,
+          color: entity.color,
         }}
         existingNames={Object.values(allEntities).map(e => e.name)}
         onSuccess={handleSave}
