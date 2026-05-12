@@ -5,7 +5,7 @@ import { createActivity } from '../api/activitiesApi';
 import { listEntities } from '../api/entitiesApi';
 import { useNavigate } from 'react-router-dom';
 import EntityChip from '../components/EntitySelector/EntityChip';
-import { PersonIcon, GroupIcon } from '../components/EntityIcons';
+import Avatar from '../components/avatar';
 
 const ResultCard = ({ result, index, isSelected, onClick, resolveEntity }) => {
     const isTopThree = index < 3;
@@ -68,17 +68,24 @@ const ResultCard = ({ result, index, isSelected, onClick, resolveEntity }) => {
             <div className="flex items-center justify-between mt-auto">
                 <div className="flex items-center">
                     {isTopThree ? (
-                        <div className={`flex items-center transition-all duration-500 animate-ease-out-back rounded-full ${isSelected ? 'bg-[#1A0B16] px-2 py-1 lg:px-2.5 lg:py-1.5 shadow-lg' : 'bg-transparent px-0 py-0 shadow-none'}`}>
-                            <div className="flex -space-x-1.5 lg:-space-x-2">
+                        <div className={`flex items-center transition-all duration-500 animate-ease-out-back rounded-full ${isSelected ? 'bg-[#4C0E36] px-2 py-1 lg:px-2.5 lg:py-1.5 shadow-lg' : 'bg-transparent px-0 py-0 shadow-none'}`}>
+                            <div className="flex -space-x-1.5 lg:-space-x-3.5">
                                 {entitiesData.slice(0, 3).map((e, i) => (
-                                    e.type === 'group' ? (
-                                        <GroupIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
-                                    ) : (
-                                        <PersonIcon key={i} color={e.color} className="w-5 h-5 lg:w-6 lg:h-6" />
-                                    )
+                                    <Avatar
+                                        key={i}
+                                        face={(e.faceIcon || '').split('/').pop() || ''}
+                                        accessories={(e.accessories || []).map(acc => typeof acc === 'string' ? acc.split('/').pop() : acc)}
+                                        theme={e.theme || 'dark'}
+                                        size={typeof window !== 'undefined' && window.innerWidth >= 1024 ? 52 : 22}
+                                        isGroup={e.type === 'group'}
+                                        bgColor={e.color || '#f97766'}
+                                        shape="circle"
+                                        className="w-5 h-5 lg:w-[52px] lg:h-[52px] shrink-0 border-2 lg:border-[2.5px] border-[#4C0E36] rounded-full"
+                                        style={{ outline: 'none' }}
+                                    />
                                 ))}
                                 {remainingCount > 0 && (
-                                    <div className={`w-5 h-5 lg:w-6 lg:h-6 rounded-full border-2 ${isSelected ? 'border-[#1A0B16] bg-[#1A0B16] text-[#f97766]' : 'border-[#1A0B16] bg-[#1A0B16] text-[#f97766]'} flex items-center justify-center text-[7px] font-bold z-30`}>
+                                    <div className={`w-5 h-5 lg:w-[52px] lg:h-[52px] rounded-full border-2 lg:border-[2.5px] border-[#4C0E36] bg-[#4C0E36] text-[#f97766] flex items-center justify-center text-[7px] lg:text-[12px] font-bold z-30 shadow-lg`}>
                                         +{remainingCount}
                                     </div>
                                 )}
